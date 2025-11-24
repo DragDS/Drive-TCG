@@ -104,6 +104,7 @@
       transition: transform 0.12s ease, box-shadow 0.12s ease,
         border-color 0.12s ease;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
     }
     .card:hover {
       transform: translateY(-3px);
@@ -187,49 +188,104 @@
       color: #6b7280;
       margin-top: 1rem;
     }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+    .modal {
+      background: #020617;
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      max-width: 900px;
+      width: 90%;
+      max-height: 90vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+    @media (max-width: 768px) {
+      .modal {
+        grid-template-columns: minmax(0, 1fr);
+        max-height: 95vh;
+      }
+    }
+    .modal-img {
+      aspect-ratio: 3 / 4;
+      background: #020617;
+      overflow: hidden;
+      border-radius: 0.5rem;
+    }
+    .modal-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.9rem;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>DRIVE Card Gallery</h1>
-      <span>Official DRIVE TCG viewer (reads drive-card.json exported from your admin).</span>
+      <span>Official DRIVE TCG viewer</span>
     </header>
 
-    <!-- Main filters -->
+    <!-- Filters -->
     <div class="controls">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search by name, text, set, tags, base part, HP/CON…"
-      />
-      <select id="setFilter">
-        <option value="">All Sets</option>
-      </select>
-      <select id="typeFilter">
-        <option value="">All Types</option>
-      </select>
-      <select id="rarityFilter">
-        <option value="">All Rarities</option>
-      </select>
+      <input type="text" id="searchInput" placeholder="Search…" />
+      <select id="setFilter"><option value="">All Sets</option></select>
+      <select id="typeFilter"><option value="">All Types</option></select>
+      <select id="rarityFilter"><option value="">All Rarities</option></select>
     </div>
 
-    <!-- Extra filters & sort -->
     <div class="controls-secondary">
       <select id="vehTypeFilter">
         <option value="">All Vehicle Types</option>
-        <option value="Drag">Drag</option>
-        <option value="Drift">Drift</option>
-        <option value="Off-Road">Off-Road</option>
-        <option value="Rally">Rally</option>
+        <option>Drag</option>
+        <option>Drift</option>
+        <option>Off-Road</option>
+        <option>Rally</option>
       </select>
       <select id="sortFilter">
         <option value="default">Sort: Default</option>
         <option value="name">Sort: Name A–Z</option>
-        <option value="set">Sort: Set & Card #</option>
+        <option value="set">Sort: Set & Number</option>
         <option value="type">Sort: Type</option>
       </select>
-      <button id="clearFiltersBtn" type="button">Clear Filters</button>
+      <button id="clearFiltersBtn">Clear Filters</button>
     </div>
 
     <div style="margin-bottom: 0.5rem; font-size: 0.82rem;">
@@ -238,7 +294,31 @@
 
     <div id="grid" class="grid"></div>
     <div id="emptyState" class="empty" style="display:none;">
-      No cards match your filters. Try clearing search or filters.
+      No cards match your filters.
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="cardModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-img">
+        <img id="modalImg" src="" alt="">
+      </div>
+      <div class="modal-body">
+        <div class="modal-header">
+          <div id="modalTitle" class="modal-title"></div>
+          <button id="modalCloseBtn" class="modal-close">✕</button>
+        </div>
+
+        <div id="modalType" class="meta"></div>
+        <div id="modalSet" class="meta"></div>
+        <div id="modalRarity" class="meta"></div>
+        <div id="modalExtra1" class="extra-line"></div>
+        <div id="modalExtra2" class="extra-line"></div>
+        <div id="modalExtra3" class="extra-line"></div>
+        <div id="modalTags" class="tag-line"></div>
+        <div id="modalNotes" class="notes"></div>
+      </div>
     </div>
   </div>
 
@@ -257,125 +337,136 @@
     const cardCount = document.getElementById("cardCount");
     const emptyState = document.getElementById("emptyState");
 
+    const cardModal = document.getElementById("cardModal");
+    const modalImg = document.getElementById("modalImg");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalType = document.getElementById("modalType");
+    const modalSet = document.getElementById("modalSet");
+    const modalRarity = document.getElementById("modalRarity");
+    const modalExtra1 = document.getElementById("modalExtra1");
+    const modalExtra2 = document.getElementById("modalExtra2");
+    const modalExtra3 = document.getElementById("modalExtra3");
+    const modalTags = document.getElementById("modalTags");
+    const modalNotes = document.getElementById("modalNotes");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+
     async function loadCards() {
-      try {
-        const res = await fetch("drive-card.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load drive-card.json");
-        const json = await res.json();
-        if (!Array.isArray(json)) throw new Error("JSON is not an array");
-        cards = json;
-      } catch (err) {
-        console.error(err);
-        cards = [];
-      }
+      const res = await fetch("drive-card.json", { cache: "no-store" });
+      cards = await res.json();
     }
 
     function populateFilters() {
-      const sets = Array.from(new Set(cards.map(c => c.setName).filter(Boolean))).sort((a,b) => a.localeCompare(b));
-      const types = Array.from(new Set(cards.map(c => c.type).filter(Boolean))).sort((a,b) => a.localeCompare(b));
-      const rarities = Array.from(new Set(cards.map(c => c.rarity).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+      const sets = [...new Set(cards.map(c => c.setName).filter(Boolean))].sort();
+      const types = [...new Set(cards.map(c => c.type).filter(Boolean))].sort();
+      const rarities = [...new Set(cards.map(c => c.rarity).filter(Boolean))].sort();
 
-      setFilter.innerHTML = '<option value="">All Sets</option>';
-      sets.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        opt.textContent = s;
-        setFilter.appendChild(opt);
-      });
-
-      typeFilter.innerHTML = '<option value="">All Types</option>';
-      types.forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t;
-        opt.textContent = t;
-        typeFilter.appendChild(opt);
-      });
-
-      rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-      rarities.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r;
-        opt.textContent = r;
-        rarityFilter.appendChild(opt);
-      });
+      sets.forEach(s => setFilter.innerHTML += `<option>${s}</option>`);
+      types.forEach(t => typeFilter.innerHTML += `<option>${t}</option>`);
+      rarities.forEach(r => rarityFilter.innerHTML += `<option>${r}</option>`);
     }
 
     function matchesVehicleType(card, vt) {
       if (!vt) return true;
       const extra = card.extra || {};
-      if (Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.includes(vt)) {
-        return true;
-      }
-      if (extra.vehicleType === vt) {
-        return true;
-      }
+      if (Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.includes(vt)) return true;
+      if (extra.vehicleType === vt) return true;
       return false;
     }
 
-    function render() {
-      const q = searchInput.value.trim().toLowerCase();
-      const setVal = setFilter.value;
-      const typeVal = typeFilter.value;
-      const rarityVal = rarityFilter.value;
-      const vehVal = vehTypeFilter.value;
-      const sortVal = sortFilter.value;
+    function openModal(card) {
+      const extra = card.extra || {};
 
+      modalImg.src = card.imageData;
+      modalTitle.textContent = card.name;
+      modalType.textContent = card.type;
+      modalSet.textContent = `${card.setName} • #${card.cardNumber}`;
+      modalRarity.textContent = "Rarity: " + card.rarity;
+
+      modalExtra1.textContent = "";
+      modalExtra2.textContent = "";
+      modalExtra3.textContent = "";
+
+      let lines = [];
+
+      if ((card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") &&
+          Array.isArray(extra.vehicleTypes)) {
+        lines.push("Types: " + extra.vehicleTypes.join(", "));
+      }
+
+      if ((card.type === "Vehicle" || card.type === "Named Vehicle")) {
+        lines.push(`Vehicle: ${extra.vehicleType} • HP/CON: ${extra.hp} / ${extra.con}`);
+      }
+
+      if (card.type === "Mod") {
+        let t = "Base Part: " + extra.modBasePart;
+        let lv = [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4].filter(Boolean);
+        if (lv.length) t += " • Lv: " + lv.join(" | ");
+        lines.push(t);
+      }
+
+      modalExtra1.textContent = lines[0] || "";
+      modalExtra2.textContent = lines[1] || "";
+      modalExtra3.textContent = lines[2] || "";
+
+      modalTags.innerHTML = "";
+      if (card.tags) {
+        card.tags.forEach(tag => {
+          modalTags.innerHTML += `<span class="tag-pill">${tag}</span>`;
+        });
+      }
+
+      modalNotes.textContent = card.notes || "";
+
+      cardModal.style.display = "flex";
+    }
+
+    function closeModal() {
+      cardModal.style.display = "none";
+    }
+
+    modalCloseBtn.onclick = closeModal;
+    cardModal.onclick = e => { if (e.target === cardModal) closeModal(); };
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+    function render() {
       let filtered = cards.slice();
 
-      // basic filters
-      if (setVal) filtered = filtered.filter(c => c.setName === setVal);
-      if (typeVal) filtered = filtered.filter(c => c.type === typeVal);
-      if (rarityVal) filtered = filtered.filter(c => c.rarity === rarityVal);
-      if (vehVal) filtered = filtered.filter(c => matchesVehicleType(c, vehVal));
+      const q = searchInput.value.toLowerCase();
+      const s = setFilter.value;
+      const t = typeFilter.value;
+      const r = rarityFilter.value;
+      const vt = vehTypeFilter.value;
 
-      // search
+      if (s) filtered = filtered.filter(c => c.setName === s);
+      if (t) filtered = filtered.filter(c => c.type === t);
+      if (r) filtered = filtered.filter(c => c.rarity === r);
+      filtered = filtered.filter(c => matchesVehicleType(c, vt));
+
       if (q) {
         filtered = filtered.filter(c => {
           const extra = c.extra || {};
-          const vehicleTypes = Array.isArray(extra.vehicleTypes) ? extra.vehicleTypes.join(" ") : "";
-          const vehicleType = extra.vehicleType || "";
-          const levels = [extra.modLevel1, extra.modLevel2, extra.modLevel3, extra.modLevel4]
-            .filter(Boolean)
-            .join(" ");
-          const hpCon = `${extra.hp ?? ""} ${extra.con ?? ""}`;
-
-          const all =
-            (c.name || "") + " " +
-            (c.type || "") + " " +
-            (c.rarity || "") + " " +
-            (c.setName || "") + " " +
-            (c.cardNumber || "") + " " +
-            (c.notes || "") + " " +
-            (c.tags || []).join(" ") + " " +
-            (extra.modBasePart || "") + " " +
-            vehicleTypes + " " +
-            vehicleType + " " +
-            levels + " " +
-            hpCon;
-
-          return all.toLowerCase().includes(q);
+          const text = (
+            c.name + " " + 
+            c.type + " " + 
+            c.rarity + " " + 
+            c.setName + " " +
+            c.cardNumber + " " +
+            c.notes + " " +
+            (c.tags||[]).join(" ") + " " +
+            JSON.stringify(extra)
+          ).toLowerCase();
+          return text.includes(q);
         });
       }
 
-      // sorting
-      if (sortVal === "name") {
-        filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-      } else if (sortVal === "set") {
-        filtered.sort((a, b) => {
-          const sa = (a.setName || "").localeCompare(b.setName || "");
-          if (sa !== 0) return sa;
-          return (a.cardNumber || "").localeCompare(b.cardNumber || "");
-        });
-      } else if (sortVal === "type") {
-        filtered.sort((a, b) => {
-          const ta = (a.type || "").localeCompare(b.type || "");
-          if (ta !== 0) return ta;
-          return (a.name || "").localeCompare(b.name || "");
-        });
-      }
-      // "default" leaves JSON order as-is (usually newest export order)
+      if (sortFilter.value === "name")
+        filtered.sort((a,b)=>a.name.localeCompare(b.name));
+      if (sortFilter.value === "set")
+        filtered.sort((a,b)=>a.setName.localeCompare(b.setName) || a.cardNumber.localeCompare(b.cardNumber));
+      if (sortFilter.value === "type")
+        filtered.sort((a,b)=>a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
 
-      cardCount.textContent = filtered.length.toString();
+      cardCount.textContent = filtered.length;
 
       grid.innerHTML = "";
       if (!filtered.length) {
@@ -384,134 +475,44 @@
       }
       emptyState.style.display = "none";
 
-      const frag = document.createDocumentFragment();
-
       filtered.forEach(card => {
         const extra = card.extra || {};
 
-        const cardEl = document.createElement("div");
-        cardEl.className = "card";
+        const el = document.createElement("div");
+        el.className = "card";
+        el.innerHTML = `
+          <div class="thumb"><img src="${card.imageData}"></div>
+          <div class="body">
+            <div class="title-row">
+              <div class="title">${card.name}</div>
+              <div class="pill">${card.type}</div>
+            </div>
+            <div class="meta">${card.setName} • #${card.cardNumber}</div>
+            <div class="meta">Rarity: ${card.rarity}</div>
 
-        const thumb = document.createElement("div");
-        thumb.className = "thumb";
-        const img = document.createElement("img");
-        img.src = card.imageData;
-        img.alt = card.name || "Card";
-        thumb.appendChild(img);
+            ${ (card.type==="Driver"||card.type==="Named Driver"||card.type==="Track") && extra.vehicleTypes
+              ? `<div class="extra-line">Types: ${extra.vehicleTypes.join(", ")}</div>` : "" }
 
-        const body = document.createElement("div");
-        body.className = "body";
+            ${ (card.type==="Vehicle"||card.type==="Named Vehicle")
+              ? `<div class="extra-line">Vehicle: ${extra.vehicleType} • HP/CON: ${extra.hp} / ${extra.con}</div>` : "" }
 
-        const titleRow = document.createElement("div");
-        titleRow.className = "title-row";
+            ${ card.type==="Mod" 
+              ? `<div class="extra-line">Base Part: ${extra.modBasePart} • Lv: ${
+                  [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4]
+                  .filter(Boolean).join(" | ")
+                }</div>` : "" }
 
-        const title = document.createElement("div");
-        title.className = "title";
-        title.textContent = card.name || "Untitled";
+            <div class="tag-line">
+              ${(card.tags||[]).map(t=>`<span class="tag-pill">${t}</span>`).join("")}
+            </div>
 
-        const pill = document.createElement("div");
-        pill.className = "pill";
-        pill.textContent = card.type || "Unknown";
+            <div class="notes">${card.notes||""}</div>
+          </div>
+        `;
 
-        titleRow.appendChild(title);
-        titleRow.appendChild(pill);
-
-        const meta1 = document.createElement("div");
-        meta1.className = "meta";
-        const setLabel = card.setName || "No Set";
-        const num = card.cardNumber ? ` • #${card.cardNumber}` : "";
-        meta1.textContent = `${setLabel}${num}`;
-
-        const meta2 = document.createElement("div");
-        meta2.className = "meta";
-        meta2.textContent = "Rarity: " + (card.rarity || "—");
-
-        body.appendChild(titleRow);
-        body.appendChild(meta1);
-        body.appendChild(meta2);
-
-        // Drivers / Named Drivers / Tracks → vehicleTypes
-        if (
-          (card.type === "Driver" ||
-            card.type === "Named Driver" ||
-            card.type === "Track") &&
-          Array.isArray(extra.vehicleTypes) &&
-          extra.vehicleTypes.length
-        ) {
-          const line = document.createElement("div");
-          line.className = "extra-line";
-          line.textContent = "Types: " + extra.vehicleTypes.join(", ");
-          body.appendChild(line);
-        }
-
-        // Vehicles / Named Vehicles → vehicleType + HP/CON
-        if (
-          (card.type === "Vehicle" || card.type === "Named Vehicle") &&
-          (extra.vehicleType || extra.hp != null || extra.con != null)
-        ) {
-          const line = document.createElement("div");
-          line.className = "extra-line";
-          const parts = [];
-          if (extra.vehicleType) parts.push("Vehicle: " + extra.vehicleType);
-          if (extra.hp != null || extra.con != null) {
-            parts.push(`HP/CON: ${extra.hp ?? "-"} / ${extra.con ?? "-"}`);
-          }
-          line.textContent = parts.join(" • ");
-          body.appendChild(line);
-        }
-
-        // Mods → base part + quick level summary
-        if (
-          card.type === "Mod" &&
-          (extra.modBasePart ||
-            extra.modLevel1 ||
-            extra.modLevel2 ||
-            extra.modLevel3 ||
-            extra.modLevel4)
-        ) {
-          const line = document.createElement("div");
-          line.className = "extra-line";
-          let text = "";
-          if (extra.modBasePart) {
-            text += "Base Part: " + extra.modBasePart;
-          }
-          const levels = [extra.modLevel1, extra.modLevel2, extra.modLevel3, extra.modLevel4]
-            .filter(Boolean);
-          if (levels.length) {
-            if (text) text += " • ";
-            text += "Lv: " + levels.join(" | ");
-          }
-          line.textContent = text;
-          body.appendChild(line);
-        }
-
-        // Tags
-        if (card.tags && card.tags.length) {
-          const tagLine = document.createElement("div");
-          tagLine.className = "tag-line";
-          card.tags.forEach(t => {
-            const span = document.createElement("span");
-            span.className = "tag-pill";
-            span.textContent = t;
-            tagLine.appendChild(span);
-          });
-          body.appendChild(tagLine);
-        }
-
-        // Rules snippet
-        if (card.notes) {
-          const notes = document.createElement("div");
-          notes.className = "notes";
-          notes.textContent = card.notes;
-          body.appendChild(notes);
-        }
-
-        cardEl.appendChild(thumb);
-        cardEl.appendChild(body);
-        frag.appendChild(cardEl);
+        el.onclick = () => openModal(card);
+        grid.appendChild(el);
       });
-
-      grid.appendChild(frag);
     }
 
     function clearFilters() {
@@ -524,18 +525,19 @@
       render();
     }
 
+    clearFiltersBtn.onclick = clearFilters;
+
     async function init() {
       await loadCards();
       populateFilters();
       render();
 
-      searchInput.addEventListener("input", render);
-      setFilter.addEventListener("change", render);
-      typeFilter.addEventListener("change", render);
-      rarityFilter.addEventListener("change", render);
-      vehTypeFilter.addEventListener("change", render);
-      sortFilter.addEventListener("change", render);
-      clearFiltersBtn.addEventListener("click", clearFilters);
+      searchInput.oninput = render;
+      setFilter.onchange = render;
+      typeFilter.onchange = render;
+      rarityFilter.onchange = render;
+      vehTypeFilter.onchange = render;
+      sortFilter.onchange = render;
     }
 
     init();
