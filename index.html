@@ -61,11 +61,6 @@
       color: #e5e7eb;
       font-size: 0.9rem;
     }
-    .badge-count {
-      font-size: 0.8rem;
-      color: #9ca3af;
-      margin-left: 0.25rem;
-    }
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -81,7 +76,7 @@
       transition: transform 0.12s ease, box-shadow 0.12s ease,
         border-color 0.12s ease;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-      cursor: pointer;
+      cursor: default;
     }
     .card:hover {
       transform: translateY(-3px);
@@ -171,7 +166,7 @@
   <div class="app">
     <header>
       <h1>DRIVE Card Gallery</h1>
-      <span>Official DRIVE TCG card viewer (powered by your exported drive-card.json).</span>
+      <span>Official DRIVE TCG viewer (reads drive-card.json exported from your admin).</span>
     </header>
 
     <div class="controls">
@@ -350,8 +345,9 @@
         body.appendChild(meta1);
         body.appendChild(meta2);
 
-        // Extra info lines
-        // Drivers / Named Drivers / Tracks → vehicleTypes
+        // --- NEW: show extra info ---
+
+        // Driver / Named Driver / Track → vehicleTypes
         if (
           (card.type === "Driver" ||
             card.type === "Named Driver" ||
@@ -382,7 +378,14 @@
         }
 
         // Mods → base part + quick level summary
-        if (card.type === "Mod" && (extra.modBasePart || extra.modLevel1 || extra.modLevel2 || extra.modLevel3 || extra.modLevel4)) {
+        if (
+          card.type === "Mod" &&
+          (extra.modBasePart ||
+            extra.modLevel1 ||
+            extra.modLevel2 ||
+            extra.modLevel3 ||
+            extra.modLevel4)
+        ) {
           const line = document.createElement("div");
           line.className = "extra-line";
           let text = "";
@@ -397,6 +400,16 @@
           }
           line.textContent = text;
           body.appendChild(line);
+        }
+
+        // TEMP DEBUG: show raw extra object so you can confirm data
+        if (Object.keys(extra).length) {
+          const debug = document.createElement("div");
+          debug.className = "meta";
+          debug.style.fontSize = "0.7rem";
+          debug.style.color = "#4ade80";
+          debug.textContent = "extra: " + JSON.stringify(extra);
+          body.appendChild(debug);
         }
 
         // Tags
