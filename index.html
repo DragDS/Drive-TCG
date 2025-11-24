@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE Card Gallery</title>
+  <title>DRIVE Card Gallery + Deck Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -34,6 +34,17 @@
     header span {
       font-size: 0.95rem;
       color: #9ca3af;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .controls,
@@ -94,7 +105,7 @@
       grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
       gap: 1rem;
     }
-    .card {
+    .card-tile {
       background: #020617;
       border-radius: 0.75rem;
       border: 1px solid #1f2937;
@@ -106,7 +117,7 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
       cursor: pointer;
     }
-    .card:hover {
+    .card-tile:hover {
       transform: translateY(-3px);
       border-color: #22c55e;
       box-shadow: 0 15px 35px rgba(34, 197, 94, 0.35);
@@ -189,6 +200,119 @@
       margin-top: 1rem;
     }
 
+    /* Deck panel */
+    .panel {
+      background: #020617;
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      padding: 0.75rem 0.8rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: calc(100vh - 150px);
+      position: sticky;
+      top: 80px;
+    }
+    @media (max-width: 900px) {
+      .panel {
+        position: static;
+        max-height: none;
+      }
+    }
+    .panel h2 {
+      margin: 0 0 0.25rem;
+      font-size: 1rem;
+    }
+    .panel small {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .panel-section {
+      margin-top: 0.4rem;
+    }
+    .panel-label {
+      font-size: 0.76rem;
+      color: #9ca3af;
+      margin-bottom: 0.15rem;
+    }
+    .deck-status {
+      font-size: 0.78rem;
+      margin-top: 0.2rem;
+    }
+    .deck-status.ok {
+      color: #4ade80;
+    }
+    .deck-status.bad {
+      color: #f87171;
+    }
+    .deck-stats {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-top: 0.1rem;
+    }
+    .deck-list {
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.4rem;
+      font-size: 0.78rem;
+    }
+    .deck-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      padding: 0.15rem 0.2rem;
+      border-radius: 0.4rem;
+    }
+    .deck-row:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .deck-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .deck-row-main {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .deck-row-sub {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .deck-row-qty {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+    .deck-qty-number {
+      min-width: 1.2rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+    .deck-btn {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 0.05rem 0.4rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .deck-btn:hover {
+      background: #020617;
+    }
+    .deck-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.4rem;
+    }
+
     /* Modal */
     .modal-backdrop {
       position: fixed;
@@ -254,47 +378,100 @@
     .modal-close:hover {
       color: #ffffff;
     }
+    .modal-deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-top: 0.2rem;
+      font-size: 0.8rem;
+    }
+    .modal-deck-label {
+      color: #9ca3af;
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>DRIVE Card Gallery</h1>
-      <span>Official DRIVE TCG viewer</span>
+      <span>Official DRIVE TCG viewer + local deck builder</span>
     </header>
 
-    <!-- Filters -->
-    <div class="controls">
-      <input type="text" id="searchInput" placeholder="Search…" />
-      <select id="setFilter"><option value="">All Sets</option></select>
-      <select id="typeFilter"><option value="">All Types</option></select>
-      <select id="rarityFilter"><option value="">All Rarities</option></select>
-    </div>
+    <div class="layout">
+      <!-- LEFT: Gallery -->
+      <div>
+        <!-- Filters -->
+        <div class="controls">
+          <input type="text" id="searchInput" placeholder="Search by name, text, set, tags, etc." />
+          <select id="setFilter"><option value="">All Sets</option></select>
+          <select id="typeFilter"><option value="">All Types</option></select>
+          <select id="rarityFilter"><option value="">All Rarities</option></select>
+        </div>
 
-    <div class="controls-secondary">
-      <select id="vehTypeFilter">
-        <option value="">All Vehicle Types</option>
-        <option>Drag</option>
-        <option>Drift</option>
-        <option>Off-Road</option>
-        <option>Rally</option>
-      </select>
-      <select id="sortFilter">
-        <option value="default">Sort: Default</option>
-        <option value="name">Sort: Name A–Z</option>
-        <option value="set">Sort: Set & Number</option>
-        <option value="type">Sort: Type</option>
-      </select>
-      <button id="clearFiltersBtn">Clear Filters</button>
-    </div>
+        <div class="controls-secondary">
+          <select id="vehTypeFilter">
+            <option value="">All Vehicle Types</option>
+            <option>Drag</option>
+            <option>Drift</option>
+            <option>Off-Road</option>
+            <option>Rally</option>
+          </select>
+          <select id="sortFilter">
+            <option value="default">Sort: Default</option>
+            <option value="name">Sort: Name A–Z</option>
+            <option value="set">Sort: Set & Number</option>
+            <option value="type">Sort: Type</option>
+          </select>
+          <button id="clearFiltersBtn">Clear Filters</button>
+        </div>
 
-    <div style="margin-bottom: 0.5rem; font-size: 0.82rem;">
-      Cards found: <span id="cardCount">0</span>
-    </div>
+        <div style="margin-bottom: 0.5rem; font-size: 0.82rem;">
+          Cards found: <span id="cardCount">0</span>
+        </div>
 
-    <div id="grid" class="grid"></div>
-    <div id="emptyState" class="empty" style="display:none;">
-      No cards match your filters.
+        <div id="grid" class="grid"></div>
+        <div id="emptyState" class="empty" style="display:none;">
+          No cards match your filters.
+        </div>
+      </div>
+
+      <!-- RIGHT: Deck Builder Panel -->
+      <aside class="panel">
+        <div>
+          <h2>Deck Builder</h2>
+          <small>50 cards exactly · Max 4 copies per card · Max 1 per Named card · Min 2 Vehicles</small>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">Active Deck</div>
+          <select id="deckSelect">
+            <option value="0">Deck 1</option>
+            <option value="1">Deck 2</option>
+            <option value="2">Deck 3</option>
+          </select>
+        </div>
+
+        <div class="panel-section">
+          <div class="panel-label">Deck Name</div>
+          <input type="text" id="deckNameInput" placeholder="e.g. Ray's Junkyard Special" />
+        </div>
+
+        <div id="deckStatus" class="deck-status"></div>
+        <div id="deckStats" class="deck-stats"></div>
+
+        <div class="panel-section" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+          <div class="panel-label">Cards in Deck</div>
+          <div id="deckList" class="deck-list"></div>
+        </div>
+
+        <div class="deck-actions">
+          <button id="clearDeckBtn">Clear Deck</button>
+          <button id="exportTxtBtn">Export TXT</button>
+          <button id="exportJsonBtn">Export JSON</button>
+          <button id="exportCsvBtn">Export CSV (Excel)</button>
+          <button id="printDeckBtn">Print / PDF</button>
+        </div>
+      </aside>
     </div>
   </div>
 
@@ -318,12 +495,19 @@
         <div id="modalExtra3" class="extra-line"></div>
         <div id="modalTags" class="tag-line"></div>
         <div id="modalNotes" class="notes"></div>
+
+        <div id="modalDeckControls" class="modal-deck-controls"></div>
       </div>
     </div>
   </div>
 
   <script>
     let cards = [];
+    let cardMap = {};
+    let decks = [];
+    let activeDeckIndex = 0;
+
+    const CARD_DECKS_KEY = "driveDecks_v1";
 
     const searchInput = document.getElementById("searchInput");
     const setFilter = document.getElementById("setFilter");
@@ -348,11 +532,33 @@
     const modalExtra3 = document.getElementById("modalExtra3");
     const modalTags = document.getElementById("modalTags");
     const modalNotes = document.getElementById("modalNotes");
+    const modalDeckControls = document.getElementById("modalDeckControls");
     const modalCloseBtn = document.getElementById("modalCloseBtn");
+
+    const deckSelect = document.getElementById("deckSelect");
+    const deckNameInput = document.getElementById("deckNameInput");
+    const deckStatus = document.getElementById("deckStatus");
+    const deckStats = document.getElementById("deckStats");
+    const deckList = document.getElementById("deckList");
+
+    const clearDeckBtn = document.getElementById("clearDeckBtn");
+    const exportTxtBtn = document.getElementById("exportTxtBtn");
+    const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const exportCsvBtn = document.getElementById("exportCsvBtn");
+    const printDeckBtn = document.getElementById("printDeckBtn");
 
     async function loadCards() {
       const res = await fetch("drive-card.json", { cache: "no-store" });
-      cards = await res.json();
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        cards = json;
+      } else {
+        cards = [];
+      }
+      cardMap = {};
+      cards.forEach(c => {
+        cardMap[c.id] = c;
+      });
     }
 
     function populateFilters() {
@@ -360,8 +566,13 @@
       const types = [...new Set(cards.map(c => c.type).filter(Boolean))].sort();
       const rarities = [...new Set(cards.map(c => c.rarity).filter(Boolean))].sort();
 
+      setFilter.innerHTML = '<option value="">All Sets</option>';
       sets.forEach(s => setFilter.innerHTML += `<option>${s}</option>`);
+
+      typeFilter.innerHTML = '<option value="">All Types</option>';
       types.forEach(t => typeFilter.innerHTML += `<option>${t}</option>`);
+
+      rarityFilter.innerHTML = '<option value="">All Rarities</option>';
       rarities.forEach(r => rarityFilter.innerHTML += `<option>${r}</option>`);
     }
 
@@ -373,14 +584,100 @@
       return false;
     }
 
+    function isNamedCard(card) {
+      return card.type && card.type.toLowerCase().includes("named");
+    }
+
+    function getActiveDeck() {
+      return decks[activeDeckIndex];
+    }
+
+    function saveDecks() {
+      localStorage.setItem(CARD_DECKS_KEY, JSON.stringify(decks));
+    }
+
+    function loadDecks() {
+      const raw = localStorage.getItem(CARD_DECKS_KEY);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length === 3) {
+            decks = parsed;
+          } else {
+            throw new Error("invalid decks");
+          }
+        } catch {
+          decks = [
+            { id: "deck1", name: "Deck 1", cards: {} },
+            { id: "deck2", name: "Deck 2", cards: {} },
+            { id: "deck3", name: "Deck 3", cards: {} },
+          ];
+        }
+      } else {
+        decks = [
+          { id: "deck1", name: "Deck 1", cards: {} },
+          { id: "deck2", name: "Deck 2", cards: {} },
+          { id: "deck3", name: "Deck 3", cards: {} },
+        ];
+      }
+      activeDeckIndex = 0;
+    }
+
+    function addToDeck(cardId, delta) {
+      const deck = getActiveDeck();
+      if (!deck) return;
+      const card = cardMap[cardId];
+      if (!card) return;
+
+      const isNamed = isNamedCard(card);
+      const current = deck.cards[cardId] || 0;
+      let newCount = current + delta;
+
+      if (delta > 0) {
+        if (isNamed && current >= 1) {
+          alert("Named cards are limited to 1 copy per deck.");
+          return;
+        }
+        if (!isNamed && current >= 4) {
+          alert("You can only have up to 4 copies of a non-named card in a deck.");
+          return;
+        }
+      }
+
+      // compute deck size if we add
+      const totalBefore = Object.values(deck.cards).reduce((sum, n) => sum + n, 0);
+      if (delta > 0 && totalBefore >= 50) {
+        alert("Deck is already full (50 cards).");
+        return;
+      }
+      if (delta > 0 && totalBefore + delta > 50) {
+        alert("Adding this card would exceed 50 cards.");
+        return;
+      }
+
+      if (newCount <= 0) {
+        delete deck.cards[cardId];
+      } else {
+        deck.cards[cardId] = newCount;
+      }
+
+      saveDecks();
+      updateDeckUI();
+    }
+
     function openModal(card) {
       const extra = card.extra || {};
+      const deck = getActiveDeck();
+      const countInDeck = deck && deck.cards[card.id] ? deck.cards[card.id] : 0;
 
       modalImg.src = card.imageData;
-      modalTitle.textContent = card.name;
-      modalType.textContent = card.type;
-      modalSet.textContent = `${card.setName} • #${card.cardNumber}`;
-      modalRarity.textContent = "Rarity: " + card.rarity;
+      modalTitle.textContent = card.name || "Untitled";
+      modalType.textContent = card.type || "Unknown";
+
+      const setLabel = card.setName || "No Set";
+      const num = card.cardNumber ? ` • #${card.cardNumber}` : "";
+      modalSet.textContent = `${setLabel}${num}`;
+      modalRarity.textContent = "Rarity: " + (card.rarity || "—");
 
       modalExtra1.textContent = "";
       modalExtra2.textContent = "";
@@ -389,19 +686,30 @@
       let lines = [];
 
       if ((card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") &&
-          Array.isArray(extra.vehicleTypes)) {
+          Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.length) {
         lines.push("Types: " + extra.vehicleTypes.join(", "));
       }
 
-      if ((card.type === "Vehicle" || card.type === "Named Vehicle")) {
-        lines.push(`Vehicle: ${extra.vehicleType} • HP/CON: ${extra.hp} / ${extra.con}`);
+      if ((card.type === "Vehicle" || card.type === "Named Vehicle") &&
+          (extra.vehicleType || extra.hp != null || extra.con != null)) {
+        const parts = [];
+        if (extra.vehicleType) parts.push("Vehicle: " + extra.vehicleType);
+        if (extra.hp != null || extra.con != null) {
+          parts.push(`HP/CON: ${extra.hp ?? "-"} / ${extra.con ?? "-"}`);
+        }
+        lines.push(parts.join(" • "));
       }
 
-      if (card.type === "Mod") {
-        let t = "Base Part: " + extra.modBasePart;
-        let lv = [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4].filter(Boolean);
-        if (lv.length) t += " • Lv: " + lv.join(" | ");
-        lines.push(t);
+      if (card.type === "Mod" &&
+          (extra.modBasePart || extra.modLevel1 || extra.modLevel2 || extra.modLevel3 || extra.modLevel4)) {
+        let text = "";
+        if (extra.modBasePart) text += "Base Part: " + extra.modBasePart;
+        const levels = [extra.modLevel1, extra.modLevel2, extra.modLevel3, extra.modLevel4].filter(Boolean);
+        if (levels.length) {
+          if (text) text += " • ";
+          text += "Lv: " + levels.join(" | ");
+        }
+        lines.push(text);
       }
 
       modalExtra1.textContent = lines[0] || "";
@@ -409,13 +717,47 @@
       modalExtra3.textContent = lines[2] || "";
 
       modalTags.innerHTML = "";
-      if (card.tags) {
-        card.tags.forEach(tag => {
-          modalTags.innerHTML += `<span class="tag-pill">${tag}</span>`;
+      if (card.tags && card.tags.length) {
+        card.tags.forEach(t => {
+          const span = document.createElement("span");
+          span.className = "tag-pill";
+          span.textContent = t;
+          modalTags.appendChild(span);
         });
       }
 
       modalNotes.textContent = card.notes || "";
+
+      // Deck controls
+      modalDeckControls.innerHTML = "";
+      const label = document.createElement("span");
+      label.className = "modal-deck-label";
+      label.textContent = "In this deck:";
+
+      const minusBtn = document.createElement("button");
+      minusBtn.className = "deck-btn";
+      minusBtn.textContent = "−";
+      minusBtn.addEventListener("click", () => {
+        addToDeck(card.id, -1);
+        openModal(card);
+      });
+
+      const qtySpan = document.createElement("span");
+      qtySpan.className = "deck-qty-number";
+      qtySpan.textContent = String(countInDeck);
+
+      const plusBtn = document.createElement("button");
+      plusBtn.className = "deck-btn";
+      plusBtn.textContent = "+";
+      plusBtn.addEventListener("click", () => {
+        addToDeck(card.id, +1);
+        openModal(card);
+      });
+
+      modalDeckControls.appendChild(label);
+      modalDeckControls.appendChild(minusBtn);
+      modalDeckControls.appendChild(qtySpan);
+      modalDeckControls.appendChild(plusBtn);
 
       cardModal.style.display = "flex";
     }
@@ -446,25 +788,31 @@
         filtered = filtered.filter(c => {
           const extra = c.extra || {};
           const text = (
-            c.name + " " + 
-            c.type + " " + 
-            c.rarity + " " + 
-            c.setName + " " +
-            c.cardNumber + " " +
-            c.notes + " " +
+            (c.name || "") + " " + 
+            (c.type || "") + " " + 
+            (c.rarity || "") + " " + 
+            (c.setName || "") + " " +
+            (c.cardNumber || "") + " " +
+            (c.notes || "") + " " +
             (c.tags||[]).join(" ") + " " +
-            JSON.stringify(extra)
+            JSON.stringify(extra || {})
           ).toLowerCase();
           return text.includes(q);
         });
       }
 
       if (sortFilter.value === "name")
-        filtered.sort((a,b)=>a.name.localeCompare(b.name));
+        filtered.sort((a,b) => (a.name || "").localeCompare(b.name || ""));
       if (sortFilter.value === "set")
-        filtered.sort((a,b)=>a.setName.localeCompare(b.setName) || a.cardNumber.localeCompare(b.cardNumber));
+        filtered.sort((a,b) =>
+          (a.setName || "").localeCompare(b.setName || "") ||
+          (a.cardNumber || "").localeCompare(b.cardNumber || "")
+        );
       if (sortFilter.value === "type")
-        filtered.sort((a,b)=>a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+        filtered.sort((a,b) =>
+          (a.type || "").localeCompare(b.type || "") ||
+          (a.name || "").localeCompare(b.name || "")
+        );
 
       cardCount.textContent = filtered.length;
 
@@ -479,34 +827,35 @@
         const extra = card.extra || {};
 
         const el = document.createElement("div");
-        el.className = "card";
+        el.className = "card-tile";
         el.innerHTML = `
-          <div class="thumb"><img src="${card.imageData}"></div>
+          <div class="thumb"><img src="${card.imageData}" alt="${card.name}"></div>
           <div class="body">
             <div class="title-row">
               <div class="title">${card.name}</div>
               <div class="pill">${card.type}</div>
             </div>
-            <div class="meta">${card.setName} • #${card.cardNumber}</div>
-            <div class="meta">Rarity: ${card.rarity}</div>
+            <div class="meta">${card.setName || ""} ${card.cardNumber ? "• #"+card.cardNumber : ""}</div>
+            <div class="meta">Rarity: ${card.rarity || "—"}</div>
 
             ${ (card.type==="Driver"||card.type==="Named Driver"||card.type==="Track") && extra.vehicleTypes
               ? `<div class="extra-line">Types: ${extra.vehicleTypes.join(", ")}</div>` : "" }
 
-            ${ (card.type==="Vehicle"||card.type==="Named Vehicle")
-              ? `<div class="extra-line">Vehicle: ${extra.vehicleType} • HP/CON: ${extra.hp} / ${extra.con}</div>` : "" }
+            ${ (card.type==="Vehicle"||card.type==="Named Vehicle") && (extra.vehicleType || extra.hp != null || extra.con != null)
+              ? `<div class="extra-line">Vehicle: ${extra.vehicleType || "-"} • HP/CON: ${extra.hp ?? "-"} / ${extra.con ?? "-"}</div>` : "" }
 
-            ${ card.type==="Mod" 
-              ? `<div class="extra-line">Base Part: ${extra.modBasePart} • Lv: ${
-                  [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4]
-                  .filter(Boolean).join(" | ")
+            ${ card.type==="Mod"
+              ? `<div class="extra-line">Base Part: ${extra.modBasePart || ""}${
+                  [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4].filter(Boolean).length
+                  ? " • Lv: " + [extra.modLevel1,extra.modLevel2,extra.modLevel3,extra.modLevel4].filter(Boolean).join(" | ")
+                  : ""
                 }</div>` : "" }
 
             <div class="tag-line">
               ${(card.tags||[]).map(t=>`<span class="tag-pill">${t}</span>`).join("")}
             </div>
 
-            <div class="notes">${card.notes||""}</div>
+            <div class="notes">${card.notes || ""}</div>
           </div>
         `;
 
@@ -525,12 +874,269 @@
       render();
     }
 
+    function updateDeckUI() {
+      const deck = getActiveDeck();
+      if (!deck) return;
+
+      deckNameInput.value = deck.name || "";
+
+      const entries = Object.entries(deck.cards);
+      let total = 0;
+      let typeCounts = {};
+      let vehicleCards = 0;
+
+      entries.forEach(([cardId, count]) => {
+        const c = cardMap[cardId];
+        if (!c) return;
+        const n = Number(count) || 0;
+        total += n;
+        typeCounts[c.type] = (typeCounts[c.type] || 0) + n;
+        if (c.type === "Vehicle" || c.type === "Named Vehicle") {
+          vehicleCards += n;
+        }
+      });
+
+      const legal = (total === 50 && vehicleCards >= 2);
+      deckStatus.textContent = legal
+        ? `Deck Status: ✅ Legal (50 cards, ${vehicleCards} Vehicle cards)`
+        : `Deck Status: ❌ Not Legal — ${total}/50 cards, ${vehicleCards}/2 Vehicles`;
+
+      deckStatus.className = "deck-status " + (legal ? "ok" : "bad");
+
+      const orderedTypes = [
+        "Vehicle",
+        "Named Vehicle",
+        "Driver",
+        "Named Driver",
+        "Crew",
+        "Mod",
+        "Track",
+        "Condition",
+      ];
+      let statsParts = [];
+      orderedTypes.forEach(t => {
+        if (typeCounts[t]) statsParts.push(`${t}: ${typeCounts[t]}`);
+      });
+      Object.keys(typeCounts).forEach(t => {
+        if (!orderedTypes.includes(t)) {
+          statsParts.push(`${t}: ${typeCounts[t]}`);
+        }
+      });
+      deckStats.textContent = `Total: ${total} · ` + (statsParts.join(" · ") || "No cards");
+
+      deckList.innerHTML = "";
+      if (!entries.length) {
+        deckList.textContent = "No cards in this deck.";
+        return;
+      }
+
+      entries
+        .sort(([aId],[bId]) => {
+          const a = cardMap[aId], b = cardMap[bId];
+          if (!a || !b) return 0;
+          return (a.type || "").localeCompare(b.type || "") ||
+                 (a.name || "").localeCompare(b.name || "");
+        })
+        .forEach(([cardId, count]) => {
+          const c = cardMap[cardId];
+          if (!c) return;
+          const row = document.createElement("div");
+          row.className = "deck-row";
+
+          const info = document.createElement("div");
+          info.className = "deck-row-info";
+
+          const main = document.createElement("div");
+          main.className = "deck-row-main";
+          main.textContent = `${count}x ${c.name}`;
+
+          const sub = document.createElement("div");
+          sub.className = "deck-row-sub";
+          const setLabel = c.setName || "";
+          const num = c.cardNumber ? ` #${c.cardNumber}` : "";
+          sub.textContent = `[${c.type}] ${setLabel}${num}`;
+
+          info.appendChild(main);
+          info.appendChild(sub);
+
+          const qty = document.createElement("div");
+          qty.className = "deck-row-qty";
+
+          const minusBtn = document.createElement("button");
+          minusBtn.className = "deck-btn";
+          minusBtn.textContent = "−";
+          minusBtn.onclick = () => addToDeck(cardId, -1);
+
+          const number = document.createElement("span");
+          number.className = "deck-qty-number";
+          number.textContent = String(count);
+
+          const plusBtn = document.createElement("button");
+          plusBtn.className = "deck-btn";
+          plusBtn.textContent = "+";
+          plusBtn.onclick = () => addToDeck(cardId, +1);
+
+          qty.appendChild(minusBtn);
+          qty.appendChild(number);
+          qty.appendChild(plusBtn);
+
+          row.appendChild(info);
+          row.appendChild(qty);
+
+          deckList.appendChild(row);
+        });
+    }
+
+    function getDeckFileSafeName(deck) {
+      const base = (deck.name || `Deck ${activeDeckIndex+1}`).trim() || `Deck_${activeDeckIndex+1}`;
+      return base.replace(/[^a-z0-9_\-]+/gi, "_");
+    }
+
+    function deckToLines(deck) {
+      const lines = [];
+      lines.push(deck.name || `Deck ${activeDeckIndex+1}`);
+      lines.push("");
+      const entries = Object.entries(deck.cards);
+      entries.forEach(([cardId, count]) => {
+        const c = cardMap[cardId];
+        if (!c) return;
+        const setLabel = c.setName || "";
+        const num = c.cardNumber ? ` #${c.cardNumber}` : "";
+        lines.push(`${count}x ${c.name} [${c.type}] (${setLabel}${num})`);
+      });
+      return lines;
+    }
+
+    function exportTxt() {
+      const deck = getActiveDeck();
+      const entries = Object.entries(deck.cards);
+      if (!entries.length) {
+        alert("Deck is empty.");
+        return;
+      }
+      const lines = deckToLines(deck);
+      const blob = new Blob([lines.join("\n")], {type: "text/plain"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getDeckFileSafeName(deck) + ".txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportJson() {
+      const deck = getActiveDeck();
+      const entries = Object.entries(deck.cards);
+      if (!entries.length) {
+        alert("Deck is empty.");
+        return;
+      }
+      const payload = {
+        name: deck.name || `Deck ${activeDeckIndex+1}`,
+        cards: Object.entries(deck.cards).map(([cardId, count]) => ({ cardId, count })),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getDeckFileSafeName(deck) + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCsv() {
+      const deck = getActiveDeck();
+      const entries = Object.entries(deck.cards);
+      if (!entries.length) {
+        alert("Deck is empty.");
+        return;
+      }
+      const rows = [["Count","Name","Type","Set","CardNumber"]];
+      entries.forEach(([cardId, count]) => {
+        const c = cardMap[cardId];
+        if (!c) return;
+        rows.push([
+          count,
+          c.name || "",
+          c.type || "",
+          c.setName || "",
+          c.cardNumber || ""
+        ]);
+      });
+      const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+      const blob = new Blob([csv], {type: "text/csv"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getDeckFileSafeName(deck) + ".csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function printDeck() {
+      const deck = getActiveDeck();
+      const entries = Object.entries(deck.cards);
+      if (!entries.length) {
+        alert("Deck is empty.");
+        return;
+      }
+      const win = window.open("", "_blank");
+      const lines = deckToLines(deck);
+      win.document.write(`
+        <html>
+          <head>
+            <title>${deck.name || "Deck"}</title>
+            <style>
+              body { font-family: system-ui, sans-serif; padding: 20px; }
+              h1 { font-size: 20px; margin-bottom: 8px; }
+              pre { font-size: 13px; }
+            </style>
+          </head>
+          <body>
+            <h1>${deck.name || "Deck"}</h1>
+            <pre>${lines.join("\n")}</pre>
+          </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      win.print(); // user can "Save as PDF" from here
+    }
+
     clearFiltersBtn.onclick = clearFilters;
+    exportTxtBtn.onclick = exportTxt;
+    exportJsonBtn.onclick = exportJson;
+    exportCsvBtn.onclick = exportCsv;
+    printDeckBtn.onclick = printDeck;
+
+    clearDeckBtn.onclick = () => {
+      const deck = getActiveDeck();
+      if (!deck) return;
+      if (!Object.keys(deck.cards).length || confirm("Clear all cards from this deck?")) {
+        deck.cards = {};
+        saveDecks();
+        updateDeckUI();
+      }
+    };
+
+    deckSelect.onchange = () => {
+      activeDeckIndex = Number(deckSelect.value) || 0;
+      updateDeckUI();
+    };
+
+    deckNameInput.oninput = () => {
+      const deck = getActiveDeck();
+      if (!deck) return;
+      deck.name = deckNameInput.value;
+      saveDecks();
+    };
 
     async function init() {
       await loadCards();
+      loadDecks();
       populateFilters();
       render();
+      updateDeckUI();
 
       searchInput.oninput = render;
       setFilter.onchange = render;
