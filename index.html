@@ -402,16 +402,6 @@
           body.appendChild(line);
         }
 
-        // TEMP DEBUG: show raw extra object so you can confirm data
-        if (Object.keys(extra).length) {
-          const debug = document.createElement("div");
-          debug.className = "meta";
-          debug.style.fontSize = "0.7rem";
-          debug.style.color = "#4ade80";
-          debug.textContent = "extra: " + JSON.stringify(extra);
-          body.appendChild(debug);
-        }
-
         // Tags
         if (card.tags && card.tags.length) {
           const tagLine = document.createElement("div");
