@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE – Card Gallery</title>
+  <title>DRIVE Card Gallery</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -10,85 +10,47 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
         sans-serif;
     }
-
     body {
       margin: 0;
       background: #020617;
       color: #e5e7eb;
     }
-
     .app {
       max-width: 1200px;
       margin: 0 auto;
       padding: 1.5rem;
     }
-
     header {
       display: flex;
       flex-wrap: wrap;
       align-items: baseline;
       gap: 0.75rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
     }
-
     header h1 {
       margin: 0;
       font-size: 1.8rem;
     }
-
     header span {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: #9ca3af;
     }
-
-    .toolbar {
-      background: #020617;
-      border-radius: 0.75rem;
-      padding: 0.75rem 1rem;
-      border: 1px solid #1f2937;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-      margin-bottom: 1rem;
-    }
-
-    .toolbar-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .toolbar-top h2 {
-      margin: 0;
-      font-size: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #9ca3af;
-    }
-
-    .badge-count {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .filters {
+    .controls {
       display: grid;
       grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
       gap: 0.5rem;
+      margin-bottom: 1rem;
     }
-
     @media (max-width: 900px) {
-      .filters {
+      .controls {
         grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
       }
     }
-
-    @media (max-width: 640px) {
-      .filters {
+    @media (max-width: 700px) {
+      .controls {
         grid-template-columns: minmax(0, 1fr);
       }
     }
-
     input[type="text"],
     select {
       width: 100%;
@@ -99,421 +61,193 @@
       color: #e5e7eb;
       font-size: 0.9rem;
     }
-
-    input::placeholder {
-      color: #6b7280;
+    .badge-count {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-left: 0.25rem;
     }
-
-    .gallery {
-      background: #020617;
-      border-radius: 0.75rem;
-      padding: 1rem;
-      border: 1px solid #1f2937;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
-    }
-
-    .card-grid {
+    .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 0.9rem;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 1rem;
     }
-
-    .card-item {
+    .card {
       background: #020617;
       border-radius: 0.75rem;
-      overflow: hidden;
       border: 1px solid #1f2937;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
+      transition: transform 0.12s ease, box-shadow 0.12s ease,
+        border-color 0.12s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
       cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.08s ease,
-        border-color 0.08s ease;
-      min-height: 240px;
     }
-
-    .card-item:hover {
-      transform: translateY(-2px);
+    .card:hover {
+      transform: translateY(-3px);
       border-color: #22c55e;
-      box-shadow: 0 16px 35px rgba(34, 197, 94, 0.35);
+      box-shadow: 0 15px 35px rgba(34, 197, 94, 0.35);
     }
-
-    .card-thumb {
+    .thumb {
       aspect-ratio: 3 / 4;
       background: #020617;
       overflow: hidden;
     }
-
-    .card-thumb img {
+    .thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
-
-    .card-body {
-      padding: 0.5rem 0.6rem 0.6rem;
+    .body {
+      padding: 0.65rem 0.75rem 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
+      gap: 0.25rem;
     }
-
-    .card-title-row {
+    .title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 0.35rem;
+      gap: 0.4rem;
     }
-
-    .card-title {
+    .title {
       font-size: 0.95rem;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    .card-pill {
-      font-size: 0.7rem;
+    .pill {
+      font-size: 0.72rem;
       padding: 0.15rem 0.5rem;
       border-radius: 999px;
       border: 1px solid #4b5563;
       color: #9ca3af;
       flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-
-    .card-meta {
-      font-size: 0.75rem;
+    .meta {
+      font-size: 0.78rem;
       color: #9ca3af;
     }
-
-    .rarity-pill {
-      display: inline-block;
-      font-size: 0.7rem;
-      padding: 0.1rem 0.45rem;
-      border-radius: 999px;
-      border: 1px solid #4b5563;
-      margin-left: 0.25rem;
-      color: #e5e7eb;
-    }
-
-    .card-notes {
-      font-size: 0.75rem;
+    .notes {
+      font-size: 0.8rem;
       color: #d1d5db;
-      margin-top: 0.15rem;
-      max-height: 2.1em;
+      margin-top: 0.2rem;
+      max-height: 2.6em;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    .empty-state {
-      font-size: 0.9rem;
-      color: #6b7280;
+    .extra-line {
+      font-size: 0.78rem;
+      color: #e5e7eb;
+    }
+    .tag-line {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .tag-pill {
+      display: inline-block;
+      padding: 0.05rem 0.4rem;
+      border-radius: 999px;
+      border: 1px solid #374151;
+      margin-right: 0.25rem;
+      margin-top: 0.15rem;
+    }
+    .empty {
       border-radius: 0.75rem;
       border: 1px dashed #4b5563;
-      padding: 1.25rem;
-      text-align: center;
-    }
-
-    .hint {
-      font-size: 0.8rem;
-      color: #6b7280;
-      margin-top: 0.4rem;
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
       padding: 1rem;
-    }
-
-    .modal-backdrop.show {
-      display: flex;
-    }
-
-    .modal {
-      background: #020617;
-      border-radius: 0.75rem;
-      border: 1px solid #4b5563;
-      max-width: 900px;
-      width: 100%;
-      max-height: 95vh;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
-      overflow: hidden;
-    }
-
-    @media (max-width: 800px) {
-      .modal {
-        grid-template-columns: minmax(0, 1fr);
-        max-height: 90vh;
-      }
-    }
-
-    .modal-image {
-      background: #020617;
-      padding: 0.75rem;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal-image img {
-      max-width: 100%;
-      max-height: 80vh;
-      object-fit: contain;
-      display: block;
-      border-radius: 0.5rem;
-    }
-
-    .modal-body {
-      padding: 0.9rem 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 1.1rem;
-    }
-
-    .modal-close {
-      border: none;
-      background: transparent;
-      color: #9ca3af;
-      font-size: 1.2rem;
-      cursor: pointer;
-      padding: 0.1rem 0.4rem;
-      border-radius: 999px;
-    }
-
-    .modal-close:hover {
-      background: #111827;
-      color: #e5e7eb;
-    }
-
-    .meta-row {
-      font-size: 0.85rem;
-      color: #9ca3af;
-    }
-
-    .meta-label {
-      font-weight: 600;
-      color: #d1d5db;
-    }
-
-    .notes-block {
-      font-size: 0.86rem;
-      color: #e5e7eb;
-      background: #020617;
-      border-radius: 0.5rem;
-      border: 1px solid #1f2937;
-      padding: 0.5rem 0.6rem;
-      white-space: pre-wrap;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>DRIVE – Card Gallery</h1>
-      <span>Browse the official DRIVE cards.</span>
+      <h1>DRIVE Card Gallery</h1>
+      <span>Official DRIVE TCG card viewer (powered by your exported drive-card.json).</span>
     </header>
 
-    <section class="toolbar">
-      <div class="toolbar-top">
-        <h2>Browse</h2>
-        <span class="badge-count" id="cardCount">Loading cards…</span>
-      </div>
-      <div class="filters">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search by name, text, set, card #, tags…"
-        />
-        <select id="setFilter">
-          <option value="">All Sets</option>
-        </select>
-        <select id="typeFilter">
-          <option value="">All Types</option>
-        </select>
-        <select id="rarityFilter">
-          <option value="">All Rarities</option>
-        </select>
-      </div>
-      <div class="hint">
-        Tip: Use search + filters together to quickly find specific cards (e.g.
-        a Named Driver from Set 1 with a certain rarity).
-      </div>
-    </section>
+    <div class="controls">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by name, text, set, tags, base part, HP/CON…"
+      />
+      <select id="setFilter">
+        <option value="">All Sets</option>
+      </select>
+      <select id="typeFilter">
+        <option value="">All Types</option>
+      </select>
+      <select id="rarityFilter">
+        <option value="">All Rarities</option>
+      </select>
+    </div>
 
-    <section class="gallery">
-      <div id="cardGrid"></div>
-    </section>
-  </div>
+    <div style="margin-bottom: 0.5rem; font-size: 0.82rem;">
+      Cards found: <span id="cardCount">0</span>
+    </div>
 
-  <!-- Modal for full card view -->
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal" role="dialog" aria-modal="true">
-      <div class="modal-image">
-        <img id="modalImage" alt="Card image" />
-      </div>
-      <div class="modal-body">
-        <div class="modal-header">
-          <h2 id="modalTitle"></h2>
-          <button class="modal-close" id="modalCloseBtn" aria-label="Close">
-            ✕
-          </button>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">Type:</span>
-          <span id="modalType"></span>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">Set:</span>
-          <span id="modalSet"></span>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">Card #:</span>
-          <span id="modalNumber"></span>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">Rarity:</span>
-          <span id="modalRarity"></span>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">Tags:</span>
-          <span id="modalTags"></span>
-        </div>
-
-        <div class="meta-row">
-          <span class="meta-label">ID:</span>
-          <span id="modalId"></span>
-        </div>
-
-        <div>
-          <div class="meta-label" style="margin-top: 0.4rem; margin-bottom: 0.2rem;">
-            Rules Text / Notes
-          </div>
-          <div class="notes-block" id="modalNotes"></div>
-        </div>
-      </div>
+    <div id="grid" class="grid"></div>
+    <div id="emptyState" class="empty" style="display:none;">
+      No cards match your filters. Try clearing search or filters.
     </div>
   </div>
 
   <script>
-    const DATA_URL = "drive-cards.json"; // exported file from your admin app
-
-    /** @typedef {Object} DriveCard
-     * @property {string} id
-     * @property {string} name
-     * @property {string} type
-     * @property {string} rarity
-     * @property {string} setName
-     * @property {string} cardNumber
-     * @property {string[]} tags
-     * @property {string} notes
-     * @property {string} imageData
-     * @property {number} createdAt
-     */
-
-    /** @type {DriveCard[]} */
-    let allCards = [];
-
-    // DOM refs
-    const cardGrid = document.getElementById("cardGrid");
-    const cardCount = document.getElementById("cardCount");
+    let cards = [];
 
     const searchInput = document.getElementById("searchInput");
     const setFilter = document.getElementById("setFilter");
     const typeFilter = document.getElementById("typeFilter");
     const rarityFilter = document.getElementById("rarityFilter");
+    const grid = document.getElementById("grid");
+    const cardCount = document.getElementById("cardCount");
+    const emptyState = document.getElementById("emptyState");
 
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    const modalImage = document.getElementById("modalImage");
-    const modalTitle = document.getElementById("modalTitle");
-    const modalType = document.getElementById("modalType");
-    const modalSet = document.getElementById("modalSet");
-    const modalNumber = document.getElementById("modalNumber");
-    const modalRarity = document.getElementById("modalRarity");
-    const modalTags = document.getElementById("modalTags");
-    const modalId = document.getElementById("modalId");
-    const modalNotes = document.getElementById("modalNotes");
-    const modalCloseBtn = document.getElementById("modalCloseBtn");
-
-    // --- Fetch data ---------------------------------------------
     async function loadCards() {
       try {
-        const res = await fetch(DATA_URL, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error("Failed to load card data");
-        }
-        const data = await res.json();
-        if (!Array.isArray(data)) {
-          throw new Error("Invalid data format");
-        }
-        allCards = data;
-        initFilters();
-        renderCards();
+        const res = await fetch("drive-card.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load drive-card.json");
+        const json = await res.json();
+        if (!Array.isArray(json)) throw new Error("JSON is not an array");
+        cards = json;
       } catch (err) {
         console.error(err);
-        cardGrid.innerHTML =
-          '<div class="empty-state">Could not load cards. Make sure <code>drive-cards.json</code> is in the same folder and this page is served from a web server.</div>';
-        cardCount.textContent = "0 cards";
+        cards = [];
       }
     }
 
-    // --- Filters -----------------------------------------------
-    function initFilters() {
-      // Set options
-      const sets = Array.from(
-        new Set(allCards.map((c) => c.setName).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b));
+    function populateFilters() {
+      const sets = Array.from(new Set(cards.map(c => c.setName).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+      const types = Array.from(new Set(cards.map(c => c.type).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+      const rarities = Array.from(new Set(cards.map(c => c.rarity).filter(Boolean))).sort((a,b) => a.localeCompare(b));
+
       setFilter.innerHTML = '<option value="">All Sets</option>';
-      sets.forEach((setName) => {
+      sets.forEach(s => {
         const opt = document.createElement("option");
-        opt.value = setName;
-        opt.textContent = setName;
+        opt.value = s;
+        opt.textContent = s;
         setFilter.appendChild(opt);
       });
 
-      // Type options
-      const types = Array.from(
-        new Set(allCards.map((c) => c.type).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b));
       typeFilter.innerHTML = '<option value="">All Types</option>';
-      types.forEach((t) => {
+      types.forEach(t => {
         const opt = document.createElement("option");
         opt.value = t;
         opt.textContent = t;
         typeFilter.appendChild(opt);
       });
 
-      // Rarity options
-      const rarities = Array.from(
-        new Set(allCards.map((c) => c.rarity).filter(Boolean))
-      ).sort((a, b) => a.localeCompare(b));
       rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-      rarities.forEach((r) => {
+      rarities.forEach(r => {
         const opt = document.createElement("option");
         opt.value = r;
         opt.textContent = r;
@@ -521,162 +255,191 @@
       });
     }
 
-    function getFilteredCards() {
-      const searchTerm = searchInput.value.trim().toLowerCase();
-      const setValue = setFilter.value;
-      const typeValue = typeFilter.value;
-      const rarityValue = rarityFilter.value;
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      const setVal = setFilter.value;
+      const typeVal = typeFilter.value;
+      const rarityVal = rarityFilter.value;
 
-      let cards = allCards.slice().sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      let filtered = cards.slice();
 
-      if (setValue) {
-        cards = cards.filter((c) => c.setName === setValue);
-      }
-      if (typeValue) {
-        cards = cards.filter((c) => c.type === typeValue);
-      }
-      if (rarityValue) {
-        cards = cards.filter((c) => c.rarity === rarityValue);
-      }
-      if (searchTerm) {
-        cards = cards.filter((c) => {
-          const text = (
-            (c.name || "") +
-            " " +
-            (c.type || "") +
-            " " +
-            (c.rarity || "") +
-            " " +
-            (c.setName || "") +
-            " " +
-            (c.cardNumber || "") +
-            " " +
-            (c.notes || "") +
-            " " +
-            ((c.tags || []).join(" "))
-          ).toLowerCase();
-          return text.includes(searchTerm);
+      if (setVal) filtered = filtered.filter(c => c.setName === setVal);
+      if (typeVal) filtered = filtered.filter(c => c.type === typeVal);
+      if (rarityVal) filtered = filtered.filter(c => c.rarity === rarityVal);
+
+      if (q) {
+        filtered = filtered.filter(c => {
+          const extra = c.extra || {};
+          const vehicleTypes = Array.isArray(extra.vehicleTypes) ? extra.vehicleTypes.join(" ") : "";
+          const vehicleType = extra.vehicleType || "";
+          const levels = [extra.modLevel1, extra.modLevel2, extra.modLevel3, extra.modLevel4]
+            .filter(Boolean)
+            .join(" ");
+          const hpCon = `${extra.hp ?? ""} ${extra.con ?? ""}`;
+
+          const all =
+            (c.name || "") + " " +
+            (c.type || "") + " " +
+            (c.rarity || "") + " " +
+            (c.setName || "") + " " +
+            (c.cardNumber || "") + " " +
+            (c.notes || "") + " " +
+            (c.tags || []).join(" ") + " " +
+            (extra.modBasePart || "") + " " +
+            vehicleTypes + " " +
+            vehicleType + " " +
+            levels + " " +
+            hpCon;
+
+          return all.toLowerCase().includes(q);
         });
       }
 
-      return cards;
-    }
+      cardCount.textContent = filtered.length.toString();
 
-    // --- Rendering ----------------------------------------------
-    function renderCards() {
-      const cards = getFilteredCards();
-      cardCount.textContent =
-        cards.length + (cards.length === 1 ? " card" : " cards");
-
-      if (!cards.length) {
-        cardGrid.innerHTML =
-          '<div class="empty-state">No cards match the current filters.</div>';
+      grid.innerHTML = "";
+      if (!filtered.length) {
+        emptyState.style.display = "block";
         return;
       }
+      emptyState.style.display = "none";
 
       const frag = document.createDocumentFragment();
 
-      cards.forEach((card) => {
-        const item = document.createElement("div");
-        item.className = "card-item";
-        item.addEventListener("click", () => openModal(card));
+      filtered.forEach(card => {
+        const extra = card.extra || {};
+
+        const cardEl = document.createElement("div");
+        cardEl.className = "card";
 
         const thumb = document.createElement("div");
-        thumb.className = "card-thumb";
+        thumb.className = "thumb";
         const img = document.createElement("img");
         img.src = card.imageData;
-        img.alt = card.name || "Card image";
+        img.alt = card.name || "Card";
         thumb.appendChild(img);
 
         const body = document.createElement("div");
-        body.className = "card-body";
+        body.className = "body";
 
         const titleRow = document.createElement("div");
-        titleRow.className = "card-title-row";
+        titleRow.className = "title-row";
 
         const title = document.createElement("div");
-        title.className = "card-title";
+        title.className = "title";
         title.textContent = card.name || "Untitled";
 
         const pill = document.createElement("div");
-        pill.className = "card-pill";
+        pill.className = "pill";
         pill.textContent = card.type || "Unknown";
 
         titleRow.appendChild(title);
         titleRow.appendChild(pill);
 
         const meta1 = document.createElement("div");
-        meta1.className = "card-meta";
-        const setLabel = card.setName || "No set";
-        const cardNo = card.cardNumber ? ` • #${card.cardNumber}` : "";
-        meta1.textContent = `${setLabel}${cardNo}`;
+        meta1.className = "meta";
+        const setLabel = card.setName || "No Set";
+        const num = card.cardNumber ? ` • #${card.cardNumber}` : "";
+        meta1.textContent = `${setLabel}${num}`;
 
         const meta2 = document.createElement("div");
-        meta2.className = "card-meta";
+        meta2.className = "meta";
         meta2.textContent = "Rarity: " + (card.rarity || "—");
-
-        const notes = document.createElement("div");
-        notes.className = "card-notes";
-        notes.textContent = card.notes || "";
 
         body.appendChild(titleRow);
         body.appendChild(meta1);
         body.appendChild(meta2);
-        if (card.notes) body.appendChild(notes);
 
-        item.appendChild(thumb);
-        item.appendChild(body);
-        frag.appendChild(item);
+        // Extra info lines
+        // Drivers / Named Drivers / Tracks → vehicleTypes
+        if (
+          (card.type === "Driver" ||
+            card.type === "Named Driver" ||
+            card.type === "Track") &&
+          Array.isArray(extra.vehicleTypes) &&
+          extra.vehicleTypes.length
+        ) {
+          const line = document.createElement("div");
+          line.className = "extra-line";
+          line.textContent = "Types: " + extra.vehicleTypes.join(", ");
+          body.appendChild(line);
+        }
+
+        // Vehicles / Named Vehicles → vehicleType + HP/CON
+        if (
+          (card.type === "Vehicle" || card.type === "Named Vehicle") &&
+          (extra.vehicleType || extra.hp != null || extra.con != null)
+        ) {
+          const line = document.createElement("div");
+          line.className = "extra-line";
+          const parts = [];
+          if (extra.vehicleType) parts.push("Vehicle: " + extra.vehicleType);
+          if (extra.hp != null || extra.con != null) {
+            parts.push(`HP/CON: ${extra.hp ?? "-"} / ${extra.con ?? "-"}`);
+          }
+          line.textContent = parts.join(" • ");
+          body.appendChild(line);
+        }
+
+        // Mods → base part + quick level summary
+        if (card.type === "Mod" && (extra.modBasePart || extra.modLevel1 || extra.modLevel2 || extra.modLevel3 || extra.modLevel4)) {
+          const line = document.createElement("div");
+          line.className = "extra-line";
+          let text = "";
+          if (extra.modBasePart) {
+            text += "Base Part: " + extra.modBasePart;
+          }
+          const levels = [extra.modLevel1, extra.modLevel2, extra.modLevel3, extra.modLevel4]
+            .filter(Boolean);
+          if (levels.length) {
+            if (text) text += " • ";
+            text += "Lv: " + levels.join(" | ");
+          }
+          line.textContent = text;
+          body.appendChild(line);
+        }
+
+        // Tags
+        if (card.tags && card.tags.length) {
+          const tagLine = document.createElement("div");
+          tagLine.className = "tag-line";
+          card.tags.forEach(t => {
+            const span = document.createElement("span");
+            span.className = "tag-pill";
+            span.textContent = t;
+            tagLine.appendChild(span);
+          });
+          body.appendChild(tagLine);
+        }
+
+        // Rules snippet
+        if (card.notes) {
+          const notes = document.createElement("div");
+          notes.className = "notes";
+          notes.textContent = card.notes;
+          body.appendChild(notes);
+        }
+
+        cardEl.appendChild(thumb);
+        cardEl.appendChild(body);
+        frag.appendChild(cardEl);
       });
 
-      cardGrid.innerHTML = "";
-      cardGrid.appendChild(frag);
+      grid.appendChild(frag);
     }
 
-    // --- Modal --------------------------------------------------
-    function openModal(card) {
-      modalImage.src = card.imageData;
-      modalImage.alt = card.name || "Card image";
+    async function init() {
+      await loadCards();
+      populateFilters();
+      render();
 
-      modalTitle.textContent = card.name || "Untitled";
-      modalType.textContent = card.type || "Unknown";
-      modalSet.textContent = card.setName || "—";
-      modalNumber.textContent = card.cardNumber || "—";
-      modalRarity.textContent = card.rarity || "—";
-      modalTags.textContent = (card.tags && card.tags.length)
-        ? card.tags.join(", ")
-        : "—";
-      modalId.textContent = card.id || "—";
-      modalNotes.textContent = card.notes || "No rules text / notes.";
-
-      modalBackdrop.classList.add("show");
+      searchInput.addEventListener("input", render);
+      setFilter.addEventListener("change", render);
+      typeFilter.addEventListener("change", render);
+      rarityFilter.addEventListener("change", render);
     }
 
-    function closeModal() {
-      modalBackdrop.classList.remove("show");
-    }
-
-    modalCloseBtn.addEventListener("click", closeModal);
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) {
-        closeModal();
-      }
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        closeModal();
-      }
-    });
-
-    // --- Events -------------------------------------------------
-    searchInput.addEventListener("input", renderCards);
-    setFilter.addEventListener("change", renderCards);
-    typeFilter.addEventListener("change", renderCards);
-    rarityFilter.addEventListener("change", renderCards);
-
-    // --- Init ---------------------------------------------------
-    loadCards();
+    init();
   </script>
 </body>
 </html>
