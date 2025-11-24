@@ -35,22 +35,32 @@
       font-size: 0.95rem;
       color: #9ca3af;
     }
-    .controls {
+
+    .controls,
+    .controls-secondary {
       display: grid;
       grid-template-columns: minmax(0, 1.7fr) repeat(3, minmax(0, 1fr));
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .controls-secondary {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     @media (max-width: 900px) {
       .controls {
         grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(0, 1fr));
       }
+      .controls-secondary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
     @media (max-width: 700px) {
-      .controls {
+      .controls,
+      .controls-secondary {
         grid-template-columns: minmax(0, 1fr);
       }
     }
+
     input[type="text"],
     select {
       width: 100%;
@@ -61,6 +71,24 @@
       color: #e5e7eb;
       font-size: 0.9rem;
     }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.45rem 0.8rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: #111827;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      transition: background 0.1s ease, transform 0.05s ease,
+        box-shadow 0.1s ease;
+    }
+    button:hover {
+      background: #020617;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -76,7 +104,6 @@
       transition: transform 0.12s ease, box-shadow 0.12s ease,
         border-color 0.12s ease;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-      cursor: default;
     }
     .card:hover {
       transform: translateY(-3px);
@@ -169,6 +196,7 @@
       <span>Official DRIVE TCG viewer (reads drive-card.json exported from your admin).</span>
     </header>
 
+    <!-- Main filters -->
     <div class="controls">
       <input
         type="text"
@@ -184,6 +212,24 @@
       <select id="rarityFilter">
         <option value="">All Rarities</option>
       </select>
+    </div>
+
+    <!-- Extra filters & sort -->
+    <div class="controls-secondary">
+      <select id="vehTypeFilter">
+        <option value="">All Vehicle Types</option>
+        <option value="Drag">Drag</option>
+        <option value="Drift">Drift</option>
+        <option value="Off-Road">Off-Road</option>
+        <option value="Rally">Rally</option>
+      </select>
+      <select id="sortFilter">
+        <option value="default">Sort: Default</option>
+        <option value="name">Sort: Name A–Z</option>
+        <option value="set">Sort: Set & Card #</option>
+        <option value="type">Sort: Type</option>
+      </select>
+      <button id="clearFiltersBtn" type="button">Clear Filters</button>
     </div>
 
     <div style="margin-bottom: 0.5rem; font-size: 0.82rem;">
@@ -203,6 +249,10 @@
     const setFilter = document.getElementById("setFilter");
     const typeFilter = document.getElementById("typeFilter");
     const rarityFilter = document.getElementById("rarityFilter");
+    const vehTypeFilter = document.getElementById("vehTypeFilter");
+    const sortFilter = document.getElementById("sortFilter");
+    const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
     const grid = document.getElementById("grid");
     const cardCount = document.getElementById("cardCount");
     const emptyState = document.getElementById("emptyState");
@@ -250,18 +300,35 @@
       });
     }
 
+    function matchesVehicleType(card, vt) {
+      if (!vt) return true;
+      const extra = card.extra || {};
+      if (Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.includes(vt)) {
+        return true;
+      }
+      if (extra.vehicleType === vt) {
+        return true;
+      }
+      return false;
+    }
+
     function render() {
       const q = searchInput.value.trim().toLowerCase();
       const setVal = setFilter.value;
       const typeVal = typeFilter.value;
       const rarityVal = rarityFilter.value;
+      const vehVal = vehTypeFilter.value;
+      const sortVal = sortFilter.value;
 
       let filtered = cards.slice();
 
+      // basic filters
       if (setVal) filtered = filtered.filter(c => c.setName === setVal);
       if (typeVal) filtered = filtered.filter(c => c.type === typeVal);
       if (rarityVal) filtered = filtered.filter(c => c.rarity === rarityVal);
+      if (vehVal) filtered = filtered.filter(c => matchesVehicleType(c, vehVal));
 
+      // search
       if (q) {
         filtered = filtered.filter(c => {
           const extra = c.extra || {};
@@ -289,6 +356,24 @@
           return all.toLowerCase().includes(q);
         });
       }
+
+      // sorting
+      if (sortVal === "name") {
+        filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      } else if (sortVal === "set") {
+        filtered.sort((a, b) => {
+          const sa = (a.setName || "").localeCompare(b.setName || "");
+          if (sa !== 0) return sa;
+          return (a.cardNumber || "").localeCompare(b.cardNumber || "");
+        });
+      } else if (sortVal === "type") {
+        filtered.sort((a, b) => {
+          const ta = (a.type || "").localeCompare(b.type || "");
+          if (ta !== 0) return ta;
+          return (a.name || "").localeCompare(b.name || "");
+        });
+      }
+      // "default" leaves JSON order as-is (usually newest export order)
 
       cardCount.textContent = filtered.length.toString();
 
@@ -345,9 +430,7 @@
         body.appendChild(meta1);
         body.appendChild(meta2);
 
-        // --- NEW: show extra info ---
-
-        // Driver / Named Driver / Track → vehicleTypes
+        // Drivers / Named Drivers / Tracks → vehicleTypes
         if (
           (card.type === "Driver" ||
             card.type === "Named Driver" ||
@@ -431,6 +514,16 @@
       grid.appendChild(frag);
     }
 
+    function clearFilters() {
+      searchInput.value = "";
+      setFilter.value = "";
+      typeFilter.value = "";
+      rarityFilter.value = "";
+      vehTypeFilter.value = "";
+      sortFilter.value = "default";
+      render();
+    }
+
     async function init() {
       await loadCards();
       populateFilters();
@@ -440,6 +533,9 @@
       setFilter.addEventListener("change", render);
       typeFilter.addEventListener("change", render);
       rarityFilter.addEventListener("change", render);
+      vehTypeFilter.addEventListener("change", render);
+      sortFilter.addEventListener("change", render);
+      clearFiltersBtn.addEventListener("click", clearFilters);
     }
 
     init();
