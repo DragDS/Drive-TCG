@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE TCG – Card Library & Deck Builder</title>
+  <title>DRIVE TCG – Card Library & Tools</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -279,52 +279,6 @@
       white-space: pre-wrap;
     }
 
-    /* Compare tray */
-    .compare-tray {
-      margin-top: 0.5rem;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.35rem 0.4rem;
-      background: rgba(15,23,42,0.8);
-      font-size: 0.78rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .compare-tray-label {
-      color: #9ca3af;
-      font-size: 0.76rem;
-    }
-    .compare-slot {
-      border-radius: 999px;
-      padding: 0.15rem 0.5rem;
-      border: 1px solid #374151;
-      background: #020617;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      max-width: 180px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .compare-slot-empty {
-      color: #4b5563;
-      font-style: italic;
-    }
-    .compare-remove {
-      border: none;
-      background: transparent;
-      color: #9ca3af;
-      padding: 0;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-    .compare-remove:hover {
-      color: #fca5a5;
-    }
-
     /* Deck panel */
     .deck-header {
       display: flex;
@@ -448,7 +402,7 @@
       white-space: pre-wrap;
     }
 
-    /* Modal overlay for full card and compare */
+    /* Modal overlay for full card only */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -492,6 +446,38 @@
       color: #fca5a5;
     }
 
+    /* Comparison viewer */
+    .compare-panel h2 {
+      margin-bottom: 0.4rem;
+    }
+    .compare-controls {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+    @media (max-width: 760px) {
+      .compare-controls {
+        grid-template-columns: minmax(0,1fr);
+      }
+    }
+    .compare-control-block {
+      border-radius: 0.6rem;
+      border: 1px solid #1f2937;
+      padding: 0.4rem;
+      background: rgba(15,23,42,0.7);
+      font-size: 0.78rem;
+    }
+    .compare-control-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .compare-slot-label {
+      font-weight: 600;
+    }
     .compare-grid {
       display: grid;
       grid-template-columns: minmax(0,1fr) minmax(0,1fr);
@@ -544,8 +530,10 @@
       <span class="mode-label">View:</span>
       <button id="modeCardsBtn" class="mode-btn active">Cards & Deck Builder</button>
       <button id="modePreconsBtn" class="mode-btn">Precon Viewer</button>
+      <button id="modeCompareBtn" class="mode-btn">Card Comparison</button>
     </div>
 
+    <!-- Cards & Deck Builder layout -->
     <div id="cardsLayout" class="layout">
       <!-- Card browser -->
       <section class="panel">
@@ -575,7 +563,7 @@
         <div id="cardGrid" class="card-grid"></div>
       </section>
 
-      <!-- Detail + compare -->
+      <!-- Card details -->
       <section class="panel">
         <div class="detail-header">
           <h2>Card Details</h2>
@@ -590,17 +578,6 @@
           <div class="detail-meta">
             <!-- Filled dynamically -->
           </div>
-        </div>
-
-        <div class="compare-tray">
-          <span class="compare-tray-label">Compare:</span>
-          <div id="compareSlotA" class="compare-slot">
-            <span class="compare-slot-empty">Slot A empty</span>
-          </div>
-          <div id="compareSlotB" class="compare-slot">
-            <span class="compare-slot-empty">Slot B empty</span>
-          </div>
-          <button id="compareNowBtn" class="secondary" type="button">Compare Now</button>
         </div>
       </section>
 
@@ -643,6 +620,33 @@
       <div id="preconStats" class="small-note"></div>
       <div id="preconList" class="deck-list" style="margin-top:0.35rem;"></div>
     </div>
+
+    <!-- Card Comparison Layout -->
+    <div id="compareLayout" class="panel compare-panel" style="display:none; margin-top:0.75rem;">
+      <h2>Card Comparison</h2>
+      <p class="small-note">
+        Choose any two cards to compare side-by-side. You can also mark cards from the Card Library view using the “Add to Compare” button.
+      </p>
+      <div class="compare-controls">
+        <div class="compare-control-block">
+          <div class="compare-control-header">
+            <span class="compare-slot-label">Slot A</span>
+            <button id="clearCompareABtn" class="secondary" type="button">Clear A</button>
+          </div>
+          <select id="compareSelectA"></select>
+        </div>
+        <div class="compare-control-block">
+          <div class="compare-control-header">
+            <span class="compare-slot-label">Slot B</span>
+            <button id="clearCompareBBtn" class="secondary" type="button">Clear B</button>
+          </div>
+          <select id="compareSelectB"></select>
+        </div>
+      </div>
+      <div id="compareViewer" class="compare-grid">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
   </div>
 
   <!-- Full card modal -->
@@ -658,19 +662,6 @@
       <div style="margin-top:0.4rem; display:flex; gap:0.4rem; flex-wrap:wrap;">
         <button id="fullAddToDeckBtn" type="button">+ Add to Active Deck</button>
         <button id="fullAddToCompareBtn" class="secondary" type="button">+ Add to Compare</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Compare modal -->
-  <div id="compareOverlay" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title">Compare Cards</div>
-        <button class="modal-close" data-close-modal="compareOverlay">&times;</button>
-      </div>
-      <div id="compareBody" class="compare-grid">
-        <!-- Filled dynamically -->
       </div>
     </div>
   </div>
@@ -699,8 +690,10 @@
     // ----------------- DOM references -----------------
     const modeCardsBtn = document.getElementById("modeCardsBtn");
     const modePreconsBtn = document.getElementById("modePreconsBtn");
+    const modeCompareBtn = document.getElementById("modeCompareBtn");
     const cardsLayout = document.getElementById("cardsLayout");
     const preconsLayout = document.getElementById("preconsLayout");
+    const compareLayout = document.getElementById("compareLayout");
 
     const searchInput = document.getElementById("searchInput");
     const typeFilter = document.getElementById("typeFilter");
@@ -712,10 +705,6 @@
 
     const detailContainer = document.getElementById("detailContainer");
     const openFullCardBtn = document.getElementById("openFullCardBtn");
-
-    const compareSlotA = document.getElementById("compareSlotA");
-    const compareSlotB = document.getElementById("compareSlotB");
-    const compareNowBtn = document.getElementById("compareNowBtn");
 
     const deckTabs = document.querySelectorAll(".deck-tab");
     const deckNameInput = document.getElementById("deckNameInput");
@@ -732,14 +721,17 @@
     const fullAddToDeckBtn = document.getElementById("fullAddToDeckBtn");
     const fullAddToCompareBtn = document.getElementById("fullAddToCompareBtn");
 
-    const compareOverlay = document.getElementById("compareOverlay");
-    const compareBody = document.getElementById("compareBody");
-
     const preconSelect = document.getElementById("preconSelect");
     const refreshPreconsBtn = document.getElementById("refreshPreconsBtn");
     const preconDesc = document.getElementById("preconDesc");
     const preconStats = document.getElementById("preconStats");
     const preconList = document.getElementById("preconList");
+
+    const compareSelectA = document.getElementById("compareSelectA");
+    const compareSelectB = document.getElementById("compareSelectB");
+    const clearCompareABtn = document.getElementById("clearCompareABtn");
+    const clearCompareBBtn = document.getElementById("clearCompareBBtn");
+    const compareViewer = document.getElementById("compareViewer");
 
     // ----------------- Utility helpers -----------------
     function getCardById(id) {
@@ -942,6 +934,7 @@
       compareBtn.textContent = "+ Add to Compare";
       compareBtn.addEventListener("click", () => {
         addCardToCompare(card.id);
+        alert("Card added to comparison slots. Open Card Comparison view to see side-by-side.");
       });
 
       actions.appendChild(addBtn);
@@ -965,7 +958,6 @@
       fullCardTitle.textContent = card.name || "Card";
       fullCardBody.innerHTML = "";
 
-      // reuse same layout as detail
       const bodyDiv = document.createElement("div");
       bodyDiv.className = "detail-body";
 
@@ -1005,7 +997,10 @@
       fullCardBody.appendChild(bodyDiv);
 
       fullAddToDeckBtn.onclick = () => addCardToActiveDeck(card.id);
-      fullAddToCompareBtn.onclick = () => addCardToCompare(card.id);
+      fullAddToCompareBtn.onclick = () => {
+        addCardToCompare(card.id);
+        alert("Card added to comparison slots. Open Card Comparison view to see side-by-side.");
+      };
 
       fullCardOverlay.style.display = "flex";
     }
@@ -1022,57 +1017,16 @@
       });
     });
 
-    [fullCardOverlay, compareOverlay].forEach(overlay => {
-      overlay.addEventListener("click", e => {
-        if (e.target === overlay) {
-          overlay.style.display = "none";
-        }
-      });
+    fullCardOverlay.addEventListener("click", e => {
+      if (e.target === fullCardOverlay) {
+        fullCardOverlay.style.display = "none";
+      }
     });
 
     openFullCardBtn.addEventListener("click", openFullCardModal);
 
     // ----------------- Compare logic -----------------
-    function renderCompareTray() {
-      const slots = [compareSlotA, compareSlotB];
-
-      slots.forEach((slotEl, idx) => {
-        const cardId = compareSlots[idx];
-        slotEl.innerHTML = "";
-        if (!cardId) {
-          const span = document.createElement("span");
-          span.className = "compare-slot-empty";
-          span.textContent = idx === 0 ? "Slot A empty" : "Slot B empty";
-          slotEl.appendChild(span);
-          return;
-        }
-        const card = getCardById(cardId);
-        if (!card) {
-          const span = document.createElement("span");
-          span.className = "compare-slot-empty";
-          span.textContent = "Missing card";
-          slotEl.appendChild(span);
-          return;
-        }
-        const nameSpan = document.createElement("span");
-        nameSpan.textContent = card.name || "(No Name)";
-
-        const removeBtn = document.createElement("button");
-        removeBtn.className = "compare-remove";
-        removeBtn.type = "button";
-        removeBtn.innerHTML = "&times;";
-        removeBtn.addEventListener("click", () => {
-          compareSlots[idx] = null;
-          renderCompareTray();
-        });
-
-        slotEl.appendChild(nameSpan);
-        slotEl.appendChild(removeBtn);
-      });
-    }
-
     function addCardToCompare(cardId) {
-      // if already in compare, remove it
       if (compareSlots[0] === cardId) {
         compareSlots[0] = null;
       } else if (compareSlots[1] === cardId) {
@@ -1082,30 +1036,70 @@
       } else if (!compareSlots[1]) {
         compareSlots[1] = cardId;
       } else {
-        // both filled, replace slot B
         compareSlots[1] = cardId;
       }
-      renderCompareTray();
+      syncCompareSelectors();
+      renderCompareViewer();
     }
 
-    function openCompareModal() {
-      const [idA, idB] = compareSlots;
-      if (!idA || !idB) {
-        alert("Select two cards to compare (fill both Slot A and Slot B).");
-        return;
+    function populateCompareSelectOptions() {
+      function fillSelect(select) {
+        select.innerHTML = "";
+        const optNone = document.createElement("option");
+        optNone.value = "";
+        optNone.textContent = "None";
+        select.appendChild(optNone);
+
+        cards
+          .slice()
+          .sort((a,b) => {
+            return (a.type || "").localeCompare(b.type || "") ||
+                   (a.name || "").localeCompare(b.name || "");
+          })
+          .forEach(card => {
+            const opt = document.createElement("option");
+            opt.value = card.id;
+            opt.textContent = `${card.name || "(No Name)"} [${card.type || ""}]`;
+            select.appendChild(opt);
+          });
       }
-      const cardA = getCardById(idA);
-      const cardB = getCardById(idB);
-      if (!cardA || !cardB) {
-        alert("One of the comparison cards is missing.");
+
+      fillSelect(compareSelectA);
+      fillSelect(compareSelectB);
+      syncCompareSelectors();
+    }
+
+    function syncCompareSelectors() {
+      if (!compareSelectA || !compareSelectB) return;
+      compareSelectA.value = compareSlots[0] || "";
+      compareSelectB.value = compareSlots[1] || "";
+    }
+
+    function renderCompareViewer() {
+      compareViewer.innerHTML = "";
+      const [idA, idB] = compareSlots;
+
+      const cardA = idA ? getCardById(idA) : null;
+      const cardB = idB ? getCardById(idB) : null;
+
+      if (!cardA && !cardB) {
+        compareViewer.innerHTML =
+          "<div class='small-note'>Select cards for Slot A and Slot B to compare them here.</div>";
         return;
       }
 
-      compareBody.innerHTML = "";
       const cardsToShow = [cardA, cardB];
-      cardsToShow.forEach(card => {
+
+      cardsToShow.forEach((card, idx) => {
         const div = document.createElement("div");
         div.className = "compare-card";
+
+        if (!card) {
+          const label = idx === 0 ? "Slot A" : "Slot B";
+          div.innerHTML = `<div class="small-note">${label} is empty. Choose a card from the dropdown.</div>`;
+          compareViewer.appendChild(div);
+          return;
+        }
 
         const h3 = document.createElement("h3");
         h3.textContent = card.name || "(No Name)";
@@ -1131,13 +1125,29 @@
         div.appendChild(h3);
         div.appendChild(imgWrap);
         div.appendChild(meta);
-        compareBody.appendChild(div);
+        compareViewer.appendChild(div);
       });
-
-      compareOverlay.style.display = "flex";
     }
 
-    compareNowBtn.addEventListener("click", openCompareModal);
+    compareSelectA.addEventListener("change", () => {
+      compareSlots[0] = compareSelectA.value || null;
+      renderCompareViewer();
+    });
+    compareSelectB.addEventListener("change", () => {
+      compareSlots[1] = compareSelectB.value || null;
+      renderCompareViewer();
+    });
+
+    clearCompareABtn.addEventListener("click", () => {
+      compareSlots[0] = null;
+      syncCompareSelectors();
+      renderCompareViewer();
+    });
+    clearCompareBBtn.addEventListener("click", () => {
+      compareSlots[1] = null;
+      syncCompareSelectors();
+      renderCompareViewer();
+    });
 
     // ----------------- Deck builder logic -----------------
     function loadDecksFromStorage() {
@@ -1255,7 +1265,6 @@
         issues.push(`Deck must contain at least 2 Vehicles / Named Vehicles (current: ${vehicleCount}).`);
       }
 
-      // copy limits
       Object.entries(deck.cards).forEach(([cardId, qty]) => {
         const card = getCardById(cardId);
         if (!card) return;
@@ -1534,7 +1543,7 @@
             if (card) {
               selectedCardId = card.id;
               renderCardDetail(card);
-              // Switch back to cards view but leave precon view visible if desired
+              setMode("cards");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }
           });
@@ -1577,20 +1586,33 @@
     // ----------------- Mode toggle -----------------
     function setMode(mode) {
       if (mode === "cards") {
-        cardsLayout.style.display = "";
+        cardsLayout.style.display = "grid";
         preconsLayout.style.display = "none";
+        compareLayout.style.display = "none";
         modeCardsBtn.classList.add("active");
         modePreconsBtn.classList.remove("active");
-      } else {
-        cardsLayout.style.display = "grid";
-        preconsLayout.style.display = "";
+        modeCompareBtn.classList.remove("active");
+      } else if (mode === "precons") {
+        cardsLayout.style.display = "none";
+        preconsLayout.style.display = "block";
+        compareLayout.style.display = "none";
         modeCardsBtn.classList.remove("active");
         modePreconsBtn.classList.add("active");
+        modeCompareBtn.classList.remove("active");
+      } else if (mode === "compare") {
+        cardsLayout.style.display = "none";
+        preconsLayout.style.display = "none";
+        compareLayout.style.display = "block";
+        modeCardsBtn.classList.remove("active");
+        modePreconsBtn.classList.remove("active");
+        modeCompareBtn.classList.add("active");
+        renderCompareViewer();
       }
     }
 
     modeCardsBtn.addEventListener("click", () => setMode("cards"));
     modePreconsBtn.addEventListener("click", () => setMode("precons"));
+    modeCompareBtn.addEventListener("click", () => setMode("compare"));
 
     // ----------------- Init -----------------
     async function loadCards() {
@@ -1625,10 +1647,8 @@
 
     function init() {
       attachFilterListeners();
-      compareNowBtn.disabled = false;
       loadDecksFromStorage();
       setActiveDeckIndex(0);
-      renderCompareTray();
     }
 
     (async function main() {
@@ -1637,6 +1657,7 @@
       populateFilterOptions();
       renderCardGrid();
       renderDeck();
+      populateCompareSelectOptions();
       await loadPrecons();
     })();
   </script>
