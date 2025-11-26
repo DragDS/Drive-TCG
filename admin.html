@@ -729,12 +729,17 @@
   </div>
 
   <!-- XLSX library for reading your DRIVE workbook in the browser -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script>
     let cards = [];
     let selectedIndex = -1;
     let currentImageData = "";
+
+    // quick sanity check
+    if (typeof XLSX === "undefined") {
+      console.error("XLSX library failed to load. Check the script src URL.");
+    }
 
     // Precon decks
     let precons = [];
@@ -1485,7 +1490,7 @@
         rows.forEach(row => {
           const card = makeBaseCard(
             row["SET"],
-            "Crew", // we'll swap name/set below
+            "Crew", // overwritten below
             row["SET"],
             row["RARITY"],
             row["Card Number"]
@@ -1583,18 +1588,22 @@
           const vtList = parseVehicleTypesFromString(row["Vehicle Type"]);
           if (vtList.length) {
             card.extra.vehicleTypes = vtList;
-            card.extra.vehicleType = vtList[0]; // primary
+            card.extra.vehicleType = vtList[0];
           }
 
           pushIfValid(card);
         });
       }
-      // MISC or unknown sheets: ignored
 
       return result;
     }
 
     xlsxFileInput.addEventListener("change", () => {
+      if (typeof XLSX === "undefined") {
+        xlsxStatus.textContent = "XLSX library not loaded. Check the script tag URL at the bottom of admin.html.";
+        return;
+      }
+
       const file = xlsxFileInput.files[0];
       if (!file) return;
       xlsxStatus.textContent = "Loading workbook...";
