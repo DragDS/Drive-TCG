@@ -1484,12 +1484,13 @@
       if (normalizedSheet === "crew cards") {
         rows.forEach(row => {
           const card = makeBaseCard(
-            row["Crew Name"],
-            "Crew",
+            row["SET"],
+            "Crew", // we'll swap name/set below
             row["SET"],
             row["RARITY"],
             row["Card Number"]
           );
+          card.name = (row["Crew Name"] || "").toString();
           card.notes = (row["Crew Trait"] || "").toString();
           pushIfValid(card);
         });
@@ -1563,7 +1564,7 @@
       else if (normalizedSheet === "vehicle cards" || normalizedSheet === "named vehicle") {
         const cardType = normalizedSheet === "vehicle cards" ? "Vehicle" : "Named Vehicle";
         const nameKey = normalizedSheet === "vehicle cards" ? "VEHICLE name" : "NAMED VEHICLE NAME";
-        const traitKey = normalizedSheet === "vehicle cards" ? "VEHICLE TRAIT" : "VEHICLE TRAIT";
+        const traitKey = normalizedSheet === "vehicle cards" ? "TRAIT" : "VEHICLE TRAIT";
 
         rows.forEach(row => {
           const card = makeBaseCard(
@@ -1603,9 +1604,10 @@
       const reader = new FileReader();
       reader.onload = e => {
         try {
-          const data = new Uint8Array(e.target.result);
+          const data = e.target.result; // ArrayBuffer
           const wb = XLSX.read(data, { type: "array" });
           xlsxWorkbook = wb;
+
           const knownSheets = [
             "Crew Cards",
             "Mod Cards",
@@ -1616,6 +1618,7 @@
             "Vehicle Cards",
             "NAMED VEHICLE"
           ];
+
           wb.SheetNames.forEach(name => {
             if (!knownSheets.includes(name)) return;
             const opt = document.createElement("option");
@@ -1623,12 +1626,21 @@
             opt.textContent = name;
             xlsxSheetSelect.appendChild(opt);
           });
-          xlsxStatus.textContent = "Workbook loaded. Select a sheet and click 'Load Sheet from XLSX'.";
+
+          if (xlsxSheetSelect.options.length <= 1) {
+            xlsxStatus.textContent =
+              "Workbook loaded, but no expected DRIVE sheets were found (Crew Cards, Mod Cards, etc.).";
+          } else {
+            xlsxStatus.textContent =
+              "Workbook loaded. Select a sheet and click 'Load Sheet from XLSX'.";
+          }
         } catch (err) {
-          console.error(err);
-          xlsxStatus.textContent = "Error reading workbook. Make sure it's a valid .xlsx file.";
+          console.error("XLSX read error:", err);
+          xlsxStatus.textContent =
+            "Error reading workbook: " + (err && err.message ? err.message : "unknown error");
         }
       };
+
       reader.readAsArrayBuffer(file);
     });
 
