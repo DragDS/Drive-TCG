@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE Card Library Admin</title>
+  <title>DRIVE Card Library – Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -36,7 +36,10 @@
       font-size: 0.8rem;
       color: #9ca3af;
     }
-    header button {
+    header .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
       margin-left: auto;
     }
 
@@ -194,14 +197,6 @@
       outline: 1px solid #22c55e;
       background: rgba(34, 197, 94, 0.2);
     }
-    .pill {
-      display: inline-block;
-      border-radius: 999px;
-      border: 1px solid #4b5563;
-      padding: 0.05rem 0.4rem;
-      font-size: 0.7rem;
-      color: #9ca3af;
-    }
 
     .tag-input {
       font-size: 0.8rem;
@@ -246,6 +241,67 @@
       display: block;
       margin: 0 auto;
     }
+
+    /* Precon deck list styles (reuse deck-style UI) */
+    .deck-list {
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      padding: 0.4rem;
+      font-size: 0.78rem;
+      max-height: 220px;
+      overflow-y: auto;
+      background: #020617;
+    }
+    .deck-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      padding: 0.15rem 0.2rem;
+      border-radius: 0.4rem;
+    }
+    .deck-row:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .deck-row:nth-child(even) {
+      background: rgba(15, 23, 42, 0.3);
+    }
+    .deck-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .deck-row-main {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .deck-row-sub {
+      font-size: 0.7rem;
+      color: #9ca3af;
+    }
+    .deck-row-qty {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+    .deck-qty-number {
+      min-width: 1.2rem;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+    .deck-btn {
+      border-radius: 999px;
+      border: 1px solid #374151;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 0.05rem 0.4rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .deck-btn:hover {
+      background: #020617;
+    }
   </style>
 </head>
 <body>
@@ -253,9 +309,12 @@
     <header>
       <div>
         <h1>DRIVE Card Library – Admin</h1>
-        <small>Manage cards, edit fields, and export drive-card.json for the public site.</small>
+        <small>Manage cards, edit fields, and export drive-card.json for the public site. Precon decks are managed locally and exported separately.</small>
       </div>
-      <button id="exportJsonBtn">Export JSON (drive-card.json)</button>
+      <div class="header-actions">
+        <button id="exportJsonBtn">Export JSON (drive-card.json)</button>
+        <button id="exportPreconsBtn">Export Precons JSON</button>
+      </div>
     </header>
 
     <div class="layout">
@@ -278,7 +337,7 @@
         </div>
       </section>
 
-      <!-- RIGHT: Card editor -->
+      <!-- RIGHT: Card editor + Precons -->
       <section class="panel">
         <h2 id="editorTitle">New Card</h2>
         <div class="toolbar">
@@ -287,6 +346,7 @@
           <button id="duplicateCardBtn" class="secondary" type="button">📄 Duplicate</button>
         </div>
 
+        <!-- Card form -->
         <div class="field">
           <label for="cardNameInput">Card Name</label>
           <input id="cardNameInput" type="text" placeholder="e.g. Pops, Junkyard Dog" />
@@ -407,6 +467,40 @@
         <div class="small-note">
           Images are stored as data URLs (base64) in drive-card.json. The public site and deck builder already use <code>imageData</code>.
         </div>
+
+        <!-- PRECON DECKS SECTION -->
+        <div style="margin-top:1rem; border-top:1px solid #1f2937; padding-top:0.75rem;">
+          <h2 style="font-size:1rem; margin:0 0 0.5rem;">Precon Decks</h2>
+          <div class="toolbar">
+            <select id="preconSelect"></select>
+            <button id="newPreconBtn" type="button">+ New Precon</button>
+            <button id="duplicatePreconBtn" class="secondary" type="button">📄 Duplicate</button>
+            <button id="deletePreconBtn" class="danger" type="button">🗑 Delete</button>
+          </div>
+
+          <div class="field">
+            <label for="preconNameInput">Precon Name</label>
+            <input id="preconNameInput" type="text" placeholder="e.g. Junkyard Starter" />
+          </div>
+
+          <div class="field">
+            <label for="preconNotesInput">Description / Notes</label>
+            <textarea id="preconNotesInput" placeholder="Optional description for this precon"></textarea>
+          </div>
+
+          <div class="field">
+            <button id="addSelectedCardToPreconBtn" type="button">+ Add Selected Card from Library</button>
+            <div class="small-note">
+              Select a card in the library on the left, then click this to add it to the active precon.
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Precon Contents</label>
+            <div id="preconStats" class="small-note"></div>
+            <div id="preconList" class="deck-list" style="margin-top:0.25rem;"></div>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -415,6 +509,11 @@
     let cards = [];
     let selectedIndex = -1;
     let currentImageData = "";
+
+    // Precon decks: stored locally, exportable as separate JSON
+    let precons = [];
+    let activePreconIndex = 0;
+    const PRECONS_KEY = "drivePrecons_v1";
 
     const searchListInput = document.getElementById("searchListInput");
     const cardListBody = document.getElementById("cardListBody");
@@ -425,6 +524,7 @@
     const deleteCardBtn = document.getElementById("deleteCardBtn");
     const duplicateCardBtn = document.getElementById("duplicateCardBtn");
     const exportJsonBtn = document.getElementById("exportJsonBtn");
+    const exportPreconsBtn = document.getElementById("exportPreconsBtn");
     const editorTitle = document.getElementById("editorTitle");
 
     const cardNameInput = document.getElementById("cardNameInput");
@@ -451,6 +551,17 @@
 
     const imageInput = document.getElementById("imageInput");
     const imagePreview = document.getElementById("imagePreview");
+
+    // Precon UI elements
+    const preconSelect = document.getElementById("preconSelect");
+    const newPreconBtn = document.getElementById("newPreconBtn");
+    const duplicatePreconBtn = document.getElementById("duplicatePreconBtn");
+    const deletePreconBtn = document.getElementById("deletePreconBtn");
+    const preconNameInput = document.getElementById("preconNameInput");
+    const preconNotesInput = document.getElementById("preconNotesInput");
+    const addSelectedCardToPreconBtn = document.getElementById("addSelectedCardToPreconBtn");
+    const preconList = document.getElementById("preconList");
+    const preconStats = document.getElementById("preconStats");
 
     async function loadExistingJson() {
       try {
@@ -750,9 +861,20 @@
       }
       const card = cards[selectedIndex];
       if (!confirm(`Delete card "${card.name}"? This cannot be undone.`)) return;
+      const deletedCardId = card.id;
       cards.splice(selectedIndex, 1);
+      selectedIndex = -1;
       clearForm();
       renderCardList();
+
+      // also remove this card from any precon decks
+      precons.forEach(p => {
+        if (p.cards && p.cards[deletedCardId]) {
+          delete p.cards[deletedCardId];
+        }
+      });
+      savePreconsToStorage();
+      renderPreconUI();
     });
 
     duplicateCardBtn.addEventListener("click", () => {
@@ -773,10 +895,295 @@
     exportJsonBtn.addEventListener("click", exportJson);
     searchListInput.addEventListener("input", renderCardList);
 
+    // ==== PRECON LOGIC ====
+
+    function loadPreconsFromStorage() {
+      try {
+        const raw = localStorage.getItem(PRECONS_KEY);
+        if (!raw) {
+          precons = [
+            { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
+          ];
+          activePreconIndex = 0;
+          return;
+        }
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) {
+          precons = parsed;
+        } else {
+          precons = [
+            { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
+          ];
+        }
+      } catch {
+        precons = [
+          { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
+        ];
+      }
+      activePreconIndex = 0;
+    }
+
+    function savePreconsToStorage() {
+      localStorage.setItem(PRECONS_KEY, JSON.stringify(precons));
+    }
+
+    function getActivePrecon() {
+      return precons[activePreconIndex] || null;
+    }
+
+    function populatePreconSelect() {
+      preconSelect.innerHTML = "";
+      precons.forEach((p, idx) => {
+        const opt = document.createElement("option");
+        opt.value = String(idx);
+        opt.textContent = p.name || `Precon ${idx + 1}`;
+        preconSelect.appendChild(opt);
+      });
+      preconSelect.value = String(activePreconIndex);
+    }
+
+    function renderPreconUI() {
+      const p = getActivePrecon();
+      if (!p) {
+        preconNameInput.value = "";
+        preconNotesInput.value = "";
+        preconList.innerHTML = "<div class='small-note'>No precon decks defined.</div>";
+        preconStats.textContent = "";
+        return;
+      }
+
+      preconNameInput.value = p.name || "";
+      preconNotesInput.value = p.notes || "";
+
+      const entries = Object.entries(p.cards || {});
+      let total = 0;
+      let typeCounts = {};
+
+      preconList.innerHTML = "";
+
+      if (!entries.length) {
+        preconList.innerHTML = "<div class='small-note'>No cards in this precon yet.</div>";
+      } else {
+        entries
+          .sort(([aId],[bId]) => {
+            const a = cards.find(c => c.id === aId);
+            const b = cards.find(c => c.id === bId);
+            if (!a || !b) return 0;
+            return (a.type || "").localeCompare(b.type || "") ||
+                   (a.name || "").localeCompare(b.name || "");
+          })
+          .forEach(([cardId, count]) => {
+            const c = cards.find(c => c.id === cardId);
+            if (!c) return;
+            const n = Number(count) || 0;
+            total += n;
+            typeCounts[c.type] = (typeCounts[c.type] || 0) + n;
+
+            const row = document.createElement("div");
+            row.className = "deck-row";
+
+            const info = document.createElement("div");
+            info.className = "deck-row-info";
+
+            const main = document.createElement("div");
+            main.className = "deck-row-main";
+            main.textContent = `${n}x ${c.name}`;
+
+            const sub = document.createElement("div");
+            sub.className = "deck-row-sub";
+            const setLabel = c.setName || "";
+            const num = c.cardNumber ? ` #${c.cardNumber}` : "";
+            sub.textContent = `[${c.type}] ${setLabel}${num}`;
+
+            info.appendChild(main);
+            info.appendChild(sub);
+
+            const qty = document.createElement("div");
+            qty.className = "deck-row-qty";
+
+            const minusBtn = document.createElement("button");
+            minusBtn.className = "deck-btn";
+            minusBtn.textContent = "−";
+            minusBtn.onclick = () => {
+              if (p.cards[cardId] <= 1) {
+                delete p.cards[cardId];
+              } else {
+                p.cards[cardId] = p.cards[cardId] - 1;
+              }
+              savePreconsToStorage();
+              renderPreconUI();
+            };
+
+            const number = document.createElement("span");
+            number.className = "deck-qty-number";
+            number.textContent = String(n);
+
+            const plusBtn = document.createElement("button");
+            plusBtn.className = "deck-btn";
+            plusBtn.textContent = "+";
+            plusBtn.onclick = () => {
+              p.cards[cardId] = (p.cards[cardId] || 0) + 1;
+              savePreconsToStorage();
+              renderPreconUI();
+            };
+
+            qty.appendChild(minusBtn);
+            qty.appendChild(number);
+            qty.appendChild(plusBtn);
+
+            row.appendChild(info);
+            row.appendChild(qty);
+            preconList.appendChild(row);
+          });
+      }
+
+      const orderedTypes = [
+        "Vehicle",
+        "Named Vehicle",
+        "Driver",
+        "Named Driver",
+        "Crew",
+        "Mod",
+        "Track",
+        "Condition",
+      ];
+      let statsParts = [];
+      orderedTypes.forEach(t => {
+        if (typeCounts[t]) statsParts.push(`${t}: ${typeCounts[t]}`);
+      });
+      Object.keys(typeCounts).forEach(t => {
+        if (!orderedTypes.includes(t)) {
+          statsParts.push(`${t}: ${typeCounts[t]}`);
+        }
+      });
+
+      preconStats.textContent = `Total cards: ${total}` +
+        (statsParts.length ? " · " + statsParts.join(" · ") : "");
+    }
+
+    preconSelect.addEventListener("change", () => {
+      activePreconIndex = Number(preconSelect.value) || 0;
+      renderPreconUI();
+    });
+
+    newPreconBtn.addEventListener("click", () => {
+      const name = prompt("Name for the new precon deck?", `Precon ${precons.length + 1}`);
+      if (!name) return;
+      const p = {
+        id: "precon-" + Date.now() + "-" + Math.floor(Math.random() * 100000),
+        name,
+        notes: "",
+        cards: {},
+      };
+      precons.push(p);
+      activePreconIndex = precons.length - 1;
+      savePreconsToStorage();
+      populatePreconSelect();
+      renderPreconUI();
+    });
+
+    duplicatePreconBtn.addEventListener("click", () => {
+      const p = getActivePrecon();
+      if (!p) {
+        alert("No precon selected.");
+        return;
+      }
+      const copy = {
+        id: "precon-" + Date.now() + "-" + Math.floor(Math.random() * 100000),
+        name: p.name + " (Copy)",
+        notes: p.notes,
+        cards: { ...p.cards },
+      };
+      precons.push(copy);
+      activePreconIndex = precons.length - 1;
+      savePreconsToStorage();
+      populatePreconSelect();
+      renderPreconUI();
+    });
+
+    deletePreconBtn.addEventListener("click", () => {
+      if (!precons.length) return;
+      if (precons.length === 1) {
+        if (!confirm("Delete the only precon deck? This will create a new empty one.")) return;
+        precons = [{
+          id: "precon-1",
+          name: "Precon 1",
+          notes: "",
+          cards: {}
+        }];
+        activePreconIndex = 0;
+      } else {
+        const p = getActivePrecon();
+        if (!p) return;
+        if (!confirm(`Delete precon "${p.name}"? This cannot be undone.`)) return;
+        precons.splice(activePreconIndex, 1);
+        if (activePreconIndex >= precons.length) {
+          activePreconIndex = precons.length - 1;
+        }
+      }
+      savePreconsToStorage();
+      populatePreconSelect();
+      renderPreconUI();
+    });
+
+    preconNameInput.addEventListener("input", () => {
+      const p = getActivePrecon();
+      if (!p) return;
+      p.name = preconNameInput.value;
+      savePreconsToStorage();
+      populatePreconSelect();
+    });
+
+    preconNotesInput.addEventListener("input", () => {
+      const p = getActivePrecon();
+      if (!p) return;
+      p.notes = preconNotesInput.value;
+      savePreconsToStorage();
+    });
+
+    addSelectedCardToPreconBtn.addEventListener("click", () => {
+      const p = getActivePrecon();
+      if (!p) {
+        alert("No active precon deck.");
+        return;
+      }
+      if (selectedIndex < 0 || !cards[selectedIndex]) {
+        alert("Select a card from the library list on the left first.");
+        return;
+      }
+      const card = cards[selectedIndex];
+      if (!card.id) {
+        alert("This card has no ID. Please save it first, then add to precon.");
+        return;
+      }
+      p.cards[card.id] = (p.cards[card.id] || 0) + 1;
+      savePreconsToStorage();
+      renderPreconUI();
+    });
+
+    function exportPrecons() {
+      if (!precons.length) {
+        alert("No precon decks to export.");
+        return;
+      }
+      const blob = new Blob([JSON.stringify(precons, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "drive-precons.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    exportPreconsBtn.addEventListener("click", exportPrecons);
+
     (async function init() {
       await loadExistingJson();
+      loadPreconsFromStorage();
       clearForm();
       renderCardList();
+      populatePreconSelect();
+      renderPreconUI();
     })();
   </script>
 </body>
