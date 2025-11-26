@@ -632,7 +632,7 @@
 
           <!-- Bulk Import Panel -->
           <div id="bulkPanel" style="display:none;">
-            <!-- Step 1 -->
+            <!-- STEP 1 -->
             <div class="bulk-step">
               <h3>Step 1 – Load data</h3>
               <p class="small-note">
@@ -661,11 +661,11 @@
               </div>
             </div>
 
-            <!-- Step 2 – Mapping (only for CSV/Text) -->
+            <!-- STEP 2A – Mapping (CSV/Text only) -->
             <div id="bulkMappingContainer" class="bulk-step" style="display:none;">
-              <h3>Step 2 – Map columns to card fields</h3>
+              <h3>Step 2 – Map columns to card fields (CSV/Text)</h3>
               <p class="small-note">
-                This step is only used for manual CSV/Text import. XLSX imports use automatic mapping based on sheet type.
+                This step is only used for manual CSV/Text import. XLSX imports skip this mapping and use known column names.
               </p>
               <div id="bulkMappingFields" class="bulk-mapping-grid"></div>
               <div class="bulk-row" style="margin-top:0.5rem;">
@@ -674,7 +674,20 @@
               </div>
             </div>
 
-            <!-- Step 3 – Images & Import -->
+            <!-- STEP 2B – Card selection from XLSX -->
+            <div id="xlsxSelectionContainer" class="bulk-step" style="display:none;">
+              <h3>Step 2 – Choose cards from sheet (XLSX)</h3>
+              <p class="small-note">
+                Review names from the loaded sheet and uncheck any cards you do <strong>not</strong> want to import.
+              </p>
+              <div id="xlsxSelectionList" class="deck-list"></div>
+              <div class="bulk-row" style="margin-top:0.5rem;">
+                <button id="xlsxApplySelectionBtn" type="button">Use Selected Cards</button>
+                <small id="xlsxSelectionStatus" class="small-note"></small>
+              </div>
+            </div>
+
+            <!-- STEP 3 – Images & Import -->
             <div id="bulkPreviewContainer" class="bulk-step" style="display:none;">
               <h3>Step 3 – Attach images & import</h3>
               <p class="small-note">
@@ -736,11 +749,6 @@
     let selectedIndex = -1;
     let currentImageData = "";
 
-    // quick sanity check
-    if (typeof XLSX === "undefined") {
-      console.error("XLSX library failed to load. Check the script src URL.");
-    }
-
     // Precon decks
     let precons = [];
     let activePreconIndex = 0;
@@ -770,8 +778,14 @@
     ];
     let bulkMapping = {};
 
-    // XLSX workbook state
+    // XLSX workbook state and draft cards
     let xlsxWorkbook = null;
+    let xlsxDraftCards = [];
+
+    // Safety check
+    if (typeof XLSX === "undefined") {
+      console.error("XLSX library failed to load. Check the script src URL at the bottom of admin.html.");
+    }
 
     // Mode toggle
     const modeCardsBtn = document.getElementById("modeCardsBtn");
@@ -844,6 +858,12 @@
     const xlsxSheetSelect = document.getElementById("xlsxSheetSelect");
     const xlsxLoadSheetBtn = document.getElementById("xlsxLoadSheetBtn");
     const xlsxStatus = document.getElementById("xlsxStatus");
+
+    // XLSX selection step DOM
+    const xlsxSelectionContainer = document.getElementById("xlsxSelectionContainer");
+    const xlsxSelectionList = document.getElementById("xlsxSelectionList");
+    const xlsxApplySelectionBtn = document.getElementById("xlsxApplySelectionBtn");
+    const xlsxSelectionStatus = document.getElementById("xlsxSelectionStatus");
 
     // Precon UI
     const preconSelect = document.getElementById("preconSelect");
@@ -1230,13 +1250,20 @@
       bulkRows = [];
       bulkDraftCards = [];
       bulkMapping = {};
+      xlsxDraftCards = [];
+
       bulkParseStatus.textContent = "";
       bulkMappingStatus.textContent = "";
       bulkImportStatus.textContent = "";
+      xlsxSelectionStatus.textContent = "";
+
       bulkPreviewList.innerHTML = "";
       bulkMappingFields.innerHTML = "";
+      xlsxSelectionList.innerHTML = "";
+
       bulkMappingContainer.style.display = "none";
       bulkPreviewContainer.style.display = "none";
+      xlsxSelectionContainer.style.display = "none";
     }
 
     bulkFileInput.addEventListener("change", () => {
@@ -1489,13 +1516,12 @@
       if (normalizedSheet === "crew cards") {
         rows.forEach(row => {
           const card = makeBaseCard(
-            row["SET"],
-            "Crew", // overwritten below
+            row["Crew Name"],
+            "Crew",
             row["SET"],
             row["RARITY"],
             row["Card Number"]
           );
-          card.name = (row["Crew Name"] || "").toString();
           card.notes = (row["Crew Trait"] || "").toString();
           pushIfValid(card);
         });
@@ -1588,7 +1614,7 @@
           const vtList = parseVehicleTypesFromString(row["Vehicle Type"]);
           if (vtList.length) {
             card.extra.vehicleTypes = vtList;
-            card.extra.vehicleType = vtList[0];
+            card.extra.vehicleType = vtList[0]; // primary
           }
 
           pushIfValid(card);
@@ -1667,7 +1693,6 @@
       resetBulkState();
       bulkRawInput.value = "";
       bulkParseStatus.textContent = "";
-      bulkMappingContainer.style.display = "none";
 
       try {
         const ws = xlsxWorkbook.Sheets[sheetName];
@@ -1677,13 +1702,94 @@
           xlsxStatus.textContent = `No valid cards found in sheet "${sheetName}".`;
           return;
         }
-        bulkDraftCards = drafts;
-        xlsxStatus.textContent = `Loaded ${drafts.length} draft card(s) from "${sheetName}". Attach images in Step 3.`;
-        renderBulkPreview();
+        xlsxDraftCards = drafts.map(c => ({ ...c, _include: true }));
+        xlsxStatus.textContent = `Loaded ${drafts.length} draft card(s) from "${sheetName}". Use Step 2 to choose which to keep.`;
+        renderXlsxSelection();
       } catch (err) {
         console.error(err);
         xlsxStatus.textContent = "Failed to parse sheet. Check column names or data.";
       }
+    });
+
+    function renderXlsxSelection() {
+      if (!xlsxDraftCards.length) {
+        xlsxSelectionContainer.style.display = "none";
+        return;
+      }
+      xlsxSelectionContainer.style.display = "";
+      xlsxSelectionList.innerHTML = "";
+
+      xlsxDraftCards.forEach((card, idx) => {
+        const row = document.createElement("div");
+        row.className = "deck-row";
+
+        const info = document.createElement("div");
+        info.className = "deck-row-info";
+
+        const main = document.createElement("div");
+        main.className = "deck-row-main";
+        main.textContent = `${card.name || "(No Name)"} [${card.type || ""}]`;
+
+        const sub = document.createElement("div");
+        sub.className = "deck-row-sub";
+        const setLabel = card.setName || "";
+        const num = card.cardNumber ? ` #${card.cardNumber}` : "";
+        sub.textContent = `${setLabel}${num}`;
+
+        info.appendChild(main);
+        info.appendChild(sub);
+
+        const right = document.createElement("div");
+        right.style.display = "flex";
+        right.style.alignItems = "center";
+        right.style.gap = "0.35rem";
+
+        const label = document.createElement("label");
+        label.style.display = "flex";
+        label.style.alignItems = "center";
+        label.style.gap = "0.25rem";
+        label.style.fontSize = "0.75rem";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = card._include !== false;
+
+        cb.addEventListener("change", () => {
+          card._include = cb.checked;
+        });
+
+        label.appendChild(cb);
+        label.appendChild(document.createTextNode("Include"));
+
+        right.appendChild(label);
+
+        row.appendChild(info);
+        row.appendChild(right);
+        xlsxSelectionList.appendChild(row);
+      });
+    }
+
+    xlsxApplySelectionBtn.addEventListener("click", () => {
+      if (!xlsxDraftCards.length) {
+        xlsxSelectionStatus.textContent = "No sheet loaded yet.";
+        return;
+      }
+      const selected = xlsxDraftCards.filter(c => c._include !== false).map(c => {
+        const copy = { ...c };
+        delete copy._include;
+        return copy;
+      });
+
+      if (!selected.length) {
+        xlsxSelectionStatus.textContent = "No cards selected. Check at least one card.";
+        bulkPreviewContainer.style.display = "none";
+        bulkDraftCards = [];
+        return;
+      }
+
+      bulkDraftCards = selected;
+      xlsxSelectionStatus.textContent = `Selected ${selected.length} card(s). Proceed to Step 3 to attach images and import.`;
+      renderBulkPreview();
     });
 
     // ------------ Bulk preview / images ------------
