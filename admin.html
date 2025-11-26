@@ -25,7 +25,7 @@
       justify-content: space-between;
       align-items: baseline;
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.75rem;
       flex-wrap: wrap;
     }
     header h1 {
@@ -41,6 +41,38 @@
       flex-wrap: wrap;
       gap: 0.4rem;
       margin-left: auto;
+    }
+
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .mode-label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+    .mode-btn {
+      border-radius: 999px;
+      padding: 0.35rem 0.85rem;
+      font-size: 0.8rem;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: background 0.1s ease, transform 0.05s ease,
+        box-shadow 0.1s ease, border-color 0.1s ease;
+    }
+    .mode-btn:hover {
+      background: #030712;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+    }
+    .mode-btn.active {
+      border-color: #22c55e;
+      background: rgba(34,197,94,0.08);
+      box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
     }
 
     .layout {
@@ -242,13 +274,13 @@
       margin: 0 auto;
     }
 
-    /* Precon deck list styles (reuse deck-style UI) */
+    /* Precon deck list styles */
     .deck-list {
       border-radius: 0.5rem;
       border: 1px solid #1f2937;
       padding: 0.4rem;
       font-size: 0.78rem;
-      max-height: 220px;
+      max-height: 260px;
       overflow-y: auto;
       background: #020617;
     }
@@ -309,7 +341,7 @@
     <header>
       <div>
         <h1>DRIVE Card Library – Admin</h1>
-        <small>Manage cards, edit fields, and export drive-card.json for the public site. Precon decks are managed locally and exported separately.</small>
+        <small>Cards mode: edit individual cards. Precons mode: build official decks. Export JSON files for the public site.</small>
       </div>
       <div class="header-actions">
         <button id="exportJsonBtn">Export JSON (drive-card.json)</button>
@@ -317,8 +349,14 @@
       </div>
     </header>
 
+    <div class="mode-toggle">
+      <span class="mode-label">Mode:</span>
+      <button id="modeCardsBtn" class="mode-btn active">Cards</button>
+      <button id="modePreconsBtn" class="mode-btn">Precons</button>
+    </div>
+
     <div class="layout">
-      <!-- LEFT: Card list -->
+      <!-- LEFT: Card list (shared for both modes) -->
       <section class="panel">
         <h2>Card Library</h2>
         <div class="toolbar">
@@ -337,140 +375,142 @@
         </div>
       </section>
 
-      <!-- RIGHT: Card editor + Precons -->
+      <!-- RIGHT: Card editor OR Precon builder (mode switched) -->
       <section class="panel">
-        <h2 id="editorTitle">New Card</h2>
-        <div class="toolbar">
-          <button id="saveCardBtn" type="button">💾 Save Card</button>
-          <button id="deleteCardBtn" class="danger" type="button">🗑 Delete</button>
-          <button id="duplicateCardBtn" class="secondary" type="button">📄 Duplicate</button>
-        </div>
-
-        <!-- Card form -->
-        <div class="field">
-          <label for="cardNameInput">Card Name</label>
-          <input id="cardNameInput" type="text" placeholder="e.g. Pops, Junkyard Dog" />
-        </div>
-
-        <div class="field-group">
-          <div class="field">
-            <label for="cardTypeSelect">Card Type</label>
-            <select id="cardTypeSelect">
-              <option value="">Select type…</option>
-              <option value="Crew">Crew</option>
-              <option value="Driver">Driver</option>
-              <option value="Named Driver">Named Driver</option>
-              <option value="Vehicle">Vehicle</option>
-              <option value="Named Vehicle">Named Vehicle</option>
-              <option value="Mod">Mod</option>
-              <option value="Track">Track</option>
-              <option value="Condition">Condition</option>
-            </select>
+        <!-- CARD MODE PANEL -->
+        <div id="cardEditorPanel">
+          <h2 id="editorTitle">New Card</h2>
+          <div class="toolbar">
+            <button id="saveCardBtn" type="button">💾 Save Card</button>
+            <button id="deleteCardBtn" class="danger" type="button">🗑 Delete</button>
+            <button id="duplicateCardBtn" class="secondary" type="button">📄 Duplicate</button>
           </div>
-          <div class="field">
-            <label for="rarityInput">Rarity</label>
-            <input id="rarityInput" type="text" placeholder="e.g. Common, Rare" />
-          </div>
-        </div>
 
-        <div class="field-group">
           <div class="field">
-            <label for="setNameInput">Set Name</label>
-            <input id="setNameInput" type="text" placeholder="e.g. Set 1, Junkyard Mini Set" />
+            <label for="cardNameInput">Card Name</label>
+            <input id="cardNameInput" type="text" placeholder="e.g. Pops, Junkyard Dog" />
           </div>
-          <div class="field">
-            <label for="cardNumberInput">Card Number</label>
-            <input id="cardNumberInput" type="text" placeholder="e.g. 001" />
-          </div>
-        </div>
 
-        <div class="field">
-          <label for="tagsInput">Tags (comma separated)</label>
-          <input id="tagsInput" type="text" class="tag-input" placeholder="e.g. junkyard, drag, starter" />
-        </div>
-
-        <div class="field">
-          <label for="rulesTextInput">Rules Text</label>
-          <textarea id="rulesTextInput" placeholder="Card rules / effects text"></textarea>
-        </div>
-
-        <!-- Type-specific sections -->
-        <div id="driverSection" style="display:none; margin-top:0.4rem;">
-          <div class="field">
-            <label>Vehicle Types (Driver / Named Driver / Track)</label>
-            <div class="vehicle-types-group">
-              <label><input type="checkbox" class="vehTypeMulti" value="Drag" /> Drag</label>
-              <label><input type="checkbox" class="vehTypeMulti" value="Drift" /> Drift</label>
-              <label><input type="checkbox" class="vehTypeMulti" value="Off-Road" /> Off-Road</label>
-              <label><input type="checkbox" class="vehTypeMulti" value="Rally" /> Rally</label>
-            </div>
-            <div class="small-note">Drivers, Named Drivers, and Tracks can work with multiple vehicle types.</div>
-          </div>
-        </div>
-
-        <div id="vehicleSection" style="display:none; margin-top:0.4rem;">
-          <div class="field">
-            <label>Vehicle Type</label>
-            <div class="vehicle-types-group">
-              <label><input type="radio" name="vehicleTypeSingle" value="Drag" /> Drag</label>
-              <label><input type="radio" name="vehicleTypeSingle" value="Drift" /> Drift</label>
-              <label><input type="radio" name="vehicleTypeSingle" value="Off-Road" /> Off-Road</label>
-              <label><input type="radio" name="vehicleTypeSingle" value="Rally" /> Rally</label>
-            </div>
-          </div>
           <div class="field-group">
             <div class="field">
-              <label for="hpInput">HP</label>
-              <input id="hpInput" type="number" min="0" placeholder="e.g. 8" />
+              <label for="cardTypeSelect">Card Type</label>
+              <select id="cardTypeSelect">
+                <option value="">Select type…</option>
+                <option value="Crew">Crew</option>
+                <option value="Driver">Driver</option>
+                <option value="Named Driver">Named Driver</option>
+                <option value="Vehicle">Vehicle</option>
+                <option value="Named Vehicle">Named Vehicle</option>
+                <option value="Mod">Mod</option>
+                <option value="Track">Track</option>
+                <option value="Condition">Condition</option>
+              </select>
             </div>
             <div class="field">
-              <label for="conInput">CON</label>
-              <input id="conInput" type="number" min="0" placeholder="e.g. 2" />
+              <label for="rarityInput">Rarity</label>
+              <input id="rarityInput" type="text" placeholder="e.g. Common, Rare" />
             </div>
           </div>
-          <div class="small-note">Vehicle and Named Vehicle cards use a single type plus HP/CON.</div>
-        </div>
 
-        <div id="modSection" style="display:none; margin-top:0.4rem;">
+          <div class="field-group">
+            <div class="field">
+              <label for="setNameInput">Set Name</label>
+              <input id="setNameInput" type="text" placeholder="e.g. Set 1, Junkyard Mini Set" />
+            </div>
+            <div class="field">
+              <label for="cardNumberInput">Card Number</label>
+              <input id="cardNumberInput" type="text" placeholder="e.g. 001" />
+            </div>
+          </div>
+
           <div class="field">
-            <label for="modBasePartInput">Base Part</label>
-            <input id="modBasePartInput" type="text" placeholder="e.g. Engine, Headers, Tires" />
+            <label for="tagsInput">Tags (comma separated)</label>
+            <input id="tagsInput" type="text" class="tag-input" placeholder="e.g. junkyard, drag, starter" />
           </div>
-          <div class="mod-levels">
+
+          <div class="field">
+            <label for="rulesTextInput">Rules Text</label>
+            <textarea id="rulesTextInput" placeholder="Card rules / effects text"></textarea>
+          </div>
+
+          <!-- Type-specific sections -->
+          <div id="driverSection" style="display:none; margin-top:0.4rem;">
             <div class="field">
-              <label for="modLevel1Input">Level 1</label>
-              <input id="modLevel1Input" type="text" placeholder="e.g. 1/2" />
+              <label>Vehicle Types (Driver / Named Driver / Track)</label>
+              <div class="vehicle-types-group">
+                <label><input type="checkbox" class="vehTypeMulti" value="Drag" /> Drag</label>
+                <label><input type="checkbox" class="vehTypeMulti" value="Drift" /> Drift</label>
+                <label><input type="checkbox" class="vehTypeMulti" value="Off-Road" /> Off-Road</label>
+                <label><input type="checkbox" class="vehTypeMulti" value="Rally" /> Rally</label>
+              </div>
+              <div class="small-note">Drivers, Named Drivers, and Tracks can work with multiple vehicle types.</div>
             </div>
+          </div>
+
+          <div id="vehicleSection" style="display:none; margin-top:0.4rem;">
             <div class="field">
-              <label for="modLevel2Input">Level 2</label>
-              <input id="modLevel2Input" type="text" placeholder="e.g. 2/2" />
+              <label>Vehicle Type</label>
+              <div class="vehicle-types-group">
+                <label><input type="radio" name="vehicleTypeSingle" value="Drag" /> Drag</label>
+                <label><input type="radio" name="vehicleTypeSingle" value="Drift" /> Drift</label>
+                <label><input type="radio" name="vehicleTypeSingle" value="Off-Road" /> Off-Road</label>
+                <label><input type="radio" name="vehicleTypeSingle" value="Rally" /> Rally</label>
+              </div>
             </div>
+            <div class="field-group">
+              <div class="field">
+                <label for="hpInput">HP</label>
+                <input id="hpInput" type="number" min="0" placeholder="e.g. 8" />
+              </div>
+              <div class="field">
+                <label for="conInput">CON</label>
+                <input id="conInput" type="number" min="0" placeholder="e.g. 2" />
+              </div>
+            </div>
+            <div class="small-note">Vehicle and Named Vehicle cards use a single type plus HP/CON.</div>
+          </div>
+
+          <div id="modSection" style="display:none; margin-top:0.4rem;">
             <div class="field">
-              <label for="modLevel3Input">Level 3</label>
-              <input id="modLevel3Input" type="text" placeholder="e.g. 3/3" />
+              <label for="modBasePartInput">Base Part</label>
+              <input id="modBasePartInput" type="text" placeholder="e.g. Engine, Headers, Tires" />
             </div>
-            <div class="field">
-              <label for="modLevel4Input">Level 4</label>
-              <input id="modLevel4Input" type="text" placeholder="e.g. 5/3 or —" />
+            <div class="mod-levels">
+              <div class="field">
+                <label for="modLevel1Input">Level 1</label>
+                <input id="modLevel1Input" type="text" placeholder="e.g. 1/2" />
+              </div>
+              <div class="field">
+                <label for="modLevel2Input">Level 2</label>
+                <input id="modLevel2Input" type="text" placeholder="e.g. 2/2" />
+              </div>
+              <div class="field">
+                <label for="modLevel3Input">Level 3</label>
+                <input id="modLevel3Input" type="text" placeholder="e.g. 3/3" />
+              </div>
+              <div class="field">
+                <label for="modLevel4Input">Level 4</label>
+                <input id="modLevel4Input" type="text" placeholder="e.g. 5/3 or —" />
+              </div>
             </div>
+          </div>
+
+          <div class="field" style="margin-top:0.6rem;">
+            <label for="imageInput">Card Image (PNG/JPEG)</label>
+            <input id="imageInput" type="file" accept="image/*" />
+            <div class="image-preview" id="imagePreview">
+              <small>No image loaded yet.</small>
+            </div>
+          </div>
+
+          <div class="small-note">
+            Images are stored as data URLs (base64) in drive-card.json. The public site and deck builder already use <code>imageData</code>.
           </div>
         </div>
 
-        <div class="field" style="margin-top:0.6rem;">
-          <label for="imageInput">Card Image (PNG/JPEG)</label>
-          <input id="imageInput" type="file" accept="image/*" />
-          <div class="image-preview" id="imagePreview">
-            <small>No image loaded yet.</small>
-          </div>
-        </div>
-
-        <div class="small-note">
-          Images are stored as data URLs (base64) in drive-card.json. The public site and deck builder already use <code>imageData</code>.
-        </div>
-
-        <!-- PRECON DECKS SECTION -->
-        <div style="margin-top:1rem; border-top:1px solid #1f2937; padding-top:0.75rem;">
-          <h2 style="font-size:1rem; margin:0 0 0.5rem;">Precon Decks</h2>
+        <!-- PRECON MODE PANEL -->
+        <div id="preconPanel" style="display:none;">
+          <h2>Precon Decks</h2>
           <div class="toolbar">
             <select id="preconSelect"></select>
             <button id="newPreconBtn" type="button">+ New Precon</button>
@@ -510,10 +550,16 @@
     let selectedIndex = -1;
     let currentImageData = "";
 
-    // Precon decks: stored locally, exportable as separate JSON
+    // Precon decks (local only)
     let precons = [];
     let activePreconIndex = 0;
     const PRECONS_KEY = "drivePrecons_v1";
+
+    // Mode toggle
+    const modeCardsBtn = document.getElementById("modeCardsBtn");
+    const modePreconsBtn = document.getElementById("modePreconsBtn");
+    const cardEditorPanel = document.getElementById("cardEditorPanel");
+    const preconPanel = document.getElementById("preconPanel");
 
     const searchListInput = document.getElementById("searchListInput");
     const cardListBody = document.getElementById("cardListBody");
@@ -552,7 +598,7 @@
     const imageInput = document.getElementById("imageInput");
     const imagePreview = document.getElementById("imagePreview");
 
-    // Precon UI elements
+    // Precon UI
     const preconSelect = document.getElementById("preconSelect");
     const newPreconBtn = document.getElementById("newPreconBtn");
     const duplicatePreconBtn = document.getElementById("duplicatePreconBtn");
@@ -563,6 +609,25 @@
     const preconList = document.getElementById("preconList");
     const preconStats = document.getElementById("preconStats");
 
+    // ---- Mode handling ----
+    function setMode(mode) {
+      if (mode === "cards") {
+        cardEditorPanel.style.display = "";
+        preconPanel.style.display = "none";
+        modeCardsBtn.classList.add("active");
+        modePreconsBtn.classList.remove("active");
+      } else {
+        cardEditorPanel.style.display = "none";
+        preconPanel.style.display = "";
+        modeCardsBtn.classList.remove("active");
+        modePreconsBtn.classList.add("active");
+      }
+    }
+
+    modeCardsBtn.addEventListener("click", () => setMode("cards"));
+    modePreconsBtn.addEventListener("click", () => setMode("precons"));
+
+    // ---- Cards / JSON ----
     async function loadExistingJson() {
       try {
         const res = await fetch("drive-card.json", { cache: "no-store" });
@@ -571,13 +636,9 @@
           return;
         }
         const json = await res.json();
-        if (Array.isArray(json)) {
-          cards = json;
-        } else {
-          cards = [];
-        }
-      } catch (e) {
-        console.warn("Unable to load drive-card.json; starting with empty library.");
+        cards = Array.isArray(json) ? json : [];
+      } catch {
+        console.warn("Unable to load drive-card.json; starting empty.");
         cards = [];
       }
     }
@@ -607,13 +668,10 @@
 
         const nameDiv = document.createElement("div");
         nameDiv.textContent = card.name || "(No Name)";
-
         const typeDiv = document.createElement("div");
         typeDiv.textContent = card.type || "";
-
         const setDiv = document.createElement("div");
         setDiv.textContent = card.setName || "";
-
         const numDiv = document.createElement("div");
         numDiv.textContent = card.cardNumber || "";
 
@@ -661,8 +719,7 @@
       rulesTextInput.value = "";
 
       vehTypeMultiInputs.forEach(el => el.checked = false);
-      const vehTypeSingle = document.querySelectorAll("input[name='vehicleTypeSingle']");
-      vehTypeSingle.forEach(el => el.checked = false);
+      document.querySelectorAll("input[name='vehicleTypeSingle']").forEach(el => el.checked = false);
       hpInput.value = "";
       conInput.value = "";
 
@@ -692,8 +749,7 @@
       setTypeSectionsVisibility(card.type || "");
 
       vehTypeMultiInputs.forEach(el => el.checked = false);
-      const vehTypeSingle = document.querySelectorAll("input[name='vehicleTypeSingle']");
-      vehTypeSingle.forEach(el => el.checked = false);
+      document.querySelectorAll("input[name='vehicleTypeSingle']").forEach(el => el.checked = false);
       hpInput.value = "";
       conInput.value = "";
 
@@ -706,9 +762,7 @@
       if ((card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") &&
           Array.isArray(extra.vehicleTypes)) {
         vehTypeMultiInputs.forEach(el => {
-          if (extra.vehicleTypes.includes(el.value)) {
-            el.checked = true;
-          }
+          if (extra.vehicleTypes.includes(el.value)) el.checked = true;
         });
       }
 
@@ -745,10 +799,7 @@
       const rarity = rarityInput.value.trim();
       const setName = setNameInput.value.trim();
       const cardNumber = cardNumberInput.value.trim();
-      const tags = tagsInput.value
-        .split(",")
-        .map(t => t.trim())
-        .filter(Boolean);
+      const tags = tagsInput.value.split(",").map(t => t.trim()).filter(Boolean);
       const notes = rulesTextInput.value.trim();
 
       if (!name) {
@@ -762,19 +813,13 @@
 
       let extra = {};
       if (type === "Driver" || type === "Named Driver" || type === "Track") {
-        const selectedTypes = vehTypeMultiInputs
-          .filter(el => el.checked)
-          .map(el => el.value);
-        if (selectedTypes.length) {
-          extra.vehicleTypes = selectedTypes;
-        }
+        const selectedTypes = vehTypeMultiInputs.filter(el => el.checked).map(el => el.value);
+        if (selectedTypes.length) extra.vehicleTypes = selectedTypes;
       }
 
       if (type === "Vehicle" || type === "Named Vehicle") {
         const vehTypeSingle = document.querySelector("input[name='vehicleTypeSingle']:checked");
-        if (vehTypeSingle) {
-          extra.vehicleType = vehTypeSingle.value;
-        }
+        if (vehTypeSingle) extra.vehicleType = vehTypeSingle.value;
         if (hpInput.value !== "") extra.hp = parseInt(hpInput.value, 10);
         if (conInput.value !== "") extra.con = parseInt(conInput.value, 10);
       }
@@ -788,7 +833,6 @@
       }
 
       const card = existingCard ? { ...existingCard } : {};
-
       if (!card.id) {
         card.id = "card-" + Date.now() + "-" + Math.floor(Math.random() * 100000);
       }
@@ -801,7 +845,6 @@
       card.tags = tags;
       card.notes = notes;
       card.extra = extra;
-
       card.imageData = currentImageData || card.imageData || "";
 
       return card;
@@ -867,11 +910,9 @@
       clearForm();
       renderCardList();
 
-      // also remove this card from any precon decks
+      // Remove from precons too
       precons.forEach(p => {
-        if (p.cards && p.cards[deletedCardId]) {
-          delete p.cards[deletedCardId];
-        }
+        if (p.cards && p.cards[deletedCardId]) delete p.cards[deletedCardId];
       });
       savePreconsToStorage();
       renderPreconUI();
@@ -895,15 +936,12 @@
     exportJsonBtn.addEventListener("click", exportJson);
     searchListInput.addEventListener("input", renderCardList);
 
-    // ==== PRECON LOGIC ====
-
+    // ---- Precons ----
     function loadPreconsFromStorage() {
       try {
         const raw = localStorage.getItem(PRECONS_KEY);
         if (!raw) {
-          precons = [
-            { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
-          ];
+          precons = [{ id: "precon-1", name: "Precon 1", notes: "", cards: {} }];
           activePreconIndex = 0;
           return;
         }
@@ -911,14 +949,10 @@
         if (Array.isArray(parsed) && parsed.length) {
           precons = parsed;
         } else {
-          precons = [
-            { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
-          ];
+          precons = [{ id: "precon-1", name: "Precon 1", notes: "", cards: {} }];
         }
       } catch {
-        precons = [
-          { id: "precon-1", name: "Precon 1", notes: "", cards: {} },
-        ];
+        precons = [{ id: "precon-1", name: "Precon 1", notes: "", cards: {} }];
       }
       activePreconIndex = 0;
     }
@@ -958,7 +992,6 @@
       const entries = Object.entries(p.cards || {});
       let total = 0;
       let typeCounts = {};
-
       preconList.innerHTML = "";
 
       if (!entries.length) {
@@ -1038,23 +1071,15 @@
       }
 
       const orderedTypes = [
-        "Vehicle",
-        "Named Vehicle",
-        "Driver",
-        "Named Driver",
-        "Crew",
-        "Mod",
-        "Track",
-        "Condition",
+        "Vehicle","Named Vehicle","Driver","Named Driver",
+        "Crew","Mod","Track","Condition"
       ];
       let statsParts = [];
       orderedTypes.forEach(t => {
         if (typeCounts[t]) statsParts.push(`${t}: ${typeCounts[t]}`);
       });
       Object.keys(typeCounts).forEach(t => {
-        if (!orderedTypes.includes(t)) {
-          statsParts.push(`${t}: ${typeCounts[t]}`);
-        }
+        if (!orderedTypes.includes(t)) statsParts.push(`${t}: ${typeCounts[t]}`);
       });
 
       preconStats.textContent = `Total cards: ${total}` +
@@ -1105,21 +1130,14 @@
       if (!precons.length) return;
       if (precons.length === 1) {
         if (!confirm("Delete the only precon deck? This will create a new empty one.")) return;
-        precons = [{
-          id: "precon-1",
-          name: "Precon 1",
-          notes: "",
-          cards: {}
-        }];
+        precons = [{ id: "precon-1", name: "Precon 1", notes: "", cards: {} }];
         activePreconIndex = 0;
       } else {
         const p = getActivePrecon();
         if (!p) return;
         if (!confirm(`Delete precon "${p.name}"? This cannot be undone.`)) return;
         precons.splice(activePreconIndex, 1);
-        if (activePreconIndex >= precons.length) {
-          activePreconIndex = precons.length - 1;
-        }
+        if (activePreconIndex >= precons.length) activePreconIndex = precons.length - 1;
       }
       savePreconsToStorage();
       populatePreconSelect();
@@ -1184,6 +1202,7 @@
       renderCardList();
       populatePreconSelect();
       renderPreconUI();
+      setMode("cards");
     })();
   </script>
 </body>
