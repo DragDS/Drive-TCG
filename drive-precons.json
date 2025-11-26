@@ -1,0 +1,21 @@
+[
+  {
+    "id": "precon-1",
+    "name": "Danny's Garage",
+    "notes": "",
+    "cards": {
+      "7c348147-66c5-4ec4-a362-108b6be913e3": 1,
+      "76a4bf59-0bdf-441a-b5f4-2cc2f1b18c4b": 4
+    }
+  },
+  {
+    "id": "precon-1764144905807-61355",
+    "name": "Josh's Garage",
+    "notes": "",
+    "cards": {
+      "1c1ba6f3-f5ad-4706-b9df-34cfb2e9fe65": 1,
+      "fd8fca63-81e1-42d2-aebd-68d5ac7df947": 1,
+      "76a4bf59-0bdf-441a-b5f4-2cc2f1b18c4b": 4
+    }
+  }
+]
