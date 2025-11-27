@@ -9,8 +9,7 @@
   <style>
     * {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
     body {
       margin: 0;
@@ -37,11 +36,6 @@
       color: #9ca3af;
       font-size: 0.85rem;
     }
-
-    a {
-      color: #38bdf8;
-    }
-
     .mode-toggle {
       display: flex;
       flex-wrap: wrap;
@@ -61,8 +55,7 @@
       background: #020617;
       color: #e5e7eb;
       cursor: pointer;
-      transition: background 0.08s ease, border-color 0.08s ease,
-        box-shadow 0.08s ease;
+      transition: background 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
     }
     .mode-btn:hover {
       background: #030712;
@@ -73,7 +66,6 @@
       background: rgba(34,197,94,0.08);
       box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
     }
-
     .panel {
       background: #020617;
       border-radius: 0.75rem;
@@ -86,7 +78,6 @@
       margin: 0 0 0.5rem;
       font-size: 1.1rem;
     }
-
     .layout-two {
       display: grid;
       grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.8fr);
@@ -97,7 +88,6 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
-
     input[type="text"],
     input[type="number"],
     textarea,
@@ -114,7 +104,6 @@
       min-height: 80px;
       resize: vertical;
     }
-
     button {
       border-radius: 999px;
       border: 1px solid #374151;
@@ -123,8 +112,7 @@
       padding: 0.3rem 0.7rem;
       font-size: 0.8rem;
       cursor: pointer;
-      transition: background 0.08s ease, box-shadow 0.08s ease,
-        transform 0.05s ease;
+      transition: background 0.08s ease, box-shadow 0.08s ease, transform 0.05s ease;
     }
     button:hover {
       background: #020617;
@@ -141,7 +129,6 @@
     button.danger:hover {
       background: #7f1d1d;
     }
-
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -153,7 +140,6 @@
       font-size: 0.78rem;
       color: #9ca3af;
     }
-
     .card-list {
       max-height: 420px;
       overflow-y: auto;
@@ -191,7 +177,6 @@
       font-size: 0.72rem;
       color: #9ca3af;
     }
-
     .form-grid {
       display: grid;
       grid-template-columns: minmax(0,1fr) minmax(0,1fr);
@@ -211,7 +196,6 @@
       margin-bottom: 0.2rem;
       color: #9ca3af;
     }
-
     .image-preview {
       border-radius: 0.6rem;
       border: 1px solid #1f2937;
@@ -228,7 +212,6 @@
       object-fit: contain;
       border-radius: 0.45rem;
     }
-
     .step-title {
       font-weight: 600;
       margin-bottom: 0.25rem;
@@ -249,7 +232,6 @@
       background: #020617;
       font-size: 0.8rem;
     }
-
     .precon-layout {
       display: grid;
       grid-template-columns: minmax(0,1.2fr) minmax(0,1.8fr);
@@ -366,6 +348,7 @@
                   <option value="Named Vehicle">Named Vehicle</option>
                   <option value="Track">Track</option>
                   <option value="Condition">Condition</option>
+                  <option value="Misc">Misc</option>
                 </select>
               </div>
               <div class="form-group">
@@ -445,27 +428,22 @@
               placeholder="Filter by name / type / set..."
               style="flex:1; min-width:180px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
             />
-
             <select
               id="bulkFilterType"
               style="min-width:140px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
             >
               <option value="">All Types</option>
             </select>
-
             <select
               id="bulkFilterSet"
               style="min-width:140px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
             >
               <option value="">All Sets</option>
             </select>
-
             <button id="bulkSelectShownBtn" type="button">Select shown</button>
             <button id="bulkClearShownBtn" type="button">Clear shown</button>
           </div>
-
           <div id="bulkSelectionList" class="bulk-list"></div>
-
           <div style="margin-top:0.4rem; display:flex; justify-content:flex-end; gap:0.4rem;">
             <button id="bulkToStep3Btn" type="button">Continue to Step 3</button>
           </div>
@@ -536,6 +514,9 @@
   </div>
 
   <script>
+    /*********************************
+     * Shared state & helpers
+     *********************************/
     const AdminState = {
       cards: [],
       selectedCardId: null,
@@ -549,6 +530,113 @@
 
     const STORAGE_KEYS = {
       lastMode: "driveAdminMode_v1"
+    };
+
+    // Central mapping of your spreadsheet sheets/columns → library fields.
+    const SHEET_CONFIG = {
+      "Crew Cards": {
+        type: "Crew",
+        nameCol: "Crew Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Crew Trait"
+      },
+      "Mod Cards": {
+        type: "Mod",
+        nameCol: "Mod Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Mod Ability",
+        extra: (row, card) => {
+          card.extra.modBasePart = row["Base Part"] || "";
+          card.extra.modLevel1   = row["Mod Lvl 1"] || "";
+          card.extra.modLevel2   = row["Mod Lvl 2"] || "";
+          card.extra.modLevel3   = row["Mod Lvl 3"] || "";
+          card.extra.modLevel4   = row["Mod Lvl 4"] || "";
+          card.extra.modType     = row["Mod TYPE"] || "";
+        }
+      },
+      "Driver Cards": {
+        type: "Driver",
+        nameCol: "Driver Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Driver Trait"
+      },
+      "Named Driver Cards": {
+        type: "Named Driver",
+        nameCol: "Driver Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Driver Trait"
+      },
+      "Condition Cards": {
+        type: "Condition",
+        nameCol: "Condition Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Condition Trait"
+      },
+      "Track Cards": {
+        type: "Track",
+        nameCol: "Track Name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "Track Trait",
+        extra: (row, card) => {
+          const vtRaw = row["Vehicle Type"];
+          if (!vtRaw) return;
+          const upper = String(vtRaw).toUpperCase();
+          if (upper.includes("ALL")) {
+            card.extra.vehicleTypes = ["Drag","Drift","Off-Road","Rally"];
+          } else {
+            const map = {
+              "DRAG": "Drag",
+              "DRIFT": "Drift",
+              "OFF-ROAD": "Off-Road",
+              "OFF ROAD": "Off-Road",
+              "RALLY": "Rally"
+            };
+            const parts = upper.split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+            card.extra.vehicleTypes = Array.from(
+              new Set(parts.map(p => map[p] || null).filter(Boolean))
+            );
+          }
+        }
+      },
+      "Vehicle Cards": {
+        type: "Vehicle",
+        nameCol: "VEHICLE name",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "TRAIT",
+        extra: (row, card) => {
+          card.extra.vehicleType = row["Vehicle Type"] || "";
+          const hpCon = parseHpCon(row["VEHICLE HP/CON"]);
+          if (hpCon.hp !== undefined) card.extra.hp = hpCon.hp;
+          if (hpCon.con !== undefined) card.extra.con = hpCon.con;
+        }
+      },
+      "NAMED VEHICLE": {
+        type: "Named Vehicle",
+        nameCol: "NAMED VEHICLE NAME",
+        setCol: "SET",
+        rarityCol: "RARITY",
+        notesCol: "VEHICLE TRAIT",
+        extra: (row, card) => {
+          card.extra.vehicleType = row["Vehicle Type"] || "";
+          const hpCon = parseHpCon(row["VEHICLE HP/CON"]);
+          if (hpCon.hp !== undefined) card.extra.hp = hpCon.hp;
+          if (hpCon.con !== undefined) card.extra.con = hpCon.con;
+        }
+      },
+      "MISC": {
+        type: "Misc",
+        nameCol: "TOKENS/COUNTERS",
+        setCol: null,
+        rarityCol: "RARITY",
+        notesCol: "ABILITY"
+      }
     };
 
     const Dom = {
@@ -617,6 +705,31 @@
       preconStatsInfo: document.getElementById("preconStatsInfo")
     };
 
+    /*********************************
+     * Small helpers
+     *********************************/
+    function readCell(row, ...keys) {
+      for (const k of keys) {
+        if (k && row[k] !== undefined && row[k] !== null && row[k] !== "") {
+          return row[k];
+        }
+      }
+      return "";
+    }
+
+    function parseHpCon(val) {
+      const out = { hp: undefined, con: undefined };
+      if (!val) return out;
+      const cleaned = String(val).replace(/\s/g, "");
+      const parts = cleaned.split("/");
+      if (parts[0] !== undefined && parts[0] !== "") out.hp = Number(parts[0]);
+      if (parts[1] !== undefined && parts[1] !== "") out.con = Number(parts[1]);
+      return out;
+    }
+
+    /*********************************
+     * Mode switching
+     *********************************/
     const Mode = {
       set(mode) {
         Dom.cardAdminLayout.style.display = mode === "cards" ? "" : "none";
@@ -639,6 +752,9 @@
       }
     };
 
+    /*********************************
+     * Card library editor
+     *********************************/
     const CardLib = {
       createEmptyCard() {
         return {
@@ -668,7 +784,8 @@
         const parts = Object.entries(types)
           .sort((a,b) => a[0].localeCompare(b[0]))
           .map(([t,n]) => `${t}: ${n}`);
-        Dom.librarySummary.textContent = `${total} cards in library` + (parts.length ? " · " + parts.join(" · ") : "");
+        Dom.librarySummary.textContent = `${total} cards in library` +
+          (parts.length ? " · " + parts.join(" · ") : "");
       },
 
       renderCardList() {
@@ -837,20 +954,14 @@
         } else if (type === "Driver" || type === "Named Driver" || type === "Track") {
           const select = document.getElementById("extraVehicleTypesInput");
           if (select) {
-            const chosen = Array.from(select.selectedOptions).map(o => o.value);
-            extra.vehicleTypes = chosen;
+            extra.vehicleTypes = Array.from(select.selectedOptions).map(o => o.value);
           }
         } else if (type === "Mod") {
-          const base = document.getElementById("extraModBasePartInput")?.value || "";
-          const l1 = document.getElementById("extraModL1Input")?.value || "";
-          const l2 = document.getElementById("extraModL2Input")?.value || "";
-          const l3 = document.getElementById("extraModL3Input")?.value || "";
-          const l4 = document.getElementById("extraModL4Input")?.value || "";
-          if (base) extra.modBasePart = base;
-          if (l1) extra.modLevel1 = l1;
-          if (l2) extra.modLevel2 = l2;
-          if (l3) extra.modLevel3 = l3;
-          if (l4) extra.modLevel4 = l4;
+          extra.modBasePart = document.getElementById("extraModBasePartInput")?.value || "";
+          extra.modLevel1   = document.getElementById("extraModL1Input")?.value || "";
+          extra.modLevel2   = document.getElementById("extraModL2Input")?.value || "";
+          extra.modLevel3   = document.getElementById("extraModL3Input")?.value || "";
+          extra.modLevel4   = document.getElementById("extraModL4Input")?.value || "";
         }
         return extra;
       },
@@ -972,7 +1083,6 @@
         });
 
         Dom.cardListSearch.addEventListener("input", () => CardLib.renderCardList());
-
         Dom.newCardBtn.addEventListener("click", () => {
           const card = CardLib.createEmptyCard();
           AdminState.cards.push(card);
@@ -998,6 +1108,9 @@
       }
     };
 
+    /*********************************
+     * Bulk import from Excel
+     *********************************/
     const BulkImport = {
       handleFileChange(file) {
         if (!file) return;
@@ -1013,10 +1126,12 @@
               opt.textContent = name;
               Dom.bulkSheetSelect.appendChild(opt);
             });
-            Dom.bulkStep1Status.textContent = `Workbook loaded. Sheets: ${bulkWorkbook.SheetNames.join(", ")}. Select a sheet and click “Parse Sheet”.`;
+            Dom.bulkStep1Status.textContent =
+              `Workbook loaded. Sheets: ${bulkWorkbook.SheetNames.join(", ")}. Select a sheet and click “Parse Sheet”.`;
           } catch (err) {
             console.error(err);
-            Dom.bulkStep1Status.textContent = "Error reading workbook. Make sure it's a valid .xlsx file.";
+            Dom.bulkStep1Status.textContent =
+              "Error reading workbook. Make sure it's a valid .xlsx file.";
           }
         };
         reader.readAsArrayBuffer(file);
@@ -1039,92 +1154,29 @@
           return;
         }
 
-        bulkCards = rows.map((row, idx) => {
-          let name = "";
-          let type = "";
-          let setName = "";
-          let rarity = "";
+        const cfg = SHEET_CONFIG[sheetName] || {};
+        bulkCards = rows
+          .map((row, idx) => {
+            const name    = readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
+            const type    = cfg.type || readCell(row, "Card Type", "Type");
+            const setName = readCell(row, cfg.setCol, "SET", "Set", "Set Name");
+            const rarity  = readCell(row, cfg.rarityCol, "RARITY", "Rarity");
 
-          switch (sheetName) {
-            case "Crew Cards":
-              name    = row["Crew Name"];
-              type    = "Crew";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Mod Cards":
-              name    = row["Mod Name"];
-              type    = "Mod";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Driver Cards":
-              name    = row["Driver Name"];
-              type    = "Driver";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Named Driver Cards":
-              name    = row["Driver Name"];
-              type    = "Named Driver";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Condition Cards":
-              name    = row["Condition Name"];
-              type    = "Condition";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Track Cards":
-              name    = row["Track Name"];
-              type    = "Track";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "Vehicle Cards":
-              name    = row["VEHICLE name"];
-              type    = "Vehicle";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "NAMED VEHICLE":
-              name    = row["NAMED VEHICLE NAME"];
-              type    = "Named Vehicle";
-              setName = row["SET"];
-              rarity  = row["RARITY"];
-              break;
-            case "MISC":
-              name    = row["TOKENS/COUNTERS"];
-              type    = "Misc";
-              setName = "";
-              rarity  = row["RARITY"];
-              break;
-            default:
-              name    = row["Card Name"] || row["Name"] || row["Card"] || "";
-              type    = row["Card Type"] || row["Type"] || "";
-              setName = row["SET"] || row["Set"] || row["Set Name"] || "";
-              rarity  = row["RARITY"] || row["Rarity"] || "";
-          }
+            return {
+              index: idx,
+              sheetName,
+              name: name || "",
+              type: type || "",
+              setName: setName || "",
+              rarity: rarity || "",
+              raw: row,
+              selected: !!name
+            };
+          })
+          .filter(c => c.name);
 
-          name    = name    || "";
-          type    = type    || "";
-          setName = setName || "";
-          rarity  = rarity  || "";
-
-          return {
-            index: idx,
-            sheetName,
-            name,
-            type,
-            setName,
-            rarity,
-            raw: row,
-            selected: !!name
-          };
-        }).filter(c => c.name);
-
-        Dom.bulkStep1Status.textContent = `Parsed ${bulkCards.length} potential cards from "${sheetName}".`;
+        Dom.bulkStep1Status.textContent =
+          `Parsed ${bulkCards.length} potential cards from "${sheetName}".`;
 
         BulkImport.buildFilterOptions();
         BulkImport.renderSelectionList();
@@ -1162,7 +1214,7 @@
       renderSelectionList() {
         Dom.bulkSelectionList.innerHTML = "";
 
-        const q = bulkFilterState.text.trim().toLowerCase();
+        const q  = bulkFilterState.text.trim().toLowerCase();
         const tf = bulkFilterState.type;
         const sf = bulkFilterState.set;
 
@@ -1196,9 +1248,8 @@
           row.style.gap = "0.5rem";
           row.style.padding = "0.2rem 0.3rem";
           row.style.borderRadius = "0.4rem";
-          row.style.background = card.index % 2 === 0 ?
-            "rgba(15,23,42,0.7)" :
-            "rgba(15,23,42,0.45)";
+          row.style.background =
+            card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
 
           const left = document.createElement("div");
           left.style.display = "flex";
@@ -1238,7 +1289,8 @@
 
       renderImageStep(selectedCards) {
         Dom.bulkImageList.innerHTML = "";
-        Dom.bulkStep3Summary.textContent = `${selectedCards.length} cards selected. Attach images as needed, then click “Finish Import”.`;
+        Dom.bulkStep3Summary.textContent =
+          `${selectedCards.length} cards selected. Attach images as needed, then click “Finish Import”.`;
 
         selectedCards.forEach(card => {
           const row = document.createElement("div");
@@ -1248,9 +1300,8 @@
           row.style.padding = "0.3rem 0.35rem";
           row.style.borderRadius = "0.5rem";
           row.style.marginBottom = "0.35rem";
-          row.style.background = card.index % 2 === 0 ?
-            "rgba(15,23,42,0.7)" :
-            "rgba(15,23,42,0.45)";
+          row.style.background =
+            card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
 
           const left = document.createElement("div");
           left.innerHTML = `<div style="font-size:0.85rem; font-weight:600;">${card.name}</div>
@@ -1298,134 +1349,36 @@
 
         let countAdded = 0;
 
-        const parseList = (val) =>
+        const parseTags = (val) =>
           String(val || "")
             .split(",")
             .map(t => t.trim())
             .filter(Boolean);
 
-        const parseHpCon = (val) => {
-          const out = { hp: undefined, con: undefined };
-          if (!val) return out;
-          const cleaned = String(val).replace(/\s/g, "");
-          const parts = cleaned.split("/");
-          if (parts[0] !== undefined && parts[0] !== "") out.hp = Number(parts[0]);
-          if (parts[1] !== undefined && parts[1] !== "") out.con = Number(parts[1]);
-          return out;
-        };
-
         selected.forEach(bc => {
           const row   = bc.raw || {};
           const sheet = bc.sheetName || "";
+          const cfg   = SHEET_CONFIG[sheet] || {};
 
           const card = CardLib.createEmptyCard();
+          card.name     = bc.name || readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
+          card.type     = cfg.type || bc.type || readCell(row, "Card Type", "Type");
+          card.setName  = bc.setName || readCell(row, cfg.setCol, "SET", "Set", "Set Name");
+          card.rarity   = bc.rarity || readCell(row, cfg.rarityCol, "RARITY", "Rarity");
+          card.cardNumber = readCell(row, "Card Number", "Number", "#");
 
-          card.name     = bc.name ||
-                          row["Card Name"] ||
-                          row["Name"] ||
-                          row["Card"] ||
-                          "";
-          card.type     = bc.type ||
-                          row["Card Type"] ||
-                          row["Type"] ||
-                          "";
-          card.setName  = bc.setName ||
-                          row["SET"] ||
-                          row["Set"] ||
-                          row["Set Name"] ||
-                          "";
-          card.rarity   = bc.rarity ||
-                          row["RARITY"] ||
-                          row["Rarity"] ||
-                          "";
-          card.cardNumber =
-            row["Card Number"] ||
-            row["Number"] ||
-            "";
-
-          const tagsVal =
-            row["Tags"] ||
-            row["Tag"] ||
-            "";
-          card.tags = parseList(tagsVal);
-
+          card.tags   = parseTags(readCell(row, "Tags", "Tag"));
           card.imageData = bc.imageData || "";
-          card.extra = {};
+          card.extra  = {};
 
-          switch (sheet) {
-            case "Crew Cards":
-              card.notes = row["Crew Trait"] || "";
-              break;
+          if (cfg.notesCol) {
+            card.notes = readCell(row, cfg.notesCol, "Rules Text", "Text", "Rules");
+          } else {
+            card.notes = readCell(row, "Rules Text", "Text", "Rules");
+          }
 
-            case "Mod Cards":
-              card.notes = row["Mod Ability"] || "";
-              card.extra.modBasePart = row["Base Part"] || "";
-              card.extra.modLevel1   = row["Mod Lvl 1"] || "";
-              card.extra.modLevel2   = row["Mod Lvl 2"] || "";
-              card.extra.modLevel3   = row["Mod Lvl 3"] || "";
-              card.extra.modLevel4   = row["Mod Lvl 4"] || "";
-              card.extra.modType     = row["Mod TYPE"] || "";
-              break;
-
-            case "Driver Cards":
-              card.notes = row["Driver Trait"] || "";
-              break;
-
-            case "Named Driver Cards":
-              card.notes = row["Driver Trait"] || "";
-              card.type  = "Named Driver";
-              break;
-
-            case "Condition Cards":
-              card.notes = row["Condition Trait"] || "";
-              break;
-
-            case "Track Cards":
-              card.notes = row["Track Trait"] || "";
-              if (row["Vehicle Type"]) {
-                const vtStr = String(row["Vehicle Type"]).toUpperCase();
-                if (vtStr.includes("ALL")) {
-                  card.extra.vehicleTypes = ["Drag","Drift","Off-Road","Rally"];
-                } else {
-                  const map = {"DRAG":"Drag","DRIFT":"Drift","OFF-ROAD":"Off-Road","OFF ROAD":"Off-Road","RALLY":"Rally"};
-                  const parts = vtStr.split(/[\/,]/).map(s => s.trim()).filter(Boolean);
-                  card.extra.vehicleTypes = Array.from(new Set(
-                    parts.map(p => map[p] || null).filter(Boolean)
-                  ));
-                }
-              }
-              break;
-
-            case "Vehicle Cards":
-              card.notes = row["TRAIT"] || "";
-              card.type  = "Vehicle";
-              card.extra.vehicleType = row["Vehicle Type"] || "";
-              const hpCon1 = parseHpCon(row["VEHICLE HP/CON"]);
-              if (hpCon1.hp !== undefined) card.extra.hp = hpCon1.hp;
-              if (hpCon1.con !== undefined) card.extra.con = hpCon1.con;
-              break;
-
-            case "NAMED VEHICLE":
-              card.notes = row["VEHICLE TRAIT"] || "";
-              card.type  = "Named Vehicle";
-              card.extra.vehicleType = row["Vehicle Type"] || "";
-              const hpCon2 = parseHpCon(row["VEHICLE HP/CON"]);
-              if (hpCon2.hp !== undefined) card.extra.hp = hpCon2.hp;
-              if (hpCon2.con !== undefined) card.extra.con = hpCon2.con;
-              break;
-
-            case "MISC":
-              card.notes = row["ABILITY"] || "";
-              card.type  = "Misc";
-              break;
-
-            default:
-              card.notes =
-                row["Rules Text"] ||
-                row["Text"] ||
-                row["Rules"] ||
-                "";
-              break;
+          if (typeof cfg.extra === "function") {
+            cfg.extra(row, card);
           }
 
           AdminState.cards.push(card);
@@ -1458,7 +1411,7 @@
         });
 
         Dom.bulkSelectShownBtn.addEventListener("click", () => {
-          const q = bulkFilterState.text.trim().toLowerCase();
+          const q  = bulkFilterState.text.trim().toLowerCase();
           const tf = bulkFilterState.type;
           const sf = bulkFilterState.set;
 
@@ -1475,7 +1428,6 @@
               ].join(" ").toLowerCase();
               if (!haystack.includes(q)) return;
             }
-
             card.selected = true;
           });
 
@@ -1483,7 +1435,7 @@
         });
 
         Dom.bulkClearShownBtn.addEventListener("click", () => {
-          const q = bulkFilterState.text.trim().toLowerCase();
+          const q  = bulkFilterState.text.trim().toLowerCase();
           const tf = bulkFilterState.type;
           const sf = bulkFilterState.set;
 
@@ -1500,7 +1452,6 @@
               ].join(" ").toLowerCase();
               if (!haystack.includes(q)) return;
             }
-
             card.selected = false;
           });
 
@@ -1512,21 +1463,30 @@
       }
     };
 
+    /*********************************
+     * Precon admin
+     *********************************/
     const PreconAdmin = {
       getActivePrecon() {
         if (AdminState.selectedPreconIndex == null) return null;
         return AdminState.precons[AdminState.selectedPreconIndex] || null;
       },
 
+      totalCards(precon) {
+        return Object.values(precon.cards || {}).reduce((a,b) => a + Number(b || 0), 0);
+      },
+
       renderPreconList() {
         Dom.preconList.innerHTML = "";
         if (!AdminState.precons.length) {
-          Dom.preconList.innerHTML = "<div class='small-note'>No precons yet. Create one with “+ New Precon”.</div>";
+          Dom.preconList.innerHTML =
+            "<div class='small-note'>No precons yet. Create one with “+ New Precon”.</div>";
           return;
         }
         AdminState.precons.forEach((p, idx) => {
           const div = document.createElement("div");
-          div.className = "precon-row" + (idx === AdminState.selectedPreconIndex ? " selected" : "");
+          div.className = "precon-row" +
+            (idx === AdminState.selectedPreconIndex ? " selected" : "");
           div.innerHTML = `<strong>${p.name || "(Untitled Precon)"}</strong><br>
             <span style="font-size:0.75rem; color:#9ca3af;">Cards: ${PreconAdmin.totalCards(p)}</span>`;
           div.addEventListener("click", () => {
@@ -1536,10 +1496,6 @@
           });
           Dom.preconList.appendChild(div);
         });
-      },
-
-      totalCards(precon) {
-        return Object.values(precon.cards || {}).reduce((a,b) => a + Number(b || 0), 0);
       },
 
       loadActivePreconIntoForm() {
@@ -1563,12 +1519,12 @@
           Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
           return;
         }
-        const cardsObj = p.cards || {};
-        const entries = Object.entries(cardsObj);
+        const entries = Object.entries(p.cards || {});
         Dom.preconCardsList.innerHTML = "";
 
         if (!entries.length) {
-          Dom.preconCardsList.innerHTML = "<div class='small-note'>No cards in this precon yet.</div>";
+          Dom.preconCardsList.innerHTML =
+            "<div class='small-note'>No cards in this precon yet.</div>";
           Dom.preconStatsInfo.textContent = "Cards: 0";
           return;
         }
@@ -1607,8 +1563,7 @@
             Dom.preconCardsList.appendChild(row);
           });
 
-        const total = PreconAdmin.totalCards(p);
-        Dom.preconStatsInfo.textContent = `Cards: ${total}`;
+        Dom.preconStatsInfo.textContent = `Cards: ${PreconAdmin.totalCards(p)}`;
       },
 
       refreshPreconCardSelect() {
@@ -1630,11 +1585,7 @@
       },
 
       newPrecon() {
-        const p = {
-          name: "New Precon",
-          notes: "",
-          cards: {}
-        };
+        const p = { name: "New Precon", notes: "", cards: {} };
         AdminState.precons.push(p);
         AdminState.selectedPreconIndex = AdminState.precons.length - 1;
         PreconAdmin.renderPreconList();
@@ -1725,6 +1676,9 @@
       }
     };
 
+    /*********************************
+     * Init
+     *********************************/
     (function init() {
       Mode.init();
       CardLib.init();
