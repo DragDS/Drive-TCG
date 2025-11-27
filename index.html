@@ -73,24 +73,12 @@
 
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr) minmax(0, 1.6fr);
+      grid-template-columns: minmax(0, 1.8fr) minmax(0, 1.8fr);
       gap: 0.75rem;
-    }
-    @media (max-width: 1040px) {
-      .layout {
-        grid-template-columns: minmax(0,1.5fr) minmax(0,1.5fr);
-        grid-auto-rows: auto;
-      }
-      .panel-deck {
-        grid-column: 1 / -1;
-      }
     }
     @media (max-width: 760px) {
       .layout {
-        grid-template-columns: minmax(0,1fr);
-      }
-      .panel-deck {
-        grid-column: 1 / -1;
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
@@ -280,6 +268,9 @@
     }
 
     /* Deck panel */
+    .deckbuilder-panel h2 {
+      margin-bottom: 0.4rem;
+    }
     .deck-header {
       display: flex;
       gap: 0.4rem;
@@ -528,12 +519,13 @@
 
     <div class="mode-toggle">
       <span class="mode-label">View:</span>
-      <button id="modeCardsBtn" class="mode-btn active">Cards & Deck Builder</button>
+      <button id="modeCardsBtn" class="mode-btn active">Cards</button>
+      <button id="modeDeckBtn" class="mode-btn">Deck Builder</button>
       <button id="modePreconsBtn" class="mode-btn">Precon Viewer</button>
       <button id="modeCompareBtn" class="mode-btn">Card Comparison</button>
     </div>
 
-    <!-- Cards & Deck Builder layout -->
+    <!-- Cards layout -->
     <div id="cardsLayout" class="layout">
       <!-- Card browser -->
       <section class="panel">
@@ -580,36 +572,39 @@
           </div>
         </div>
       </section>
-
-      <!-- Deck builder -->
-      <section class="panel panel-deck">
-        <h2>Deck Builder</h2>
-        <div class="deck-header">
-          <div class="deck-tabs">
-            <button class="deck-tab active" data-deck-index="0">Deck 1</button>
-            <button class="deck-tab" data-deck-index="1">Deck 2</button>
-            <button class="deck-tab" data-deck-index="2">Deck 3</button>
-          </div>
-          <input id="deckNameInput" type="text" class="deck-name-input" placeholder="Deck name..." />
-          <button id="clearDeckBtn" class="secondary" type="button">Clear Deck</button>
-        </div>
-
-        <div id="deckList" class="deck-list"></div>
-
-        <div class="deck-stats" id="deckStats"></div>
-        <div class="deck-legal" id="deckLegal"></div>
-
-        <div class="toolbar" style="margin-top:0.4rem;">
-          <button id="exportDeckJsonBtn" type="button">Export Deck JSON</button>
-          <button id="exportDeckTextBtn" type="button">Export Deck Text</button>
-        </div>
-        <p class="small-note">
-          Deck rules: exactly 50 cards · max 4 copies of any non-named card · named cards (Named Driver, Named Vehicle) are limited to 1 copy each · minimum 2 Vehicle/Named Vehicle cards.
-        </p>
-      </section>
     </div>
 
-    <!-- Precon Viewer Layout -->
+    <!-- Deck Builder layout -->
+    <div id="deckbuilderLayout" class="panel deckbuilder-panel" style="display:none; margin-top:0.75rem;">
+      <h2>Deck Builder</h2>
+      <p class="small-note">
+        Build local decks using cards from the library. You can also add cards directly from the Card view using “Add to Active Deck”.
+      </p>
+      <div class="deck-header">
+        <div class="deck-tabs">
+          <button class="deck-tab active" data-deck-index="0">Deck 1</button>
+          <button class="deck-tab" data-deck-index="1">Deck 2</button>
+          <button class="deck-tab" data-deck-index="2">Deck 3</button>
+        </div>
+        <input id="deckNameInput" type="text" class="deck-name-input" placeholder="Deck name..." />
+        <button id="clearDeckBtn" class="secondary" type="button">Clear Deck</button>
+      </div>
+
+      <div id="deckList" class="deck-list"></div>
+
+      <div class="deck-stats" id="deckStats"></div>
+      <div class="deck-legal" id="deckLegal"></div>
+
+      <div class="toolbar" style="margin-top:0.4rem;">
+        <button id="exportDeckJsonBtn" type="button">Export Deck JSON</button>
+        <button id="exportDeckTextBtn" type="button">Export Deck Text</button>
+      </div>
+      <p class="small-note">
+        Deck rules: exactly 50 cards · max 4 copies of any non-named card · named cards (Named Driver, Named Vehicle) are limited to 1 copy each · minimum 2 Vehicle/Named Vehicle cards.
+      </p>
+    </div>
+
+    <!-- Precon Viewer layout -->
     <div id="preconsLayout" class="panel precon-panel" style="display:none; margin-top:0.75rem;">
       <h2>Precon Deck Viewer</h2>
       <div class="precon-header">
@@ -621,11 +616,11 @@
       <div id="preconList" class="deck-list" style="margin-top:0.35rem;"></div>
     </div>
 
-    <!-- Card Comparison Layout -->
+    <!-- Card Comparison layout -->
     <div id="compareLayout" class="panel compare-panel" style="display:none; margin-top:0.75rem;">
       <h2>Card Comparison</h2>
       <p class="small-note">
-        Choose any two cards to compare side-by-side. You can also mark cards from the Card Library view using the “Add to Compare” button.
+        Choose any two cards to compare side-by-side. You can also mark cards from the Card view using the “Add to Compare” button.
       </p>
       <div class="compare-controls">
         <div class="compare-control-block">
@@ -667,641 +662,900 @@
   </div>
 
   <script>
-    // ----------------- Data & state -----------------
-    let cards = [];
-    let cardsById = {};
+    // ========= GLOBAL APP STATE =========
+    const AppState = {
+      cards: [],
+      cardsById: {},
+      decks: [
+        { name: "Deck 1", cards: {} },
+        { name: "Deck 2", cards: {} },
+        { name: "Deck 3", cards: {} }
+      ],
+      activeDeckIndex: 0,
+      compareSlots: [null, null],
+      precons: []
+    };
+
+    const STORAGE_KEYS = {
+      decks: "driveDecks_v1"
+    };
+
+    // ========= DOM REFERENCES =========
+    const Dom = {
+      // Mode buttons
+      modeCardsBtn: document.getElementById("modeCardsBtn"),
+      modeDeckBtn: document.getElementById("modeDeckBtn"),
+      modePreconsBtn: document.getElementById("modePreconsBtn"),
+      modeCompareBtn: document.getElementById("modeCompareBtn"),
+
+      // Layouts
+      cardsLayout: document.getElementById("cardsLayout"),
+      deckbuilderLayout: document.getElementById("deckbuilderLayout"),
+      preconsLayout: document.getElementById("preconsLayout"),
+      compareLayout: document.getElementById("compareLayout"),
+
+      // Card browser
+      searchInput: document.getElementById("searchInput"),
+      typeFilter: document.getElementById("typeFilter"),
+      setFilter: document.getElementById("setFilter"),
+      rarityFilter: document.getElementById("rarityFilter"),
+      vehicleFilter: document.getElementById("vehicleFilter"),
+      cardGrid: document.getElementById("cardGrid"),
+      cardCountLabel: document.getElementById("cardCountLabel"),
+      detailContainer: document.getElementById("detailContainer"),
+      openFullCardBtn: document.getElementById("openFullCardBtn"),
+
+      // Deck builder
+      deckTabs: document.querySelectorAll(".deck-tab"),
+      deckNameInput: document.getElementById("deckNameInput"),
+      deckList: document.getElementById("deckList"),
+      deckStats: document.getElementById("deckStats"),
+      deckLegal: document.getElementById("deckLegal"),
+      clearDeckBtn: document.getElementById("clearDeckBtn"),
+      exportDeckJsonBtn: document.getElementById("exportDeckJsonBtn"),
+      exportDeckTextBtn: document.getElementById("exportDeckTextBtn"),
+
+      // Full card modal
+      fullCardOverlay: document.getElementById("fullCardOverlay"),
+      fullCardTitle: document.getElementById("fullCardTitle"),
+      fullCardBody: document.getElementById("fullCardBody"),
+      fullAddToDeckBtn: document.getElementById("fullAddToDeckBtn"),
+      fullAddToCompareBtn: document.getElementById("fullAddToCompareBtn"),
+
+      // Precons
+      preconSelect: document.getElementById("preconSelect"),
+      refreshPreconsBtn: document.getElementById("refreshPreconsBtn"),
+      preconDesc: document.getElementById("preconDesc"),
+      preconStats: document.getElementById("preconStats"),
+      preconList: document.getElementById("preconList"),
+
+      // Comparison
+      compareSelectA: document.getElementById("compareSelectA"),
+      compareSelectB: document.getElementById("compareSelectB"),
+      clearCompareABtn: document.getElementById("clearCompareABtn"),
+      clearCompareBBtn: document.getElementById("clearCompareBBtn"),
+      compareViewer: document.getElementById("compareViewer")
+    };
+
     let selectedCardId = null;
 
-    // Decks: up to 3 stored in localStorage
-    const DECKS_KEY = "driveDecks_v1";
-    let decks = [
-      { name: "Deck 1", cards: {} },
-      { name: "Deck 2", cards: {} },
-      { name: "Deck 3", cards: {} },
-    ];
-    let activeDeckIndex = 0;
-
-    // Comparison slots (store card IDs)
-    let compareSlots = [null, null];
-
-    // Precons (from drive-precons.json)
-    let precons = [];
-
-    // ----------------- DOM references -----------------
-    const modeCardsBtn = document.getElementById("modeCardsBtn");
-    const modePreconsBtn = document.getElementById("modePreconsBtn");
-    const modeCompareBtn = document.getElementById("modeCompareBtn");
-    const cardsLayout = document.getElementById("cardsLayout");
-    const preconsLayout = document.getElementById("preconsLayout");
-    const compareLayout = document.getElementById("compareLayout");
-
-    const searchInput = document.getElementById("searchInput");
-    const typeFilter = document.getElementById("typeFilter");
-    const setFilter = document.getElementById("setFilter");
-    const rarityFilter = document.getElementById("rarityFilter");
-    const vehicleFilter = document.getElementById("vehicleFilter");
-    const cardGrid = document.getElementById("cardGrid");
-    const cardCountLabel = document.getElementById("cardCountLabel");
-
-    const detailContainer = document.getElementById("detailContainer");
-    const openFullCardBtn = document.getElementById("openFullCardBtn");
-
-    const deckTabs = document.querySelectorAll(".deck-tab");
-    const deckNameInput = document.getElementById("deckNameInput");
-    const deckList = document.getElementById("deckList");
-    const deckStats = document.getElementById("deckStats");
-    const deckLegal = document.getElementById("deckLegal");
-    const clearDeckBtn = document.getElementById("clearDeckBtn");
-    const exportDeckJsonBtn = document.getElementById("exportDeckJsonBtn");
-    const exportDeckTextBtn = document.getElementById("exportDeckTextBtn");
-
-    const fullCardOverlay = document.getElementById("fullCardOverlay");
-    const fullCardTitle = document.getElementById("fullCardTitle");
-    const fullCardBody = document.getElementById("fullCardBody");
-    const fullAddToDeckBtn = document.getElementById("fullAddToDeckBtn");
-    const fullAddToCompareBtn = document.getElementById("fullAddToCompareBtn");
-
-    const preconSelect = document.getElementById("preconSelect");
-    const refreshPreconsBtn = document.getElementById("refreshPreconsBtn");
-    const preconDesc = document.getElementById("preconDesc");
-    const preconStats = document.getElementById("preconStats");
-    const preconList = document.getElementById("preconList");
-
-    const compareSelectA = document.getElementById("compareSelectA");
-    const compareSelectB = document.getElementById("compareSelectB");
-    const clearCompareABtn = document.getElementById("clearCompareABtn");
-    const clearCompareBBtn = document.getElementById("clearCompareBBtn");
-    const compareViewer = document.getElementById("compareViewer");
-
-    // ----------------- Utility helpers -----------------
-    function getCardById(id) {
-      return cardsById[id] || null;
-    }
-
-    function formatExtra(card) {
-      if (!card.extra) return "";
-      const extra = card.extra;
-      const pieces = [];
-
-      if (card.type === "Vehicle" || card.type === "Named Vehicle") {
-        if (extra.vehicleType) pieces.push("Vehicle Type: " + extra.vehicleType);
-        if (extra.hp != null || extra.con != null) {
-          pieces.push("HP/CON: " + (extra.hp ?? "?") + "/" + (extra.con ?? "?"));
+    // ========= MODULE: CardData =========
+    const CardData = {
+      async load() {
+        try {
+          const res = await fetch("drive-card.json", { cache: "no-store" });
+          if (!res.ok) {
+            AppState.cards = [];
+            AppState.cardsById = {};
+            return;
+          }
+          const json = await res.json();
+          AppState.cards = Array.isArray(json) ? json : [];
+        } catch (e) {
+          console.error("Failed to load drive-card.json", e);
+          AppState.cards = [];
         }
-      }
 
-      if (card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") {
-        if (Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.length) {
-          pieces.push("Vehicle Types: " + extra.vehicleTypes.join(", "));
+        AppState.cardsById = {};
+        AppState.cards.forEach(c => {
+          if (!c.id) {
+            c.id = "card-" + Math.random().toString(36).slice(2);
+          }
+          AppState.cardsById[c.id] = c;
+        });
+      },
+
+      getCardById(id) {
+        return AppState.cardsById[id] || null;
+      },
+
+      isNamedCard(card) {
+        if (!card || !card.type) return false;
+        return card.type.startsWith("Named");
+      },
+
+      formatExtra(card) {
+        if (!card.extra) return "";
+        const extra = card.extra;
+        const pieces = [];
+
+        // Vehicles
+        if (card.type === "Vehicle" || card.type === "Named Vehicle") {
+          if (extra.vehicleType) pieces.push("Vehicle Type: " + extra.vehicleType);
+          if (extra.hp != null || extra.con != null) {
+            pieces.push("HP/CON: " + (extra.hp ?? "?") + "/" + (extra.con ?? "?"));
+          }
         }
+
+        // Drivers / Tracks
+        if (card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") {
+          if (Array.isArray(extra.vehicleTypes) && extra.vehicleTypes.length) {
+            pieces.push("Vehicle Types: " + extra.vehicleTypes.join(", "));
+          }
+        }
+
+        // Mods
+        if (card.type === "Mod") {
+          if (extra.modBasePart) pieces.push("Base Part: " + extra.modBasePart);
+          const lv = [];
+          if (extra.modLevel1) lv.push("L1 " + extra.modLevel1);
+          if (extra.modLevel2) lv.push("L2 " + extra.modLevel2);
+          if (extra.modLevel3) lv.push("L3 " + extra.modLevel3);
+          if (extra.modLevel4) lv.push("L4 " + extra.modLevel4);
+          if (lv.length) pieces.push("Levels: " + lv.join(" · "));
+        }
+
+        return pieces.join(" | ");
       }
+    };
 
-      if (card.type === "Mod") {
-        if (extra.modBasePart) pieces.push("Base Part: " + extra.modBasePart);
-        const lv = [];
-        if (extra.modLevel1) lv.push("L1 " + extra.modLevel1);
-        if (extra.modLevel2) lv.push("L2 " + extra.modLevel2);
-        if (extra.modLevel3) lv.push("L3 " + extra.modLevel3);
-        if (extra.modLevel4) lv.push("L4 " + extra.modLevel4);
-        if (lv.length) pieces.push("Levels: " + lv.join(" · "));
-      }
+    // ========= MODULE: DeckManager =========
+    const DeckManager = {
+      loadFromStorage() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.decks);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length === 3) {
+            AppState.decks = parsed;
+          }
+        } catch (e) {
+          console.warn("Failed to load decks from storage", e);
+        }
+      },
 
-      return pieces.join(" | ");
-    }
+      saveToStorage() {
+        localStorage.setItem(STORAGE_KEYS.decks, JSON.stringify(AppState.decks));
+      },
 
-    function isNamedCard(card) {
-      if (!card || !card.type) return false;
-      return card.type.startsWith("Named");
-    }
+      getActiveDeck() {
+        return AppState.decks[AppState.activeDeckIndex];
+      },
 
-    function cardMatchesFilters(card) {
-      const q = searchInput.value.trim().toLowerCase();
-      const t = typeFilter.value;
-      const s = setFilter.value;
-      const r = rarityFilter.value;
-      const v = vehicleFilter.value;
-
-      if (t && card.type !== t) return false;
-      if (s && card.setName !== s) return false;
-      if (r && card.rarity !== r) return false;
-
-      if (v) {
-        const extra = card.extra || {};
-        let types = [];
-        if (Array.isArray(extra.vehicleTypes)) types = extra.vehicleTypes;
-        else if (extra.vehicleType) types = [extra.vehicleType];
-        if (!types.includes(v)) return false;
-      }
-
-      if (q) {
-        const haystack = [
-          card.name || "",
-          card.type || "",
-          card.rarity || "",
-          card.setName || "",
-          card.cardNumber || "",
-          (card.notes || ""),
-          (card.tags || []).join(" "),
-        ]
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
-
-      return true;
-    }
-
-    // ----------------- Rendering: cards -----------------
-    function populateFilterOptions() {
-      const typeSet = new Set();
-      const setSet = new Set();
-      const rarSet = new Set();
-
-      cards.forEach(c => {
-        if (c.type) typeSet.add(c.type);
-        if (c.setName) setSet.add(c.setName);
-        if (c.rarity) rarSet.add(c.rarity);
-      });
-
-      function fillSelect(sel, values, label) {
-        sel.innerHTML = "";
-        const optAll = document.createElement("option");
-        optAll.value = "";
-        optAll.textContent = "All " + label;
-        sel.appendChild(optAll);
-
-        Array.from(values).sort().forEach(v => {
-          const opt = document.createElement("option");
-          opt.value = v;
-          opt.textContent = v;
-          sel.appendChild(opt);
+      setActiveDeckIndex(idx) {
+        AppState.activeDeckIndex = idx;
+        Dom.deckTabs.forEach(tab => {
+          tab.classList.toggle(
+            "active",
+            Number(tab.dataset.deckIndex) === AppState.activeDeckIndex
+          );
         });
-      }
+        DeckManager.renderDeck();
+      },
 
-      fillSelect(typeFilter, typeSet, "Types");
-      fillSelect(setFilter, setSet, "Sets");
-      fillSelect(rarityFilter, rarSet, "Rarities");
-    }
+      addCardToActiveDeck(cardId) {
+        const deck = DeckManager.getActiveDeck();
+        const card = CardData.getCardById(cardId);
+        if (!deck || !card) return;
 
-    function renderCardGrid() {
-      cardGrid.innerHTML = "";
-      const filtered = cards.filter(cardMatchesFilters);
-      cardCountLabel.textContent = `${filtered.length} shown / ${cards.length} total`;
+        const isNamed = CardData.isNamedCard(card);
+        const limit = isNamed ? 1 : 4;
+        const current = deck.cards[cardId] || 0;
 
-      filtered.forEach(card => {
-        const div = document.createElement("div");
-        div.className = "card-item";
-        div.dataset.cardId = card.id;
-
-        const img = document.createElement("img");
-        img.src = card.imageData || "";
-        img.alt = card.name || "Card";
-
-        const nameDiv = document.createElement("div");
-        nameDiv.className = "card-item-name";
-        nameDiv.textContent = card.name || "(No Name)";
-
-        const subDiv = document.createElement("div");
-        subDiv.className = "card-item-sub";
-        const setLabel = card.setName || "";
-        const num = card.cardNumber ? ` #${card.cardNumber}` : "";
-        subDiv.textContent = `${card.type || ""} · ${setLabel}${num}`;
-
-        div.appendChild(img);
-        div.appendChild(nameDiv);
-        div.appendChild(subDiv);
-
-        div.addEventListener("click", () => {
-          selectCard(card.id);
-        });
-
-        cardGrid.appendChild(div);
-      });
-    }
-
-    // ----------------- Card selection & detail -----------------
-    function selectCard(cardId) {
-      selectedCardId = cardId;
-      const card = getCardById(cardId);
-      if (!card) return;
-      renderCardDetail(card);
-    }
-
-    function renderCardDetail(card) {
-      const left = detailContainer.querySelector(".detail-image");
-      const right = detailContainer.querySelector(".detail-meta");
-
-      left.innerHTML = "";
-      const img = document.createElement("img");
-      img.src = card.imageData || "";
-      img.alt = card.name || "Card";
-      left.appendChild(img);
-
-      right.innerHTML = "";
-
-      const h3 = document.createElement("h3");
-      h3.textContent = card.name || "(No Name)";
-
-      const metaLines = document.createElement("div");
-      metaLines.innerHTML = `
-        <div class="detail-row"><span class="detail-label">Type:</span> ${card.type || ""}</div>
-        <div class="detail-row"><span class="detail-label">Rarity:</span> ${card.rarity || ""}</div>
-        <div class="detail-row"><span class="detail-label">Set / #: </span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
-        <div class="detail-row"><span class="detail-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
-        <div class="detail-row"><span class="detail-label">Extra:</span> ${formatExtra(card) || "-"}</div>
-      `;
-
-      const rulesDiv = document.createElement("div");
-      rulesDiv.className = "detail-rules";
-      rulesDiv.textContent = card.notes || "No rules text.";
-
-      const actions = document.createElement("div");
-      actions.style.marginTop = "0.35rem";
-      actions.style.display = "flex";
-      actions.style.flexWrap = "wrap";
-      actions.style.gap = "0.35rem";
-
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.textContent = "+ Add to Active Deck";
-      addBtn.addEventListener("click", () => {
-        addCardToActiveDeck(card.id);
-      });
-
-      const compareBtn = document.createElement("button");
-      compareBtn.type = "button";
-      compareBtn.className = "secondary";
-      compareBtn.textContent = "+ Add to Compare";
-      compareBtn.addEventListener("click", () => {
-        addCardToCompare(card.id);
-        alert("Card added to comparison slots. Open Card Comparison view to see side-by-side.");
-      });
-
-      actions.appendChild(addBtn);
-      actions.appendChild(compareBtn);
-
-      right.appendChild(h3);
-      right.appendChild(metaLines);
-      right.appendChild(rulesDiv);
-      right.appendChild(actions);
-    }
-
-    // ----------------- Full card modal -----------------
-    function openFullCardModal() {
-      if (!selectedCardId) {
-        alert("Select a card first.");
-        return;
-      }
-      const card = getCardById(selectedCardId);
-      if (!card) return;
-
-      fullCardTitle.textContent = card.name || "Card";
-      fullCardBody.innerHTML = "";
-
-      const bodyDiv = document.createElement("div");
-      bodyDiv.className = "detail-body";
-
-      const left = document.createElement("div");
-      left.className = "detail-image";
-      const img = document.createElement("img");
-      img.src = card.imageData || "";
-      img.alt = card.name || "Card";
-      left.appendChild(img);
-
-      const right = document.createElement("div");
-      right.className = "detail-meta";
-
-      const h3 = document.createElement("h3");
-      h3.textContent = card.name || "(No Name)";
-
-      const metaLines = document.createElement("div");
-      metaLines.innerHTML = `
-        <div class="detail-row"><span class="detail-label">Type:</span> ${card.type || ""}</div>
-        <div class="detail-row"><span class="detail-label">Rarity:</span> ${card.rarity || ""}</div>
-        <div class="detail-row"><span class="detail-label">Set / #: </span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
-        <div class="detail-row"><span class="detail-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
-        <div class="detail-row"><span class="detail-label">Extra:</span> ${formatExtra(card) || "-"}</div>
-      `;
-
-      const rulesDiv = document.createElement("div");
-      rulesDiv.className = "detail-rules";
-      rulesDiv.textContent = card.notes || "No rules text.";
-
-      right.appendChild(h3);
-      right.appendChild(metaLines);
-      right.appendChild(rulesDiv);
-
-      bodyDiv.appendChild(left);
-      bodyDiv.appendChild(right);
-
-      fullCardBody.appendChild(bodyDiv);
-
-      fullAddToDeckBtn.onclick = () => addCardToActiveDeck(card.id);
-      fullAddToCompareBtn.onclick = () => {
-        addCardToCompare(card.id);
-        alert("Card added to comparison slots. Open Card Comparison view to see side-by-side.");
-      };
-
-      fullCardOverlay.style.display = "flex";
-    }
-
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.style.display = "none";
-    }
-
-    document.querySelectorAll(".modal-close").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const target = btn.getAttribute("data-close-modal");
-        if (target) closeModal(target);
-      });
-    });
-
-    fullCardOverlay.addEventListener("click", e => {
-      if (e.target === fullCardOverlay) {
-        fullCardOverlay.style.display = "none";
-      }
-    });
-
-    openFullCardBtn.addEventListener("click", openFullCardModal);
-
-    // ----------------- Compare logic -----------------
-    function addCardToCompare(cardId) {
-      if (compareSlots[0] === cardId) {
-        compareSlots[0] = null;
-      } else if (compareSlots[1] === cardId) {
-        compareSlots[1] = null;
-      } else if (!compareSlots[0]) {
-        compareSlots[0] = cardId;
-      } else if (!compareSlots[1]) {
-        compareSlots[1] = cardId;
-      } else {
-        compareSlots[1] = cardId;
-      }
-      syncCompareSelectors();
-      renderCompareViewer();
-    }
-
-    function populateCompareSelectOptions() {
-      function fillSelect(select) {
-        select.innerHTML = "";
-        const optNone = document.createElement("option");
-        optNone.value = "";
-        optNone.textContent = "None";
-        select.appendChild(optNone);
-
-        cards
-          .slice()
-          .sort((a,b) => {
-            return (a.type || "").localeCompare(b.type || "") ||
-                   (a.name || "").localeCompare(b.name || "");
-          })
-          .forEach(card => {
-            const opt = document.createElement("option");
-            opt.value = card.id;
-            opt.textContent = `${card.name || "(No Name)"} [${card.type || ""}]`;
-            select.appendChild(opt);
-          });
-      }
-
-      fillSelect(compareSelectA);
-      fillSelect(compareSelectB);
-      syncCompareSelectors();
-    }
-
-    function syncCompareSelectors() {
-      if (!compareSelectA || !compareSelectB) return;
-      compareSelectA.value = compareSlots[0] || "";
-      compareSelectB.value = compareSlots[1] || "";
-    }
-
-    function renderCompareViewer() {
-      compareViewer.innerHTML = "";
-      const [idA, idB] = compareSlots;
-
-      const cardA = idA ? getCardById(idA) : null;
-      const cardB = idB ? getCardById(idB) : null;
-
-      if (!cardA && !cardB) {
-        compareViewer.innerHTML =
-          "<div class='small-note'>Select cards for Slot A and Slot B to compare them here.</div>";
-        return;
-      }
-
-      const cardsToShow = [cardA, cardB];
-
-      cardsToShow.forEach((card, idx) => {
-        const div = document.createElement("div");
-        div.className = "compare-card";
-
-        if (!card) {
-          const label = idx === 0 ? "Slot A" : "Slot B";
-          div.innerHTML = `<div class="small-note">${label} is empty. Choose a card from the dropdown.</div>`;
-          compareViewer.appendChild(div);
+        if (current >= limit) {
+          alert(
+            `Copy limit reached for this card.\n` +
+              (isNamed
+                ? "Named cards are limited to 1 copy per deck."
+                : "Non-named cards are limited to 4 copies per deck.")
+          );
           return;
         }
 
-        const h3 = document.createElement("h3");
-        h3.textContent = card.name || "(No Name)";
+        deck.cards[cardId] = current + 1;
+        DeckManager.saveToStorage();
+        DeckManager.renderDeck();
+      },
 
-        const imgWrap = document.createElement("div");
-        imgWrap.className = "compare-image";
-        const img = document.createElement("img");
-        img.src = card.imageData || "";
-        img.alt = card.name || "Card";
-        imgWrap.appendChild(img);
+      removeCardFromActiveDeck(cardId) {
+        const deck = DeckManager.getActiveDeck();
+        if (!deck || !deck.cards[cardId]) return;
+        deck.cards[cardId] -= 1;
+        if (deck.cards[cardId] <= 0) delete deck.cards[cardId];
+        DeckManager.saveToStorage();
+        DeckManager.renderDeck();
+      },
 
-        const meta = document.createElement("div");
-        meta.innerHTML = `
-          <div class="compare-section"><span class="compare-label">Type:</span> ${card.type || ""}</div>
-          <div class="compare-section"><span class="compare-label">Rarity:</span> ${card.rarity || ""}</div>
-          <div class="compare-section"><span class="compare-label">Set / #:</span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
-          <div class="compare-section"><span class="compare-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
-          <div class="compare-section"><span class="compare-label">Extra:</span> ${formatExtra(card) || "-"}</div>
-          <div class="compare-section"><span class="compare-label">Rules:</span></div>
-          <div class="compare-section" style="white-space:pre-wrap;">${card.notes || "No rules text."}</div>
-        `;
+      clearActiveDeck() {
+        const deck = DeckManager.getActiveDeck();
+        if (!deck) return;
+        if (!confirm("Clear all cards from this deck?")) return;
+        deck.cards = {};
+        DeckManager.saveToStorage();
+        DeckManager.renderDeck();
+      },
 
-        div.appendChild(h3);
-        div.appendChild(imgWrap);
-        div.appendChild(meta);
-        compareViewer.appendChild(div);
-      });
-    }
+      computeDeckStats(deck) {
+        let total = 0;
+        const typeCounts = {};
+        let vehicleCount = 0;
+        const issues = [];
 
-    compareSelectA.addEventListener("change", () => {
-      compareSlots[0] = compareSelectA.value || null;
-      renderCompareViewer();
-    });
-    compareSelectB.addEventListener("change", () => {
-      compareSlots[1] = compareSelectB.value || null;
-      renderCompareViewer();
-    });
+        Object.entries(deck.cards).forEach(([cardId, qty]) => {
+          const card = CardData.getCardById(cardId);
+          if (!card) return;
+          const n = Number(qty) || 0;
+          total += n;
+          const type = card.type || "Unknown";
+          typeCounts[type] = (typeCounts[type] || 0) + n;
+          if (type === "Vehicle" || type === "Named Vehicle") {
+            vehicleCount += n;
+          }
+        });
 
-    clearCompareABtn.addEventListener("click", () => {
-      compareSlots[0] = null;
-      syncCompareSelectors();
-      renderCompareViewer();
-    });
-    clearCompareBBtn.addEventListener("click", () => {
-      compareSlots[1] = null;
-      syncCompareSelectors();
-      renderCompareViewer();
-    });
-
-    // ----------------- Deck builder logic -----------------
-    function loadDecksFromStorage() {
-      try {
-        const raw = localStorage.getItem(DECKS_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length === 3) {
-          decks = parsed;
+        if (total !== 50) {
+          issues.push(`Deck must contain exactly 50 cards (current: ${total}).`);
         }
-      } catch (e) {
-        console.warn("Failed to load decks from storage", e);
-      }
-    }
-
-    function saveDecksToStorage() {
-      localStorage.setItem(DECKS_KEY, JSON.stringify(decks));
-    }
-
-    function getActiveDeck() {
-      return decks[activeDeckIndex];
-    }
-
-    function setActiveDeckIndex(idx) {
-      activeDeckIndex = idx;
-      deckTabs.forEach(tab => {
-        tab.classList.toggle(
-          "active",
-          Number(tab.dataset.deckIndex) === activeDeckIndex
-        );
-      });
-      renderDeck();
-    }
-
-    deckTabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        const idx = Number(tab.dataset.deckIndex);
-        setActiveDeckIndex(idx);
-      });
-    });
-
-    deckNameInput.addEventListener("input", () => {
-      const deck = getActiveDeck();
-      deck.name = deckNameInput.value || `Deck ${activeDeckIndex + 1}`;
-      saveDecksToStorage();
-    });
-
-    function addCardToActiveDeck(cardId) {
-      const deck = getActiveDeck();
-      const card = getCardById(cardId);
-      if (!deck || !card) return;
-
-      const isNamed = isNamedCard(card);
-      const limit = isNamed ? 1 : 4;
-
-      const current = deck.cards[cardId] || 0;
-      if (current >= limit) {
-        alert(
-          `Copy limit reached for this card.\n` +
-            (isNamed
-              ? "Named cards are limited to 1 copy per deck."
-              : "Non-named cards are limited to 4 copies per deck.")
-        );
-        return;
-      }
-
-      deck.cards[cardId] = current + 1;
-      saveDecksToStorage();
-      renderDeck();
-    }
-
-    function removeCardFromActiveDeck(cardId) {
-      const deck = getActiveDeck();
-      if (!deck || !deck.cards[cardId]) return;
-      deck.cards[cardId] -= 1;
-      if (deck.cards[cardId] <= 0) delete deck.cards[cardId];
-      saveDecksToStorage();
-      renderDeck();
-    }
-
-    function clearActiveDeck() {
-      const deck = getActiveDeck();
-      if (!deck) return;
-      if (!confirm("Clear all cards from this deck?")) return;
-      deck.cards = {};
-      saveDecksToStorage();
-      renderDeck();
-    }
-
-    clearDeckBtn.addEventListener("click", clearActiveDeck);
-
-    function computeDeckStats(deck) {
-      let total = 0;
-      const typeCounts = {};
-      let vehicleCount = 0;
-
-      Object.entries(deck.cards).forEach(([cardId, qty]) => {
-        const card = getCardById(cardId);
-        if (!card) return;
-        const n = Number(qty) || 0;
-        total += n;
-        const type = card.type || "Unknown";
-        typeCounts[type] = (typeCounts[type] || 0) + n;
-        if (type === "Vehicle" || type === "Named Vehicle") {
-          vehicleCount += n;
+        if (vehicleCount < 2) {
+          issues.push(`Deck must contain at least 2 Vehicles / Named Vehicles (current: ${vehicleCount}).`);
         }
-      });
 
-      const issues = [];
+        Object.entries(deck.cards).forEach(([cardId, qty]) => {
+          const card = CardData.getCardById(cardId);
+          if (!card) return;
+          const n = Number(qty) || 0;
+          const isNamed = CardData.isNamedCard(card);
+          const limit = isNamed ? 1 : 4;
+          if (n > limit) {
+            issues.push(`"${card.name}" exceeds its copy limit (${n}/${limit}).`);
+          }
+        });
 
-      if (total !== 50) {
-        issues.push(`Deck must contain exactly 50 cards (current: ${total}).`);
-      }
-      if (vehicleCount < 2) {
-        issues.push(`Deck must contain at least 2 Vehicles / Named Vehicles (current: ${vehicleCount}).`);
-      }
+        return { total, typeCounts, vehicleCount, issues };
+      },
 
-      Object.entries(deck.cards).forEach(([cardId, qty]) => {
-        const card = getCardById(cardId);
-        if (!card) return;
-        const n = Number(qty) || 0;
-        const isNamed = isNamedCard(card);
-        const limit = isNamed ? 1 : 4;
-        if (n > limit) {
-          issues.push(
-            `"${card.name}" exceeds its copy limit (${n}/${limit}).`
-          );
+      renderDeck() {
+        const deck = DeckManager.getActiveDeck();
+        if (!deck) return;
+        Dom.deckNameInput.value = deck.name || `Deck ${AppState.activeDeckIndex + 1}`;
+
+        Dom.deckList.innerHTML = "";
+        const entries = Object.entries(deck.cards);
+
+        if (!entries.length) {
+          Dom.deckList.innerHTML = "<div class='small-note'>No cards in this deck yet. Use the Card view and click “Add to Active Deck”, or add from here.</div>";
+        } else {
+          entries
+            .sort(([aId],[bId]) => {
+              const a = CardData.getCardById(aId);
+              const b = CardData.getCardById(bId);
+              if (!a || !b) return 0;
+              return (a.type || "").localeCompare(b.type || "") ||
+                     (a.name || "").localeCompare(b.name || "");
+            })
+            .forEach(([cardId, qty]) => {
+              const card = CardData.getCardById(cardId);
+              if (!card) return;
+              const row = document.createElement("div");
+              row.className = "deck-row";
+
+              const info = document.createElement("div");
+              info.className = "deck-row-info";
+
+              const main = document.createElement("div");
+              main.className = "deck-row-main";
+              main.textContent = `${qty}x ${card.name}`;
+
+              const sub = document.createElement("div");
+              sub.className = "deck-row-sub";
+              const setLabel = card.setName || "";
+              const num = card.cardNumber ? ` #${card.cardNumber}` : "";
+              sub.textContent = `[${card.type || ""}] ${setLabel}${num}`;
+
+              info.appendChild(main);
+              info.appendChild(sub);
+
+              const qtyDiv = document.createElement("div");
+              qtyDiv.className = "deck-row-qty";
+
+              const minusBtn = document.createElement("button");
+              minusBtn.className = "deck-btn";
+              minusBtn.type = "button";
+              minusBtn.textContent = "−";
+              minusBtn.onclick = () => DeckManager.removeCardFromActiveDeck(cardId);
+
+              const numSpan = document.createElement("span");
+              numSpan.className = "deck-qty-number";
+              numSpan.textContent = qty;
+
+              const plusBtn = document.createElement("button");
+              plusBtn.className = "deck-btn";
+              plusBtn.type = "button";
+              plusBtn.textContent = "+";
+              plusBtn.onclick = () => DeckManager.addCardToActiveDeck(cardId);
+
+              qtyDiv.appendChild(minusBtn);
+              qtyDiv.appendChild(numSpan);
+              qtyDiv.appendChild(plusBtn);
+
+              row.appendChild(info);
+              row.appendChild(qtyDiv);
+              Dom.deckList.appendChild(row);
+            });
         }
-      });
 
-      return { total, typeCounts, vehicleCount, issues };
-    }
+        const stats = DeckManager.computeDeckStats(deck);
+        const orderedTypes = [
+          "Vehicle","Named Vehicle","Driver","Named Driver",
+          "Crew","Mod","Track","Condition"
+        ];
+        const statsParts = [];
+        orderedTypes.forEach(t => {
+          if (stats.typeCounts[t]) statsParts.push(`${t}: ${stats.typeCounts[t]}`);
+        });
+        Object.entries(stats.typeCounts).forEach(([t,count]) => {
+          if (!orderedTypes.includes(t)) statsParts.push(`${t}: ${count}`);
+        });
 
-    function renderDeck() {
-      const deck = getActiveDeck();
-      if (!deck) return;
-      deckNameInput.value = deck.name || `Deck ${activeDeckIndex + 1}`;
+        Dom.deckStats.textContent = `Total: ${stats.total} · ` +
+          (statsParts.length ? statsParts.join(" · ") : "No cards yet");
 
-      deckList.innerHTML = "";
-      const entries = Object.entries(deck.cards);
-      if (!entries.length) {
-        deckList.innerHTML = "<div class='small-note'>No cards in this deck yet. Select a card and click “Add to Active Deck”.</div>";
-      } else {
+        if (!stats.issues.length) {
+          Dom.deckLegal.innerHTML = `<span class="legal-ok">✅ Deck is legal under the current rules.</span>`;
+        } else {
+          Dom.deckLegal.innerHTML =
+            `<span class="legal-bad">❌ Deck is not legal:</span><br>${stats.issues
+              .map(i => "• " + i)
+              .join("<br>")}`;
+        }
+      },
+
+      exportDeckJson() {
+        const deck = DeckManager.getActiveDeck();
+        if (!deck) return;
+        const payload = {
+          name: deck.name,
+          cards: deck.cards
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = (deck.name || "deck") + ".json";
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      exportDeckText() {
+        const deck = DeckManager.getActiveDeck();
+        if (!deck) return;
+        let lines = [];
+        lines.push(deck.name || "Deck");
+        lines.push("");
+        const entries = Object.entries(deck.cards);
         entries
           .sort(([aId],[bId]) => {
-            const a = getCardById(aId);
-            const b = getCardById(bId);
+            const a = CardData.getCardById(aId);
+            const b = CardData.getCardById(bId);
             if (!a || !b) return 0;
             return (a.type || "").localeCompare(b.type || "") ||
                    (a.name || "").localeCompare(b.name || "");
           })
           .forEach(([cardId, qty]) => {
-            const card = getCardById(cardId);
+            const card = CardData.getCardById(cardId);
             if (!card) return;
+            const setLabel = card.setName || "";
+            const num = card.cardNumber ? ` #${card.cardNumber}` : "";
+            lines.push(`${qty}x ${card.name} [${card.type}] ${setLabel}${num}`);
+          });
+
+        const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = (deck.name || "deck") + ".txt";
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      init() {
+        DeckManager.loadFromStorage();
+        Dom.deckTabs.forEach(tab => {
+          tab.addEventListener("click", () => {
+            const idx = Number(tab.dataset.deckIndex);
+            DeckManager.setActiveDeckIndex(idx);
+          });
+        });
+
+        Dom.deckNameInput.addEventListener("input", () => {
+          const deck = DeckManager.getActiveDeck();
+          deck.name = Dom.deckNameInput.value || `Deck ${AppState.activeDeckIndex + 1}`;
+          DeckManager.saveToStorage();
+        });
+
+        Dom.clearDeckBtn.addEventListener("click", () => DeckManager.clearActiveDeck());
+        Dom.exportDeckJsonBtn.addEventListener("click", () => DeckManager.exportDeckJson());
+        Dom.exportDeckTextBtn.addEventListener("click", () => DeckManager.exportDeckText());
+
+        DeckManager.setActiveDeckIndex(0);
+      }
+    };
+
+    // ========= MODULE: CompareModule =========
+    const CompareModule = {
+      addCardToCompare(cardId) {
+        const slots = AppState.compareSlots;
+        if (slots[0] === cardId) {
+          slots[0] = null;
+        } else if (slots[1] === cardId) {
+          slots[1] = null;
+        } else if (!slots[0]) {
+          slots[0] = cardId;
+        } else if (!slots[1]) {
+          slots[1] = cardId;
+        } else {
+          slots[1] = cardId;
+        }
+        CompareModule.syncSelectors();
+        CompareModule.renderViewer();
+      },
+
+      populateSelectOptions() {
+        function fillSelect(select) {
+          select.innerHTML = "";
+          const optNone = document.createElement("option");
+          optNone.value = "";
+          optNone.textContent = "None";
+          select.appendChild(optNone);
+
+          AppState.cards
+            .slice()
+            .sort((a,b) => {
+              return (a.type || "").localeCompare(b.type || "") ||
+                     (a.name || "").localeCompare(b.name || "");
+            })
+            .forEach(card => {
+              const opt = document.createElement("option");
+              opt.value = card.id;
+              opt.textContent = `${card.name || "(No Name)"} [${card.type || ""}]`;
+              select.appendChild(opt);
+            });
+        }
+
+        fillSelect(Dom.compareSelectA);
+        fillSelect(Dom.compareSelectB);
+        CompareModule.syncSelectors();
+      },
+
+      syncSelectors() {
+        Dom.compareSelectA.value = AppState.compareSlots[0] || "";
+        Dom.compareSelectB.value = AppState.compareSlots[1] || "";
+      },
+
+      renderViewer() {
+        Dom.compareViewer.innerHTML = "";
+        const [idA, idB] = AppState.compareSlots;
+
+        const cardA = idA ? CardData.getCardById(idA) : null;
+        const cardB = idB ? CardData.getCardById(idB) : null;
+
+        if (!cardA && !cardB) {
+          Dom.compareViewer.innerHTML =
+            "<div class='small-note'>Select cards for Slot A and Slot B to compare them here.</div>";
+          return;
+        }
+
+        const cards = [cardA, cardB];
+        cards.forEach((card, idx) => {
+          const div = document.createElement("div");
+          div.className = "compare-card";
+
+          if (!card) {
+            const label = idx === 0 ? "Slot A" : "Slot B";
+            div.innerHTML = `<div class="small-note">${label} is empty. Choose a card from the dropdown.</div>`;
+            Dom.compareViewer.appendChild(div);
+            return;
+          }
+
+          const h3 = document.createElement("h3");
+          h3.textContent = card.name || "(No Name)";
+
+          const imgWrap = document.createElement("div");
+          imgWrap.className = "compare-image";
+          const img = document.createElement("img");
+          img.src = card.imageData || "";
+          img.alt = card.name || "Card";
+          imgWrap.appendChild(img);
+
+          const meta = document.createElement("div");
+          meta.innerHTML = `
+            <div class="compare-section"><span class="compare-label">Type:</span> ${card.type || ""}</div>
+            <div class="compare-section"><span class="compare-label">Rarity:</span> ${card.rarity || ""}</div>
+            <div class="compare-section"><span class="compare-label">Set / #:</span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
+            <div class="compare-section"><span class="compare-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
+            <div class="compare-section"><span class="compare-label">Extra:</span> ${CardData.formatExtra(card) || "-"}</div>
+            <div class="compare-section"><span class="compare-label">Rules:</span></div>
+            <div class="compare-section" style="white-space:pre-wrap;">${card.notes || "No rules text."}</div>
+          `;
+
+          div.appendChild(h3);
+          div.appendChild(imgWrap);
+          div.appendChild(meta);
+          Dom.compareViewer.appendChild(div);
+        });
+      },
+
+      init() {
+        Dom.compareSelectA.addEventListener("change", () => {
+          AppState.compareSlots[0] = Dom.compareSelectA.value || null;
+          CompareModule.renderViewer();
+        });
+        Dom.compareSelectB.addEventListener("change", () => {
+          AppState.compareSlots[1] = Dom.compareSelectB.value || null;
+          CompareModule.renderViewer();
+        });
+
+        Dom.clearCompareABtn.addEventListener("click", () => {
+          AppState.compareSlots[0] = null;
+          CompareModule.syncSelectors();
+          CompareModule.renderViewer();
+        });
+        Dom.clearCompareBBtn.addEventListener("click", () => {
+          AppState.compareSlots[1] = null;
+          CompareModule.syncSelectors();
+          CompareModule.renderViewer();
+        });
+      }
+    };
+
+    // ========= MODULE: CardBrowser =========
+    const CardBrowser = {
+      cardMatchesFilters(card) {
+        const q = Dom.searchInput.value.trim().toLowerCase();
+        const t = Dom.typeFilter.value;
+        const s = Dom.setFilter.value;
+        const r = Dom.rarityFilter.value;
+        const v = Dom.vehicleFilter.value;
+
+        if (t && card.type !== t) return false;
+        if (s && card.setName !== s) return false;
+        if (r && card.rarity !== r) return false;
+
+        if (v) {
+          const extra = card.extra || {};
+          let types = [];
+          if (Array.isArray(extra.vehicleTypes)) types = extra.vehicleTypes;
+          else if (extra.vehicleType) types = [extra.vehicleType];
+          if (!types.includes(v)) return false;
+        }
+
+        if (q) {
+          const haystack = [
+            card.name || "",
+            card.type || "",
+            card.rarity || "",
+            card.setName || "",
+            card.cardNumber || "",
+            (card.notes || ""),
+            (card.tags || []).join(" "),
+          ]
+            .join(" ")
+            .toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+        return true;
+      },
+
+      populateFilterOptions() {
+        const typeSet = new Set();
+        const setSet = new Set();
+        const rarSet = new Set();
+
+        AppState.cards.forEach(c => {
+          if (c.type) typeSet.add(c.type);
+          if (c.setName) setSet.add(c.setName);
+          if (c.rarity) rarSet.add(c.rarity);
+        });
+
+        function fillSelect(sel, values, label) {
+          sel.innerHTML = "";
+          const optAll = document.createElement("option");
+          optAll.value = "";
+          optAll.textContent = "All " + label;
+          sel.appendChild(optAll);
+
+          Array.from(values).sort().forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v;
+            opt.textContent = v;
+            sel.appendChild(opt);
+          });
+        }
+
+        fillSelect(Dom.typeFilter, typeSet, "Types");
+        fillSelect(Dom.setFilter, setSet, "Sets");
+        fillSelect(Dom.rarityFilter, rarSet, "Rarities");
+      },
+
+      renderGrid() {
+        Dom.cardGrid.innerHTML = "";
+        const filtered = AppState.cards.filter(CardBrowser.cardMatchesFilters);
+        Dom.cardCountLabel.textContent = `${filtered.length} shown / ${AppState.cards.length} total`;
+
+        filtered.forEach(card => {
+          const div = document.createElement("div");
+          div.className = "card-item";
+          div.dataset.cardId = card.id;
+
+          const img = document.createElement("img");
+          img.src = card.imageData || "";
+          img.alt = card.name || "Card";
+
+          const nameDiv = document.createElement("div");
+          nameDiv.className = "card-item-name";
+          nameDiv.textContent = card.name || "(No Name)";
+
+          const subDiv = document.createElement("div");
+          subDiv.className = "card-item-sub";
+          const setLabel = card.setName || "";
+          const num = card.cardNumber ? ` #${card.cardNumber}` : "";
+          subDiv.textContent = `${card.type || ""} · ${setLabel}${num}`;
+
+          div.appendChild(img);
+          div.appendChild(nameDiv);
+          div.appendChild(subDiv);
+
+          div.addEventListener("click", () => {
+            CardBrowser.selectCard(card.id);
+          });
+
+          Dom.cardGrid.appendChild(div);
+        });
+      },
+
+      selectCard(cardId) {
+        selectedCardId = cardId;
+        const card = CardData.getCardById(cardId);
+        if (!card) return;
+        CardBrowser.renderDetail(card);
+      },
+
+      renderDetail(card) {
+        const left = Dom.detailContainer.querySelector(".detail-image");
+        const right = Dom.detailContainer.querySelector(".detail-meta");
+
+        left.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = card.imageData || "";
+        img.alt = card.name || "Card";
+        left.appendChild(img);
+
+        right.innerHTML = "";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = card.name || "(No Name)";
+
+        const metaLines = document.createElement("div");
+        metaLines.innerHTML = `
+          <div class="detail-row"><span class="detail-label">Type:</span> ${card.type || ""}</div>
+          <div class="detail-row"><span class="detail-label">Rarity:</span> ${card.rarity || ""}</div>
+          <div class="detail-row"><span class="detail-label">Set / #: </span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
+          <div class="detail-row"><span class="detail-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
+          <div class="detail-row"><span class="detail-label">Extra:</span> ${CardData.formatExtra(card) || "-"}</div>
+        `;
+
+        const rulesDiv = document.createElement("div");
+        rulesDiv.className = "detail-rules";
+        rulesDiv.textContent = card.notes || "No rules text.";
+
+        const actions = document.createElement("div");
+        actions.style.marginTop = "0.35rem";
+        actions.style.display = "flex";
+        actions.style.flexWrap = "wrap";
+        actions.style.gap = "0.35rem";
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.textContent = "+ Add to Active Deck";
+        addBtn.addEventListener("click", () => {
+          DeckManager.addCardToActiveDeck(card.id);
+        });
+
+        const compareBtn = document.createElement("button");
+        compareBtn.type = "button";
+        compareBtn.className = "secondary";
+        compareBtn.textContent = "+ Add to Compare";
+        compareBtn.addEventListener("click", () => {
+          CompareModule.addCardToCompare(card.id);
+          alert("Card added to comparison slots. Switch to Card Comparison view to see side-by-side.");
+        });
+
+        actions.appendChild(addBtn);
+        actions.appendChild(compareBtn);
+
+        right.appendChild(h3);
+        right.appendChild(metaLines);
+        right.appendChild(rulesDiv);
+        right.appendChild(actions);
+      },
+
+      openFullCardModal() {
+        if (!selectedCardId) {
+          alert("Select a card first.");
+          return;
+        }
+        const card = CardData.getCardById(selectedCardId);
+        if (!card) return;
+
+        Dom.fullCardTitle.textContent = card.name || "Card";
+        Dom.fullCardBody.innerHTML = "";
+
+        const bodyDiv = document.createElement("div");
+        bodyDiv.className = "detail-body";
+
+        const left = document.createElement("div");
+        left.className = "detail-image";
+        const img = document.createElement("img");
+        img.src = card.imageData || "";
+        img.alt = card.name || "Card";
+        left.appendChild(img);
+
+        const right = document.createElement("div");
+        right.className = "detail-meta";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = card.name || "(No Name)";
+
+        const metaLines = document.createElement("div");
+        metaLines.innerHTML = `
+          <div class="detail-row"><span class="detail-label">Type:</span> ${card.type || ""}</div>
+          <div class="detail-row"><span class="detail-label">Rarity:</span> ${card.rarity || ""}</div>
+          <div class="detail-row"><span class="detail-label">Set / #: </span> ${(card.setName || "")}${card.cardNumber ? " · #" + card.cardNumber : ""}</div>
+          <div class="detail-row"><span class="detail-label">Tags:</span> ${(card.tags || []).join(", ") || "-"}</div>
+          <div class="detail-row"><span class="detail-label">Extra:</span> ${CardData.formatExtra(card) || "-"}</div>
+        `;
+
+        const rulesDiv = document.createElement("div");
+        rulesDiv.className = "detail-rules";
+        rulesDiv.textContent = card.notes || "No rules text.";
+
+        right.appendChild(h3);
+        right.appendChild(metaLines);
+        right.appendChild(rulesDiv);
+
+        bodyDiv.appendChild(left);
+        bodyDiv.appendChild(right);
+        Dom.fullCardBody.appendChild(bodyDiv);
+
+        Dom.fullAddToDeckBtn.onclick = () => DeckManager.addCardToActiveDeck(card.id);
+        Dom.fullAddToCompareBtn.onclick = () => {
+          CompareModule.addCardToCompare(card.id);
+          alert("Card added to comparison slots. Switch to Card Comparison view to see side-by-side.");
+        };
+
+        Dom.fullCardOverlay.style.display = "flex";
+      },
+
+      init() {
+        // Filters
+        [Dom.searchInput, Dom.typeFilter, Dom.setFilter, Dom.rarityFilter, Dom.vehicleFilter].forEach(el => {
+          el.addEventListener("input", () => CardBrowser.renderGrid());
+          el.addEventListener("change", () => CardBrowser.renderGrid());
+        });
+
+        // Full-card modal
+        Dom.openFullCardBtn.addEventListener("click", () => CardBrowser.openFullCardModal());
+
+        // Modal close
+        document.querySelectorAll(".modal-close").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const target = btn.getAttribute("data-close-modal");
+            if (target === "fullCardOverlay") {
+              Dom.fullCardOverlay.style.display = "none";
+            }
+          });
+        });
+        Dom.fullCardOverlay.addEventListener("click", e => {
+          if (e.target === Dom.fullCardOverlay) {
+            Dom.fullCardOverlay.style.display = "none";
+          }
+        });
+      }
+    };
+
+    // ========= MODULE: PreconViewer =========
+    const PreconViewer = {
+      async loadPrecons() {
+        try {
+          const res = await fetch("drive-precons.json", { cache: "no-store" });
+          if (!res.ok) {
+            AppState.precons = [];
+            PreconViewer.renderSelect();
+            PreconViewer.renderPrecon();
+            return;
+          }
+          const json = await res.json();
+          AppState.precons = Array.isArray(json) ? json : [];
+        } catch (e) {
+          console.warn("Failed to load drive-precons.json", e);
+          AppState.precons = [];
+        }
+        PreconViewer.renderSelect();
+        PreconViewer.renderPrecon();
+      },
+
+      renderSelect() {
+        Dom.preconSelect.innerHTML = "";
+        if (!AppState.precons.length) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No precons available";
+          Dom.preconSelect.appendChild(opt);
+          return;
+        }
+        AppState.precons.forEach((p, idx) => {
+          const opt = document.createElement("option");
+          opt.value = String(idx);
+          opt.textContent = p.name || `Precon ${idx + 1}`;
+          Dom.preconSelect.appendChild(opt);
+        });
+        Dom.preconSelect.value = "0";
+      },
+
+      renderPrecon() {
+        if (!AppState.precons.length) {
+          Dom.preconDesc.textContent = "";
+          Dom.preconStats.textContent = "";
+          Dom.preconList.innerHTML = "<div class='small-note'>No precon decks available.</div>";
+          return;
+        }
+        const idx = Number(Dom.preconSelect.value) || 0;
+        const p = AppState.precons[idx] || AppState.precons[0];
+
+        Dom.preconDesc.textContent = p.notes || "";
+        Dom.preconList.innerHTML = "";
+
+        const entries = Object.entries(p.cards || {});
+        if (!entries.length) {
+          Dom.preconList.innerHTML = "<div class='small-note'>This precon has no cards.</div>";
+          Dom.preconStats.textContent = "";
+          return;
+        }
+
+        let total = 0;
+        const typeCounts = {};
+        let vehicleCount = 0;
+
+        entries
+          .sort(([aId],[bId]) => {
+            const a = CardData.getCardById(aId);
+            const b = CardData.getCardById(bId);
+            if (!a || !b) return 0;
+            return (a.type || "").localeCompare(b.type || "") ||
+                   (a.name || "").localeCompare(b.name || "");
+          })
+          .forEach(([cardId, qty]) => {
+            const card = CardData.getCardById(cardId);
+            const n = Number(qty) || 0;
+            total += n;
+            if (card) {
+              const t = card.type || "Unknown";
+              typeCounts[t] = (typeCounts[t] || 0) + n;
+              if (t === "Vehicle" || t === "Named Vehicle") vehicleCount += n;
+            }
+
             const row = document.createElement("div");
             row.className = "deck-row";
 
@@ -1310,355 +1564,138 @@
 
             const main = document.createElement("div");
             main.className = "deck-row-main";
-            main.textContent = `${qty}x ${card.name}`;
+            main.textContent = `${qty}x ${card ? card.name : "(Unknown card)"}`;
 
             const sub = document.createElement("div");
             sub.className = "deck-row-sub";
-            const setLabel = card.setName || "";
-            const num = card.cardNumber ? ` #${card.cardNumber}` : "";
-            sub.textContent = `[${card.type || ""}] ${setLabel}${num}`;
+            if (card) {
+              const setLabel = card.setName || "";
+              const num = card.cardNumber ? ` #${card.cardNumber}` : "";
+              sub.textContent = `[${card.type}] ${setLabel}${num}`;
+            } else {
+              sub.textContent = cardId;
+            }
 
             info.appendChild(main);
             info.appendChild(sub);
 
-            const qtyDiv = document.createElement("div");
-            qtyDiv.className = "deck-row-qty";
-
-            const minusBtn = document.createElement("button");
-            minusBtn.className = "deck-btn";
-            minusBtn.type = "button";
-            minusBtn.textContent = "−";
-            minusBtn.onclick = () => removeCardFromActiveDeck(cardId);
-
-            const numSpan = document.createElement("span");
-            numSpan.className = "deck-qty-number";
-            numSpan.textContent = qty;
-
-            const plusBtn = document.createElement("button");
-            plusBtn.className = "deck-btn";
-            plusBtn.type = "button";
-            plusBtn.textContent = "+";
-            plusBtn.onclick = () => addCardToActiveDeck(cardId);
-
-            qtyDiv.appendChild(minusBtn);
-            qtyDiv.appendChild(numSpan);
-            qtyDiv.appendChild(plusBtn);
-
             row.appendChild(info);
-            row.appendChild(qtyDiv);
-            deckList.appendChild(row);
+            Dom.preconList.appendChild(row);
+
+            row.addEventListener("click", () => {
+              if (card) {
+                selectedCardId = card.id;
+                CardBrowser.renderDetail(card);
+                ModeSwitcher.setMode("cards");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            });
           });
-      }
 
-      const stats = computeDeckStats(deck);
-      const orderedTypes = [
-        "Vehicle","Named Vehicle","Driver","Named Driver",
-        "Crew","Mod","Track","Condition"
-      ];
-      const statsParts = [];
-      orderedTypes.forEach(t => {
-        if (stats.typeCounts[t]) statsParts.push(`${t}: ${stats.typeCounts[t]}`);
-      });
-      Object.entries(stats.typeCounts).forEach(([t,count]) => {
-        if (!orderedTypes.includes(t)) statsParts.push(`${t}: ${count}`);
-      });
-
-      deckStats.textContent = `Total: ${stats.total} · ` +
-        (statsParts.length ? statsParts.join(" · ") : "No cards yet");
-
-      if (!stats.issues.length) {
-        deckLegal.innerHTML = `<span class="legal-ok">✅ Deck is legal under the current rules.</span>`;
-      } else {
-        deckLegal.innerHTML =
-          `<span class="legal-bad">❌ Deck is not legal:</span><br>${stats.issues
-            .map(i => "• " + i)
-            .join("<br>")}`;
-      }
-    }
-
-    function exportDeckJson() {
-      const deck = getActiveDeck();
-      if (!deck) return;
-      const payload = {
-        name: deck.name,
-        cards: deck.cards,
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = (deck.name || "deck") + ".json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function exportDeckText() {
-      const deck = getActiveDeck();
-      if (!deck) return;
-      let lines = [];
-      lines.push(deck.name || "Deck");
-      lines.push("");
-      const entries = Object.entries(deck.cards);
-      entries
-        .sort(([aId],[bId]) => {
-          const a = getCardById(aId);
-          const b = getCardById(bId);
-          if (!a || !b) return 0;
-          return (a.type || "").localeCompare(b.type || "") ||
-                 (a.name || "").localeCompare(b.name || "");
-        })
-        .forEach(([cardId, qty]) => {
-          const card = getCardById(cardId);
-          if (!card) return;
-          const setLabel = card.setName || "";
-          const num = card.cardNumber ? ` #${card.cardNumber}` : "";
-          lines.push(`${qty}x ${card.name} [${card.type}] ${setLabel}${num}`);
+        const orderedTypes = [
+          "Vehicle","Named Vehicle","Driver","Named Driver",
+          "Crew","Mod","Track","Condition"
+        ];
+        const parts = [];
+        orderedTypes.forEach(t => {
+          if (typeCounts[t]) parts.push(`${t}: ${typeCounts[t]}`);
+        });
+        Object.entries(typeCounts).forEach(([t,c]) => {
+          if (!orderedTypes.includes(t)) parts.push(`${t}: ${c}`);
         });
 
-      const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = (deck.name || "deck") + ".txt";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    exportDeckJsonBtn.addEventListener("click", exportDeckJson);
-    exportDeckTextBtn.addEventListener("click", exportDeckText);
-
-    // ----------------- Precon viewer -----------------
-    async function loadPrecons() {
-      try {
-        const res = await fetch("drive-precons.json", { cache: "no-store" });
-        if (!res.ok) {
-          precons = [];
-          preconSelect.innerHTML =
-            "<option value=''>No precons found</option>";
-          preconDesc.textContent = "";
-          preconList.innerHTML = "<div class='small-note'>No precons JSON found.</div>";
-          preconStats.textContent = "";
-          return;
+        const legalIssues = [];
+        if (total !== 50) {
+          legalIssues.push(`Not 50 cards (current: ${total}).`);
         }
-        const json = await res.json();
-        precons = Array.isArray(json) ? json : [];
-      } catch (e) {
-        console.warn("Failed to load drive-precons.json", e);
-        precons = [];
-      }
-
-      renderPreconSelect();
-      renderPrecon();
-    }
-
-    function renderPreconSelect() {
-      preconSelect.innerHTML = "";
-      if (!precons.length) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "No precons available";
-        preconSelect.appendChild(opt);
-        return;
-      }
-      precons.forEach((p, idx) => {
-        const opt = document.createElement("option");
-        opt.value = String(idx);
-        opt.textContent = p.name || `Precon ${idx + 1}`;
-        preconSelect.appendChild(opt);
-      });
-      preconSelect.value = "0";
-    }
-
-    function renderPrecon() {
-      if (!precons.length) {
-        preconDesc.textContent = "";
-        preconStats.textContent = "";
-        preconList.innerHTML = "<div class='small-note'>No precon decks available.</div>";
-        return;
-      }
-      const idx = Number(preconSelect.value) || 0;
-      const p = precons[idx] || precons[0];
-
-      preconDesc.textContent = p.notes || "";
-      preconList.innerHTML = "";
-
-      const entries = Object.entries(p.cards || {});
-      if (!entries.length) {
-        preconList.innerHTML = "<div class='small-note'>This precon has no cards.</div>";
-        preconStats.textContent = "";
-        return;
-      }
-
-      let total = 0;
-      const typeCounts = {};
-      let vehicleCount = 0;
-
-      entries
-        .sort(([aId],[bId]) => {
-          const a = getCardById(aId);
-          const b = getCardById(bId);
-          if (!a || !b) return 0;
-          return (a.type || "").localeCompare(b.type || "") ||
-                 (a.name || "").localeCompare(b.name || "");
-        })
-        .forEach(([cardId, qty]) => {
-          const card = getCardById(cardId);
-          const n = Number(qty) || 0;
-          total += n;
-          if (card) {
-            const t = card.type || "Unknown";
-            typeCounts[t] = (typeCounts[t] || 0) + n;
-            if (t === "Vehicle" || t === "Named Vehicle") vehicleCount += n;
-          }
-
-          const row = document.createElement("div");
-          row.className = "deck-row";
-
-          const info = document.createElement("div");
-          info.className = "deck-row-info";
-
-          const main = document.createElement("div");
-          main.className = "deck-row-main";
-          main.textContent = `${qty}x ${card ? card.name : "(Unknown card)"}`;
-
-          const sub = document.createElement("div");
-          sub.className = "deck-row-sub";
-          if (card) {
-            const setLabel = card.setName || "";
-            const num = card.cardNumber ? ` #${card.cardNumber}` : "";
-            sub.textContent = `[${card.type}] ${setLabel}${num}`;
-          } else {
-            sub.textContent = cardId;
-          }
-
-          info.appendChild(main);
-          info.appendChild(sub);
-
-          row.appendChild(info);
-          preconList.appendChild(row);
-
-          row.addEventListener("click", () => {
-            if (card) {
-              selectedCardId = card.id;
-              renderCardDetail(card);
-              setMode("cards");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          });
-        });
-
-      const orderedTypes = [
-        "Vehicle","Named Vehicle","Driver","Named Driver",
-        "Crew","Mod","Track","Condition"
-      ];
-      const parts = [];
-      orderedTypes.forEach(t => {
-        if (typeCounts[t]) parts.push(`${t}: ${typeCounts[t]}`);
-      });
-      Object.entries(typeCounts).forEach(([t,c]) => {
-        if (!orderedTypes.includes(t)) parts.push(`${t}: ${c}`);
-      });
-
-      const legalIssues = [];
-      if (total !== 50) {
-        legalIssues.push(`Not 50 cards (current: ${total}).`);
-      }
-      if (vehicleCount < 2) {
-        legalIssues.push(`Has fewer than 2 Vehicle / Named Vehicle cards (current: ${vehicleCount}).`);
-      }
-
-      const legalSummary =
-        legalIssues.length === 0
-          ? "✅ This precon is a legal 50-card deck."
-          : "⚠️ This precon does not meet all deck rules.";
-
-      preconStats.textContent =
-        `Total: ${total}` +
-        (parts.length ? " · " + parts.join(" · ") : "") +
-        " · " + legalSummary;
-    }
-
-    preconSelect.addEventListener("change", renderPrecon);
-    refreshPreconsBtn.addEventListener("click", loadPrecons);
-
-    // ----------------- Mode toggle -----------------
-    function setMode(mode) {
-      if (mode === "cards") {
-        cardsLayout.style.display = "grid";
-        preconsLayout.style.display = "none";
-        compareLayout.style.display = "none";
-        modeCardsBtn.classList.add("active");
-        modePreconsBtn.classList.remove("active");
-        modeCompareBtn.classList.remove("active");
-      } else if (mode === "precons") {
-        cardsLayout.style.display = "none";
-        preconsLayout.style.display = "block";
-        compareLayout.style.display = "none";
-        modeCardsBtn.classList.remove("active");
-        modePreconsBtn.classList.add("active");
-        modeCompareBtn.classList.remove("active");
-      } else if (mode === "compare") {
-        cardsLayout.style.display = "none";
-        preconsLayout.style.display = "none";
-        compareLayout.style.display = "block";
-        modeCardsBtn.classList.remove("active");
-        modePreconsBtn.classList.remove("active");
-        modeCompareBtn.classList.add("active");
-        renderCompareViewer();
-      }
-    }
-
-    modeCardsBtn.addEventListener("click", () => setMode("cards"));
-    modePreconsBtn.addEventListener("click", () => setMode("precons"));
-    modeCompareBtn.addEventListener("click", () => setMode("compare"));
-
-    // ----------------- Init -----------------
-    async function loadCards() {
-      try {
-        const res = await fetch("drive-card.json", { cache: "no-store" });
-        if (!res.ok) {
-          cards = [];
-          cardsById = {};
-          return;
+        if (vehicleCount < 2) {
+          legalIssues.push(`Has fewer than 2 Vehicle / Named Vehicle cards (current: ${vehicleCount}).`);
         }
-        const json = await res.json();
-        cards = Array.isArray(json) ? json : [];
-      } catch (e) {
-        console.error("Failed to load drive-card.json", e);
-        cards = [];
+
+        const legalSummary =
+          legalIssues.length === 0
+            ? "✅ This precon is a legal 50-card deck."
+            : "⚠️ This precon does not meet all deck rules.";
+
+        Dom.preconStats.textContent =
+          `Total: ${total}` +
+          (parts.length ? " · " + parts.join(" · ") : "") +
+          " · " + legalSummary;
+      },
+
+      init() {
+        Dom.preconSelect.addEventListener("change", () => PreconViewer.renderPrecon());
+        Dom.refreshPreconsBtn.addEventListener("click", () => PreconViewer.loadPrecons());
       }
-      cardsById = {};
-      cards.forEach(c => {
-        if (!c.id) {
-          c.id = "card-" + Math.random().toString(36).slice(2);
+    };
+
+    // ========= MODULE: ModeSwitcher =========
+    const ModeSwitcher = {
+      setMode(mode) {
+        if (mode === "cards") {
+          Dom.cardsLayout.style.display = "grid";
+          Dom.deckbuilderLayout.style.display = "none";
+          Dom.preconsLayout.style.display = "none";
+          Dom.compareLayout.style.display = "none";
+          Dom.modeCardsBtn.classList.add("active");
+          Dom.modeDeckBtn.classList.remove("active");
+          Dom.modePreconsBtn.classList.remove("active");
+          Dom.modeCompareBtn.classList.remove("active");
+        } else if (mode === "deck") {
+          Dom.cardsLayout.style.display = "none";
+          Dom.deckbuilderLayout.style.display = "block";
+          Dom.preconsLayout.style.display = "none";
+          Dom.compareLayout.style.display = "none";
+          Dom.modeCardsBtn.classList.remove("active");
+          Dom.modeDeckBtn.classList.add("active");
+          Dom.modePreconsBtn.classList.remove("active");
+          Dom.modeCompareBtn.classList.remove("active");
+        } else if (mode === "precons") {
+          Dom.cardsLayout.style.display = "none";
+          Dom.deckbuilderLayout.style.display = "none";
+          Dom.preconsLayout.style.display = "block";
+          Dom.compareLayout.style.display = "none";
+          Dom.modeCardsBtn.classList.remove("active");
+          Dom.modeDeckBtn.classList.remove("active");
+          Dom.modePreconsBtn.classList.add("active");
+          Dom.modeCompareBtn.classList.remove("active");
+        } else if (mode === "compare") {
+          Dom.cardsLayout.style.display = "none";
+          Dom.deckbuilderLayout.style.display = "none";
+          Dom.preconsLayout.style.display = "none";
+          Dom.compareLayout.style.display = "block";
+          Dom.modeCardsBtn.classList.remove("active");
+          Dom.modeDeckBtn.classList.remove("active");
+          Dom.modePreconsBtn.classList.remove("active");
+          Dom.modeCompareBtn.classList.add("active");
+          CompareModule.renderViewer();
         }
-        cardsById[c.id] = c;
-      });
-    }
+      },
 
-    function attachFilterListeners() {
-      [searchInput, typeFilter, setFilter, rarityFilter, vehicleFilter].forEach(el => {
-        el.addEventListener("input", renderCardGrid);
-        el.addEventListener("change", renderCardGrid);
-      });
-    }
+      init() {
+        Dom.modeCardsBtn.addEventListener("click", () => ModeSwitcher.setMode("cards"));
+        Dom.modeDeckBtn.addEventListener("click", () => ModeSwitcher.setMode("deck"));
+        Dom.modePreconsBtn.addEventListener("click", () => ModeSwitcher.setMode("precons"));
+        Dom.modeCompareBtn.addEventListener("click", () => ModeSwitcher.setMode("compare"));
+      }
+    };
 
-    function init() {
-      attachFilterListeners();
-      loadDecksFromStorage();
-      setActiveDeckIndex(0);
-    }
-
+    // ========= APP INIT =========
     (async function main() {
-      init();
-      await loadCards();
-      populateFilterOptions();
-      renderCardGrid();
-      renderDeck();
-      populateCompareSelectOptions();
-      await loadPrecons();
+      ModeSwitcher.init();
+      DeckManager.init();
+      CompareModule.init();
+      PreconViewer.init();
+      CardBrowser.init();
+
+      await CardData.load();
+      CardBrowser.populateFilterOptions();
+      CardBrowser.renderGrid();
+      DeckManager.renderDeck();
+      CompareModule.populateSelectOptions();
+      await PreconViewer.loadPrecons();
+
+      ModeSwitcher.setMode("cards");
     })();
   </script>
 </body>
