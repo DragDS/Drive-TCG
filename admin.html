@@ -229,7 +229,6 @@
       border-radius: 0.45rem;
     }
 
-    /* Bulk import */
     .step-title {
       font-weight: 600;
       margin-bottom: 0.25rem;
@@ -251,7 +250,6 @@
       font-size: 0.8rem;
     }
 
-    /* Precon admin */
     .precon-layout {
       display: grid;
       grid-template-columns: minmax(0,1.2fr) minmax(0,1.8fr);
@@ -319,7 +317,6 @@
       </div>
     </header>
 
-    <!-- Mode buttons -->
     <div class="mode-toggle">
       <span class="mode-label">Mode:</span>
       <button id="modeCardsBtn" class="mode-btn active">Card Editor</button>
@@ -339,7 +336,6 @@
       </div>
 
       <div class="layout-two">
-        <!-- Card list panel -->
         <section class="panel">
           <h2>Cards in Library</h2>
           <div class="toolbar">
@@ -350,7 +346,6 @@
           <div id="cardList" class="card-list"></div>
         </section>
 
-        <!-- Card editor panel -->
         <section class="panel">
           <h2>Card Details</h2>
           <div class="form-grid">
@@ -391,9 +386,7 @@
               </div>
             </div>
             <div>
-              <div id="extraFieldsContainer">
-                <!-- Dynamic fields by type -->
-              </div>
+              <div id="extraFieldsContainer"></div>
               <div class="form-group">
                 <label class="form-label">Card Image</label>
                 <input id="cardImageInput" type="file" accept="image/png,image/jpeg" />
@@ -543,24 +536,21 @@
   </div>
 
   <script>
-    // =================== GLOBAL APP STATE ===================
     const AdminState = {
-      cards: [],          // [{id, name, type, rarity, setName, cardNumber, notes, tags, imageData, extra:{...}}]
+      cards: [],
       selectedCardId: null,
-      precons: [],        // [{name, notes, cards:{cardId: qty}}]
+      precons: [],
       selectedPreconIndex: null
     };
 
-    // Bulk import state
     let bulkWorkbook = null;
-    let bulkCards = []; // Each: { index, sheetName, name, type, setName, rarity, raw, selected, imageData }
+    let bulkCards = [];
     const bulkFilterState = { text: "", type: "", set: "" };
 
     const STORAGE_KEYS = {
       lastMode: "driveAdminMode_v1"
     };
 
-    // =================== MODE SWITCHER ===================
     const Dom = {
       modeCardsBtn: document.getElementById("modeCardsBtn"),
       modeBulkBtn: document.getElementById("modeBulkBtn"),
@@ -570,7 +560,6 @@
       bulkLayout: document.getElementById("bulkLayout"),
       preconLayout: document.getElementById("preconLayout"),
 
-      // Card editor DOM
       loadLibraryBtn: document.getElementById("loadLibraryBtn"),
       loadLibraryInput: document.getElementById("loadLibraryInput"),
       saveLibraryBtn: document.getElementById("saveLibraryBtn"),
@@ -595,7 +584,6 @@
       saveCardBtn: document.getElementById("saveCardBtn"),
       duplicateCardBtn: document.getElementById("duplicateCardBtn"),
 
-      // Bulk DOM
       bulkFileInput: document.getElementById("bulkFileInput"),
       bulkSheetSelect: document.getElementById("bulkSheetSelect"),
       bulkParseSheetBtn: document.getElementById("bulkParseSheetBtn"),
@@ -613,7 +601,6 @@
       bulkStep3Summary: document.getElementById("bulkStep3Summary"),
       bulkImportFinishBtn: document.getElementById("bulkImportFinishBtn"),
 
-      // Precon DOM
       loadPreconsBtn: document.getElementById("loadPreconsBtn"),
       loadPreconsInput: document.getElementById("loadPreconsInput"),
       savePreconsBtn: document.getElementById("savePreconsBtn"),
@@ -652,7 +639,6 @@
       }
     };
 
-    // =================== CARD LIBRARY MODULE ===================
     const CardLib = {
       createEmptyCard() {
         return {
@@ -748,7 +734,6 @@
       loadSelectedCardIntoForm() {
         const card = CardLib.getCardById(AdminState.selectedCardId);
         if (!card) {
-          // clear form
           Dom.cardNameInput.value = "";
           Dom.cardTypeInput.value = "";
           Dom.cardRarityInput.value = "";
@@ -836,7 +821,6 @@
           addField("Level 3", "extraModL3Input", extra.modLevel3 || "", "e.g., 3/3");
           addField("Level 4", "extraModL4Input", extra.modLevel4 || "", "e.g., 5/3");
         } else {
-          // Crew / Condition or unknown
           container.innerHTML = "<p class='small-note'>No extra fields for this card type.</p>";
         }
       },
@@ -934,11 +918,8 @@
           const text = await file.text();
           const json = JSON.parse(text);
           AdminState.cards = Array.isArray(json) ? json : [];
-          // ensure ids
           AdminState.cards.forEach(c => {
-            if (!c.id) {
-              c.id = "card-" + Math.random().toString(36).slice(2);
-            }
+            if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
             if (!c.extra) c.extra = {};
             if (!Array.isArray(c.tags)) c.tags = [];
           });
@@ -966,19 +947,16 @@
       },
 
       init() {
-        // Card type extra fields change
         Dom.cardTypeInput.addEventListener("change", () => {
           CardLib.renderExtraFields(Dom.cardTypeInput.value || "", {});
         });
 
-        // Image upload
         Dom.cardImageInput.addEventListener("change", () => {
           const file = Dom.cardImageInput.files[0];
           if (!file) return;
           const reader = new FileReader();
           reader.onload = () => {
             if (!AdminState.selectedCardId) {
-              // we might be editing unsaved, create first
               const newCard = CardLib.createEmptyCard();
               AdminState.cards.push(newCard);
               AdminState.selectedCardId = newCard.id;
@@ -993,10 +971,8 @@
           reader.readAsDataURL(file);
         });
 
-        // Search
         Dom.cardListSearch.addEventListener("input", () => CardLib.renderCardList());
 
-        // Buttons
         Dom.newCardBtn.addEventListener("click", () => {
           const card = CardLib.createEmptyCard();
           AdminState.cards.push(card);
@@ -1016,14 +992,12 @@
         });
         Dom.saveLibraryBtn.addEventListener("click", () => CardLib.saveLibraryToFile());
 
-        // Initial empty state
         CardLib.updateLibrarySummary();
         CardLib.renderCardList();
         CardLib.loadSelectedCardIntoForm();
       }
     };
 
-    // =================== BULK IMPORT MODULE ===================
     const BulkImport = {
       handleFileChange(file) {
         if (!file) return;
@@ -1065,7 +1039,6 @@
           return;
         }
 
-        // Map rows to bulkCards with sheet-specific logic
         bulkCards = rows.map((row, idx) => {
           let name = "";
           let type = "";
@@ -1079,62 +1052,59 @@
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Mod Cards":
               name    = row["Mod Name"];
               type    = "Mod";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Driver Cards":
               name    = row["Driver Name"];
               type    = "Driver";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Named Driver Cards":
-              name    = row["Named Driver"];
+              name    = row["Driver Name"];
               type    = "Named Driver";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Condition Cards":
-              name    = row["Conditions"];
+              name    = row["Condition Name"];
               type    = "Condition";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Track Cards":
               name    = row["Track Name"];
               type    = "Track";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "Vehicle Cards":
-              name    = row["Vehicle"];
+              name    = row["VEHICLE name"];
               type    = "Vehicle";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
             case "NAMED VEHICLE":
-              name    = row["Named Vehicles"];
+              name    = row["NAMED VEHICLE NAME"];
               type    = "Named Vehicle";
               setName = row["SET"];
               rarity  = row["RARITY"];
               break;
-
+            case "MISC":
+              name    = row["TOKENS/COUNTERS"];
+              type    = "Misc";
+              setName = "";
+              rarity  = row["RARITY"];
+              break;
             default:
-              // Fallback for any future/random sheets
-              name    = row["Card Name"] || row["Name"] || row["Card"] || row["CardName"] || "";
+              name    = row["Card Name"] || row["Name"] || row["Card"] || "";
               type    = row["Card Type"] || row["Type"] || "";
-              setName = row["Set"] || row["Set Name"] || row["SET"] || "";
-              rarity  = row["Rarity"] || row["RARITY"] || "";
+              setName = row["SET"] || row["Set"] || row["Set Name"] || "";
+              rarity  = row["RARITY"] || row["Rarity"] || "";
           }
 
           name    = name    || "";
@@ -1152,7 +1122,7 @@
             raw: row,
             selected: !!name
           };
-        }).filter(c => c.name); // drop rows with no name
+        }).filter(c => c.name);
 
         Dom.bulkStep1Status.textContent = `Parsed ${bulkCards.length} potential cards from "${sheetName}".`;
 
@@ -1334,13 +1304,22 @@
             .map(t => t.trim())
             .filter(Boolean);
 
+        const parseHpCon = (val) => {
+          const out = { hp: undefined, con: undefined };
+          if (!val) return out;
+          const cleaned = String(val).replace(/\s/g, "");
+          const parts = cleaned.split("/");
+          if (parts[0] !== undefined && parts[0] !== "") out.hp = Number(parts[0]);
+          if (parts[1] !== undefined && parts[1] !== "") out.con = Number(parts[1]);
+          return out;
+        };
+
         selected.forEach(bc => {
           const row   = bc.raw || {};
           const sheet = bc.sheetName || "";
 
           const card = CardLib.createEmptyCard();
 
-          // Basic shared fields
           card.name     = bc.name ||
                           row["Card Name"] ||
                           row["Name"] ||
@@ -1351,36 +1330,31 @@
                           row["Type"] ||
                           "";
           card.setName  = bc.setName ||
+                          row["SET"] ||
                           row["Set"] ||
                           row["Set Name"] ||
-                          row["SET"] ||
                           "";
           card.rarity   = bc.rarity ||
-                          row["Rarity"] ||
                           row["RARITY"] ||
+                          row["Rarity"] ||
                           "";
           card.cardNumber =
             row["Card Number"] ||
             row["Number"] ||
             "";
 
-          // Tags (if you ever add a Tags col)
           const tagsVal =
             row["Tags"] ||
             row["Tag"] ||
             "";
           card.tags = parseList(tagsVal);
 
-          // Image (from Step 3)
           card.imageData = bc.imageData || "";
-
-          // Sheet-specific rules text & extras
           card.extra = {};
 
           switch (sheet) {
             case "Crew Cards":
               card.notes = row["Crew Trait"] || "";
-              // Crew has no structured extra fields right now
               break;
 
             case "Mod Cards":
@@ -1390,91 +1364,67 @@
               card.extra.modLevel2   = row["Mod Lvl 2"] || "";
               card.extra.modLevel3   = row["Mod Lvl 3"] || "";
               card.extra.modLevel4   = row["Mod Lvl 4"] || "";
-              if (row["Mod TYPE"]) {
-                card.extra.modType = row["Mod TYPE"];
-              }
+              card.extra.modType     = row["Mod TYPE"] || "";
               break;
 
             case "Driver Cards":
               card.notes = row["Driver Trait"] || "";
-              if (row["Driver TYPE"]) {
-                card.extra.vehicleTypes = parseList(row["Driver TYPE"]);
-              }
               break;
 
             case "Named Driver Cards":
-              card.notes = row["Named Traits"] || "";
-              card.type  = "Named Driver"; // enforce
-              if (row["DRIVER TYPE"]) {
-                card.extra.vehicleTypes = parseList(row["DRIVER TYPE"]);
-              }
+              card.notes = row["Driver Trait"] || "";
+              card.type  = "Named Driver";
               break;
 
             case "Condition Cards":
-              card.notes = row["Condition Traits"] || "";
+              card.notes = row["Condition Trait"] || "";
               break;
 
             case "Track Cards":
               card.notes = row["Track Trait"] || "";
-              if (row["Track Type"]) {
-                card.extra.vehicleTypes = parseList(row["Track Type"]);
+              if (row["Vehicle Type"]) {
+                const vtStr = String(row["Vehicle Type"]).toUpperCase();
+                if (vtStr.includes("ALL")) {
+                  card.extra.vehicleTypes = ["Drag","Drift","Off-Road","Rally"];
+                } else {
+                  const map = {"DRAG":"Drag","DRIFT":"Drift","OFF-ROAD":"Off-Road","OFF ROAD":"Off-Road","RALLY":"Rally"};
+                  const parts = vtStr.split(/[\/,]/).map(s => s.trim()).filter(Boolean);
+                  card.extra.vehicleTypes = Array.from(new Set(
+                    parts.map(p => map[p] || null).filter(Boolean)
+                  ));
+                }
               }
               break;
 
             case "Vehicle Cards":
-              card.notes = row["VEHICLE TRAIT"] || "";
+              card.notes = row["TRAIT"] || "";
               card.type  = "Vehicle";
-              if (row["Vehicle TYPE"]) {
-                card.extra.vehicleType = row["Vehicle TYPE"];
-              }
-              if (row["HP"] !== "") {
-                card.extra.hp = Number(row["HP"]);
-              }
-              if (row["CON"] !== "") {
-                card.extra.con = Number(row["CON"]);
-              }
+              card.extra.vehicleType = row["Vehicle Type"] || "";
+              const hpCon1 = parseHpCon(row["VEHICLE HP/CON"]);
+              if (hpCon1.hp !== undefined) card.extra.hp = hpCon1.hp;
+              if (hpCon1.con !== undefined) card.extra.con = hpCon1.con;
               break;
 
             case "NAMED VEHICLE":
-              card.notes = row["Vehicle Trait"] || "";
+              card.notes = row["VEHICLE TRAIT"] || "";
               card.type  = "Named Vehicle";
-              if (row["Vehicle TYPE"]) {
-                card.extra.vehicleType = row["Vehicle TYPE"];
-              }
-              if (row["HP"] !== "") {
-                card.extra.hp = Number(row["HP"]);
-              }
-              if (row["CON"] !== "") {
-                card.extra.con = Number(row["CON"]);
-              }
+              card.extra.vehicleType = row["Vehicle Type"] || "";
+              const hpCon2 = parseHpCon(row["VEHICLE HP/CON"]);
+              if (hpCon2.hp !== undefined) card.extra.hp = hpCon2.hp;
+              if (hpCon2.con !== undefined) card.extra.con = hpCon2.con;
+              break;
+
+            case "MISC":
+              card.notes = row["ABILITY"] || "";
+              card.type  = "Misc";
               break;
 
             default:
-              // Fallback generic mapping for any future sheets
               card.notes =
                 row["Rules Text"] ||
                 row["Text"] ||
                 row["Rules"] ||
                 "";
-              if (card.type === "Vehicle" || card.type === "Named Vehicle") {
-                const vType = row["Vehicle Type"] || row["Type (Vehicle)"] || "";
-                const hp    = row["HP"] || row["Hull"] || "";
-                const con   = row["CON"] || row["Condition"] || "";
-                if (vType) card.extra.vehicleType = vType;
-                if (hp !== "") card.extra.hp      = Number(hp);
-                if (con !== "") card.extra.con    = Number(con);
-              }
-              if (card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") {
-                const vt = row["Vehicle Types"] || row["Types"] || "";
-                if (vt) card.extra.vehicleTypes = parseList(vt);
-              }
-              if (card.type === "Mod") {
-                card.extra.modBasePart = row["Base Part"] || row["Part"] || "";
-                card.extra.modLevel1   = row["Level 1"] || row["L1"] || "";
-                card.extra.modLevel2   = row["Level 2"] || row["L2"] || "";
-                card.extra.modLevel3   = row["Level 3"] || row["L3"] || "";
-                card.extra.modLevel4   = row["Level 4"] || row["L4"] || "";
-              }
               break;
           }
 
@@ -1494,7 +1444,6 @@
         });
         Dom.bulkParseSheetBtn.addEventListener("click", () => BulkImport.parseSheet());
 
-        // Filters
         Dom.bulkFilterText.addEventListener("input", () => {
           bulkFilterState.text = Dom.bulkFilterText.value;
           BulkImport.renderSelectionList();
@@ -1563,7 +1512,6 @@
       }
     };
 
-    // =================== PRECON ADMIN MODULE ===================
     const PreconAdmin = {
       getActivePrecon() {
         if (AdminState.selectedPreconIndex == null) return null;
@@ -1763,7 +1711,6 @@
       },
 
       init() {
-        // Buttons
         Dom.newPreconBtn.addEventListener("click", () => PreconAdmin.newPrecon());
         Dom.deletePreconBtn.addEventListener("click", () => PreconAdmin.deletePrecon());
         Dom.preconAddCardBtn.addEventListener("click", () => PreconAdmin.addCardToPrecon());
@@ -1778,20 +1725,17 @@
       }
     };
 
-    // =================== INIT ===================
     (function init() {
       Mode.init();
       CardLib.init();
       BulkImport.init();
       PreconAdmin.init();
 
-      // Make sure precon card dropdown refreshes whenever the library summary updates
       const originalUpdateSummary = CardLib.updateLibrarySummary;
       CardLib.updateLibrarySummary = function() {
         originalUpdateSummary.call(CardLib);
         PreconAdmin.refreshPreconCardSelect();
       };
-      // Call once for empty state
       PreconAdmin.refreshPreconCardSelect();
     })();
   </script>
