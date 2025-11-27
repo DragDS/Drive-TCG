@@ -553,7 +553,7 @@
 
     // Bulk import state
     let bulkWorkbook = null;
-    let bulkCards = []; // Each: { index, name, type, setName, rarity, raw, selected, imageData }
+    let bulkCards = []; // Each: { index, sheetName, name, type, setName, rarity, raw, selected, imageData }
     const bulkFilterState = { text: "", type: "", set: "" };
 
     const STORAGE_KEYS = {
@@ -784,7 +784,7 @@
         const container = Dom.extraFieldsContainer;
         container.innerHTML = "";
 
-        const addField = (label, id, value, placeholder = "", type="text") => {
+        const addField = (label, id, value, placeholder = "", typeInput="text") => {
           const wrap = document.createElement("div");
           wrap.className = "form-group";
           const lab = document.createElement("label");
@@ -792,7 +792,7 @@
           lab.textContent = label;
           const input = document.createElement("input");
           input.id = id;
-          input.type = type;
+          input.type = typeInput;
           input.value = value ?? "";
           input.placeholder = placeholder;
           wrap.appendChild(lab);
@@ -816,9 +816,9 @@
           select.size = 4;
           select.style.height = "90px";
 
-          const types = ["Drag","Drift","Off-Road","Rally"];
+          const typesArr = ["Drag","Drift","Off-Road","Rally"];
           const chosen = extra.vehicleTypes || [];
-          types.forEach(t => {
+          typesArr.forEach(t => {
             const opt = document.createElement("option");
             opt.value = t;
             opt.textContent = t;
@@ -1065,36 +1065,94 @@
           return;
         }
 
-        // Map rows to bulkCards with best-guess column names
+        // Map rows to bulkCards with sheet-specific logic
         bulkCards = rows.map((row, idx) => {
-          const name =
-            row["Card Name"] ||
-            row["Name"] ||
-            row["Card"] ||
-            row["CardName"] ||
-            "";
-          const type =
-            row["Card Type"] ||
-            row["Type"] ||
-            "";
-          const setName =
-            row["Set"] ||
-            row["Set Name"] ||
-            "";
-          const rarity =
-            row["Rarity"] ||
-            "";
+          let name = "";
+          let type = "";
+          let setName = "";
+          let rarity = "";
+
+          switch (sheetName) {
+            case "Crew Cards":
+              name    = row["Crew Name"];
+              type    = "Crew";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Mod Cards":
+              name    = row["Mod Name"];
+              type    = "Mod";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Driver Cards":
+              name    = row["Driver Name"];
+              type    = "Driver";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Named Driver Cards":
+              name    = row["Named Driver"];
+              type    = "Named Driver";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Condition Cards":
+              name    = row["Conditions"];
+              type    = "Condition";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Track Cards":
+              name    = row["Track Name"];
+              type    = "Track";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "Vehicle Cards":
+              name    = row["Vehicle"];
+              type    = "Vehicle";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            case "NAMED VEHICLE":
+              name    = row["Named Vehicles"];
+              type    = "Named Vehicle";
+              setName = row["SET"];
+              rarity  = row["RARITY"];
+              break;
+
+            default:
+              // Fallback for any future/random sheets
+              name    = row["Card Name"] || row["Name"] || row["Card"] || row["CardName"] || "";
+              type    = row["Card Type"] || row["Type"] || "";
+              setName = row["Set"] || row["Set Name"] || row["SET"] || "";
+              rarity  = row["Rarity"] || row["RARITY"] || "";
+          }
+
+          name    = name    || "";
+          type    = type    || "";
+          setName = setName || "";
+          rarity  = rarity  || "";
 
           return {
             index: idx,
+            sheetName,
             name,
             type,
             setName,
             rarity,
             raw: row,
-            selected: !!name // default select if it has a name
+            selected: !!name
           };
-        }).filter(c => c.name); // drop completely blank
+        }).filter(c => c.name); // drop rows with no name
 
         Dom.bulkStep1Status.textContent = `Parsed ${bulkCards.length} potential cards from "${sheetName}".`;
 
@@ -1269,78 +1327,155 @@
         }
 
         let countAdded = 0;
+
+        const parseList = (val) =>
+          String(val || "")
+            .split(",")
+            .map(t => t.trim())
+            .filter(Boolean);
+
         selected.forEach(bc => {
-          const row = bc.raw || {};
+          const row   = bc.raw || {};
+          const sheet = bc.sheetName || "";
+
           const card = CardLib.createEmptyCard();
 
-          card.name =
-            bc.name ||
-            row["Card Name"] ||
-            row["Name"] ||
-            row["Card"] ||
-            "";
-          card.type =
-            bc.type ||
-            row["Card Type"] ||
-            row["Type"] ||
-            "";
-          card.setName =
-            bc.setName ||
-            row["Set"] ||
-            row["Set Name"] ||
-            "";
-          card.rarity =
-            bc.rarity ||
-            row["Rarity"] ||
-            "";
+          // Basic shared fields
+          card.name     = bc.name ||
+                          row["Card Name"] ||
+                          row["Name"] ||
+                          row["Card"] ||
+                          "";
+          card.type     = bc.type ||
+                          row["Card Type"] ||
+                          row["Type"] ||
+                          "";
+          card.setName  = bc.setName ||
+                          row["Set"] ||
+                          row["Set Name"] ||
+                          row["SET"] ||
+                          "";
+          card.rarity   = bc.rarity ||
+                          row["Rarity"] ||
+                          row["RARITY"] ||
+                          "";
           card.cardNumber =
             row["Card Number"] ||
             row["Number"] ||
             "";
 
-          card.notes =
-            row["Rules Text"] ||
-            row["Text"] ||
-            row["Rules"] ||
-            "";
-          const tags =
+          // Tags (if you ever add a Tags col)
+          const tagsVal =
             row["Tags"] ||
             row["Tag"] ||
             "";
-          card.tags = String(tags)
-            .split(",")
-            .map(t => t.trim())
-            .filter(t => t);
+          card.tags = parseList(tagsVal);
 
+          // Image (from Step 3)
           card.imageData = bc.imageData || "";
 
-          // Basic extra auto-detection (very lightweight, just a helper)
+          // Sheet-specific rules text & extras
           card.extra = {};
-          if (card.type === "Vehicle" || card.type === "Named Vehicle") {
-            card.extra.vehicleType =
-              row["Vehicle Type"] ||
-              row["Type (Vehicle)"] ||
-              "";
-            const hp = row["HP"] || row["Hull"] || "";
-            const con = row["CON"] || row["Condition"] || "";
-            if (hp !== "") card.extra.hp = Number(hp);
-            if (con !== "") card.extra.con = Number(con);
-          }
-          if (card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") {
-            const vt =
-              row["Vehicle Types"] ||
-              row["Types"] ||
-              "";
-            if (vt) {
-              card.extra.vehicleTypes = String(vt).split(",").map(t => t.trim()).filter(t => t);
-            }
-          }
-          if (card.type === "Mod") {
-            card.extra.modBasePart = row["Base Part"] || row["Part"] || "";
-            card.extra.modLevel1 = row["Level 1"] || row["L1"] || "";
-            card.extra.modLevel2 = row["Level 2"] || row["L2"] || "";
-            card.extra.modLevel3 = row["Level 3"] || row["L3"] || "";
-            card.extra.modLevel4 = row["Level 4"] || row["L4"] || "";
+
+          switch (sheet) {
+            case "Crew Cards":
+              card.notes = row["Crew Trait"] || "";
+              // Crew has no structured extra fields right now
+              break;
+
+            case "Mod Cards":
+              card.notes = row["Mod Ability"] || "";
+              card.extra.modBasePart = row["Base Part"] || "";
+              card.extra.modLevel1   = row["Mod Lvl 1"] || "";
+              card.extra.modLevel2   = row["Mod Lvl 2"] || "";
+              card.extra.modLevel3   = row["Mod Lvl 3"] || "";
+              card.extra.modLevel4   = row["Mod Lvl 4"] || "";
+              if (row["Mod TYPE"]) {
+                card.extra.modType = row["Mod TYPE"];
+              }
+              break;
+
+            case "Driver Cards":
+              card.notes = row["Driver Trait"] || "";
+              if (row["Driver TYPE"]) {
+                card.extra.vehicleTypes = parseList(row["Driver TYPE"]);
+              }
+              break;
+
+            case "Named Driver Cards":
+              card.notes = row["Named Traits"] || "";
+              card.type  = "Named Driver"; // enforce
+              if (row["DRIVER TYPE"]) {
+                card.extra.vehicleTypes = parseList(row["DRIVER TYPE"]);
+              }
+              break;
+
+            case "Condition Cards":
+              card.notes = row["Condition Traits"] || "";
+              break;
+
+            case "Track Cards":
+              card.notes = row["Track Trait"] || "";
+              if (row["Track Type"]) {
+                card.extra.vehicleTypes = parseList(row["Track Type"]);
+              }
+              break;
+
+            case "Vehicle Cards":
+              card.notes = row["VEHICLE TRAIT"] || "";
+              card.type  = "Vehicle";
+              if (row["Vehicle TYPE"]) {
+                card.extra.vehicleType = row["Vehicle TYPE"];
+              }
+              if (row["HP"] !== "") {
+                card.extra.hp = Number(row["HP"]);
+              }
+              if (row["CON"] !== "") {
+                card.extra.con = Number(row["CON"]);
+              }
+              break;
+
+            case "NAMED VEHICLE":
+              card.notes = row["Vehicle Trait"] || "";
+              card.type  = "Named Vehicle";
+              if (row["Vehicle TYPE"]) {
+                card.extra.vehicleType = row["Vehicle TYPE"];
+              }
+              if (row["HP"] !== "") {
+                card.extra.hp = Number(row["HP"]);
+              }
+              if (row["CON"] !== "") {
+                card.extra.con = Number(row["CON"]);
+              }
+              break;
+
+            default:
+              // Fallback generic mapping for any future sheets
+              card.notes =
+                row["Rules Text"] ||
+                row["Text"] ||
+                row["Rules"] ||
+                "";
+              if (card.type === "Vehicle" || card.type === "Named Vehicle") {
+                const vType = row["Vehicle Type"] || row["Type (Vehicle)"] || "";
+                const hp    = row["HP"] || row["Hull"] || "";
+                const con   = row["CON"] || row["Condition"] || "";
+                if (vType) card.extra.vehicleType = vType;
+                if (hp !== "") card.extra.hp      = Number(hp);
+                if (con !== "") card.extra.con    = Number(con);
+              }
+              if (card.type === "Driver" || card.type === "Named Driver" || card.type === "Track") {
+                const vt = row["Vehicle Types"] || row["Types"] || "";
+                if (vt) card.extra.vehicleTypes = parseList(vt);
+              }
+              if (card.type === "Mod") {
+                card.extra.modBasePart = row["Base Part"] || row["Part"] || "";
+                card.extra.modLevel1   = row["Level 1"] || row["L1"] || "";
+                card.extra.modLevel2   = row["Level 2"] || row["L2"] || "";
+                card.extra.modLevel3   = row["Level 3"] || row["L3"] || "";
+                card.extra.modLevel4   = row["Level 4"] || row["L4"] || "";
+              }
+              break;
           }
 
           AdminState.cards.push(card);
@@ -1640,9 +1775,6 @@
           if (file) PreconAdmin.loadPreconsFromFile(file);
         });
         Dom.savePreconsBtn.addEventListener("click", () => PreconAdmin.savePreconsToFile());
-
-        // When cards change (library loaded or bulk import used), we want the precon card dropdown updated.
-        // We'll call PreconAdmin.refreshPreconCardSelect() from CardLib.init() end and BulkImport.finishImport() end.
       }
     };
 
@@ -1653,7 +1785,7 @@
       BulkImport.init();
       PreconAdmin.init();
 
-      // Refresh precon card select initially & whenever library changes
+      // Make sure precon card dropdown refreshes whenever the library summary updates
       const originalUpdateSummary = CardLib.updateLibrarySummary;
       CardLib.updateLibrarySummary = function() {
         originalUpdateSummary.call(CardLib);
