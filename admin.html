@@ -688,16 +688,6 @@
                 placeholder="PIT COST from Excel"
               />
             </div>
-
-            <!-- Extra JSON always visible, advanced -->
-            <div class="field">
-              <label for="extraJsonInput">Extra JSON (advanced)</label>
-              <input
-                id="extraJsonInput"
-                type="text"
-                placeholder='{"sponsorBrand":"WOLF"}'
-              />
-            </div>
           </div>
 
           <h3>Rules Text</h3>
@@ -1228,7 +1218,6 @@
 
       vehicleHpConInput: document.getElementById("vehicleHpConInput"),
       pitCostInput: document.getElementById("pitCostInput"),
-      extraJsonInput: document.getElementById("extraJsonInput"),
       cardNotesInput: document.getElementById("cardNotesInput"),
 
       singleNewBtn: document.getElementById("singleNewBtn"),
@@ -1574,14 +1563,6 @@
       const pitCost = pitCostStr !== "" ? Number(pitCostStr) : undefined;
 
       let extra = {};
-      if (Dom.extraJsonInput.value.trim()) {
-        try {
-          extra = JSON.parse(Dom.extraJsonInput.value);
-        } catch (e) {
-          console.error("Invalid extra JSON, ignoring:", e);
-          extra = {};
-        }
-      }
 
       if (type === "Mod") {
         extra.modType = modType || undefined;
@@ -1646,11 +1627,6 @@
 
       const vehTypes = CardData.getVehicleTypes(card);
       setSelectedVehicleTypesInUI(vehTypes);
-
-      const extraClean = JSON.parse(JSON.stringify(e || {}));
-      Dom.extraJsonInput.value = Object.keys(extraClean).length
-        ? JSON.stringify(extraClean)
-        : "";
 
       renderSinglePreview();
       updateFieldVisibility();
@@ -1764,7 +1740,6 @@
       Dom.modL4Input.value = "";
       Dom.vehicleHpConInput.value = "";
       Dom.pitCostInput.value = "";
-      Dom.extraJsonInput.value = "";
       clearVehicleTypeCheckboxes();
       Dom.singleStatus.textContent = "New blank card.";
       Dom.singleStatus.className = "status small-note";
@@ -2505,8 +2480,7 @@
         Dom.modL3Input,
         Dom.modL4Input,
         Dom.vehicleHpConInput,
-        Dom.pitCostInput,
-        Dom.extraJsonInput
+        Dom.pitCostInput
       ].forEach(el => {
         el.addEventListener("input", renderSinglePreview);
       });
