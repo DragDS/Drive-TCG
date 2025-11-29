@@ -10,7 +10,7 @@
     "notes": "SELECT 1 OPPONENT, THAT PLAYER REMOVES A MOD FROM A VEHICLE THEY OWN.",
     "createdAt": 1763867641765,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/blown_head_gasket.png"
   },
   {
     "id": "76a4bf59-0bdf-441a-b5f4-2cc2f1b18c4b",
@@ -23,7 +23,7 @@
     "notes": "SEARCH YOUR JUNKYARD FOR 1 MOD, REVEAL IT, AND EQUIP IT TO YOUR VEHICLE IN THE RACE.",
     "createdAt": 1763872203579,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/drift_stitch.png"
   },
   {
     "id": "f820a9e5-9e71-4a47-aadc-18622a8284e2",
@@ -36,7 +36,7 @@
     "notes": "-1/-6",
     "createdAt": 1763872312027,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/heavy_rain.png"
   },
   {
     "id": "7c348147-66c5-4ec4-a362-108b6be913e3",
@@ -56,7 +56,7 @@
         "Rally"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/danny.png"
   },
   {
     "id": "1c1ba6f3-f5ad-4706-b9df-34cfb2e9fe65",
@@ -73,7 +73,7 @@
         "Drag"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/josh.png"
   },
   {
     "id": "9cd823cc-d472-444e-8ea3-f76503406c1b",
@@ -91,7 +91,7 @@
         "Drift"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/raquel.png"
   },
   {
     "id": "ae5735bd-9915-43a8-b1c8-9d6bc652113f",
@@ -109,12 +109,12 @@
         "Drift"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/north_short.png"
   },
   {
     "id": "fd8fca63-81e1-42d2-aebd-68d5ac7df947",
     "name": "Josh's Firehawk",
-    "type": "Vehicle",
+    "type": "Named Vehicle",
     "rarity": "Rare",
     "setName": "Set 1",
     "cardNumber": "01-090",
@@ -122,16 +122,19 @@
     "notes": "IF A TRACK IS IN  PLAY THAT AFFECTS DRAG VEHICLES, ADD +6/0 TO THIS VEHICLE",
     "createdAt": 1763874406458,
     "extra": {
-      "vehicleType": "Drag",
       "hp": 8,
-      "con": 2
+      "con": 2,
+      "pitCost": 2
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/joshs_firehawk.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "d39ecb12-7977-4841-8613-fa07be759391",
     "name": "Raquel's Supersport",
-    "type": "Vehicle",
+    "type": "Named Vehicle",
     "rarity": "Rare",
     "setName": "Set 1",
     "cardNumber": "01-091",
@@ -139,122 +142,146 @@
     "notes": "WHILE IN THE RACE, INCREASE YOUR OPPONENTS PIT COST BY 1.",
     "createdAt": 1763874440337,
     "extra": {
-      "vehicleType": "Drag",
       "hp": 7,
-      "con": 3
+      "con": 3,
+      "pitCost": 2
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/raquels_supersport.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-1764234922929-22832-0",
     "name": "Danny's R-2-4",
     "type": "Named Vehicle",
     "setName": "SET 1",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "cardNumber": "01-089",
     "tags": [],
     "notes": "WHILE IN THE RACE, YOU CAN MAY DRAW AN EXTRA CARD.",
     "extra": {
-      "vehicleType": "Drift",
       "hp": 5,
-      "con": 5
+      "con": 5,
+      "pitCost": 2
     },
-    "imageUrl": "images/set1/dannys_r-2-4.png"
+    "imageUrl": "images/set1/dannys_r-2-4.png",
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-vm2p77gewgn",
     "name": "KNOX LUNAR",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-083",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 6,
-      "con": 4
+      "con": 4,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/knox_lunar.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-i3ai0lxrcyq",
     "name": "KNOX SUPER SPORT",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-084",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 7,
-      "con": 3
+      "con": 3,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/knox_super_sport.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-eyyf41qhcb",
     "name": "NISORO R-2-4",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-085",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRIFT",
       "hp": 5,
-      "con": 5
+      "con": 5,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/nisoro_r-2-4.png",
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-2p4ythuubos",
     "name": "NISORO ZX1",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-086",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRIFT",
       "hp": 3,
-      "con": 7
+      "con": 7,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/nisoro_zx1.png",
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-55dc245erda",
     "name": "ROCHESTER FIREHAWK",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-087",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 8,
-      "con": 2
+      "con": 2,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/rochester_firehawk.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-7r1tasebfb",
     "name": "ROCHESTER FUEGO",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-088",
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 2,
-      "con": 8
+      "con": 8,
+      "pitCost": 1
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/rochester_fuego.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   }
 ]

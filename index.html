@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE TCG – Card Library & Deck Builder</title>
+  <title>DRIVE TCG – Card Library</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * {
@@ -143,15 +143,17 @@
     .button.danger:hover {
       background: #7f1d1d;
     }
-    /* Card grid */
+
+    /* Card grid – auto-fit height */
     .card-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 0.5rem;
-      max-height: 500px;
+      max-height: calc(100vh - 260px);
       overflow-y: auto;
       padding-right: 0.25rem;
     }
+
     .card-tile {
       border-radius: 0.75rem;
       border: 1px solid #1f2937;
@@ -216,6 +218,7 @@
       background: rgba(15,23,42,0.8);
       color: #e5e7eb;
     }
+
     /* Detail view */
     .detail-layout {
       display: flex;
@@ -293,6 +296,7 @@
       flex-wrap: wrap;
       gap: 0.4rem;
     }
+
     /* Deck builder */
     .deck-layout {
       display: flex;
@@ -335,8 +339,10 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
+
+    /* Deck list – auto-fit */
     .deck-list {
-      max-height: 270px;
+      max-height: calc(100vh - 300px);
       overflow-y: auto;
       border-radius: 0.6rem;
       border: 1px solid #1f2937;
@@ -399,15 +405,10 @@
       margin-top: 0.25rem;
       font-size: 0.78rem;
     }
-    .deck-issues .ok {
-      color: #4ade80;
-    }
-    .deck-issues .warn {
-      color: #facc15;
-    }
-    .deck-issues .err {
-      color: #f97373;
-    }
+    .deck-issues .ok { color: #4ade80; }
+    .deck-issues .warn { color: #facc15; }
+    .deck-issues .err { color: #f97373; }
+
     /* Compare */
     .compare-layout {
       display: grid;
@@ -455,6 +456,8 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
+
+    /* Compare image – auto-fit */
     .compare-image {
       border-radius: 0.5rem;
       border: 1px solid #1f2937;
@@ -463,7 +466,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      max-height: 260px;
+      max-height: calc(100vh - 340px);
     }
     .compare-image img {
       max-width: 100%;
@@ -492,6 +495,7 @@
       color: #6b7280;
       font-style: italic;
     }
+
     /* Full card overlay */
     .overlay {
       position: fixed;
@@ -598,7 +602,8 @@
       flex-wrap: wrap;
       gap: 0.4rem;
     }
-    /* Precons */
+
+    /* Precons – auto-fit lists */
     .precon-layout {
       display: grid;
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
@@ -610,7 +615,7 @@
       }
     }
     .precon-list {
-      max-height: 290px;
+      max-height: calc(100vh - 300px);
       overflow-y: auto;
       border-radius: 0.6rem;
       border: 1px solid #1f2937;
@@ -645,7 +650,7 @@
       font-size: 0.72rem;
     }
     .precon-cards {
-      max-height: 220px;
+      max-height: calc(100vh - 300px);
       overflow-y: auto;
       border-radius: 0.6rem;
       border: 1px solid #1f2937;
@@ -880,7 +885,6 @@
   </div>
 
   <script>
-    // ========= GLOBAL APP STATE =========
     const AppState = {
       cards: [],
       cardsById: {},
@@ -894,12 +898,9 @@
       precons: []
     };
 
-    const STORAGE_KEYS = {
-      decks: "driveDecks_v1"
-    };
+    const STORAGE_KEYS = { decks: "driveDecks_v1" };
 
     const Dom = {
-      // Modes
       modeCardsBtn: document.getElementById("modeCardsBtn"),
       modeDecksBtn: document.getElementById("modeDecksBtn"),
       modeCompareBtn: document.getElementById("modeCompareBtn"),
@@ -909,7 +910,6 @@
       compareModePanel: document.getElementById("compareModePanel"),
       preconsModePanel: document.getElementById("preconsModePanel"),
 
-      // Card library
       searchInput: document.getElementById("searchInput"),
       typeFilter: document.getElementById("typeFilter"),
       setFilter: document.getElementById("setFilter"),
@@ -920,7 +920,6 @@
       detailContainer: document.getElementById("detailContainer"),
       openFullCardBtn: document.getElementById("openFullCardBtn"),
 
-      // Deck builder
       deckTabs: document.querySelectorAll(".deck-tab"),
       deckNameInput: document.getElementById("deckNameInput"),
       deckList: document.getElementById("deckList"),
@@ -930,7 +929,6 @@
       exportDeckJsonBtn: document.getElementById("exportDeckJsonBtn"),
       exportDeckTextBtn: document.getElementById("exportDeckTextBtn"),
 
-      // Full card modal
       fullCardOverlay: document.getElementById("fullCardOverlay"),
       fullCardTitle: document.getElementById("fullCardTitle"),
       fullCardImage: document.getElementById("fullCardImage"),
@@ -945,14 +943,12 @@
       fullAddToCompareBtn: document.getElementById("fullAddToCompareBtn"),
       closeFullCardBtn: document.getElementById("closeFullCardBtn"),
 
-      // Compare
       compareSelectA: document.getElementById("compareSelectA"),
       compareSelectB: document.getElementById("compareSelectB"),
       clearCompareABtn: document.getElementById("clearCompareABtn"),
       clearCompareBBtn: document.getElementById("clearCompareBBtn"),
       compareViewer: document.getElementById("compareViewer"),
 
-      // Precons
       preconSelect: document.getElementById("preconSelect"),
       refreshPreconsBtn: document.getElementById("refreshPreconsBtn"),
       preconDesc: document.getElementById("preconDesc"),
@@ -963,7 +959,6 @@
 
     let selectedCardId = null;
 
-    // ========= MODULE: CardData =========
     const CardData = {
       async load() {
         try {
@@ -982,25 +977,16 @@
 
         AppState.cardsById = {};
         AppState.cards.forEach(c => {
-          if (!c.id) {
-            c.id = "card-" + Math.random().toString(36).slice(2);
-          }
+          if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
           if (!c.extra) c.extra = {};
           if (!Array.isArray(c.tags)) c.tags = [];
           if (typeof c.imageUrl !== "string") c.imageUrl = "";
           AppState.cardsById[c.id] = c;
         });
       },
-
       getCardById(id) {
         return AppState.cardsById[id] || null;
       },
-
-      isNamedCard(card) {
-        if (!card || !card.type) return false;
-        return card.type === "Named Driver" || card.type === "Named Vehicle";
-      },
-
       getVehicleTypes(card) {
         if (!card) return [];
         if (card.extra && Array.isArray(card.extra.vehicleTypes) && card.extra.vehicleTypes.length) {
@@ -1011,7 +997,6 @@
         }
         return [];
       },
-
       getModStats(card) {
         if (!card || card.type !== "Mod") return "";
         const e = card.extra || {};
@@ -1025,7 +1010,6 @@
         if (levels.length) parts.push(levels.join(" · "));
         return parts.join(" | ");
       },
-
       getVehicleStats(card) {
         if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return "";
         const e = card.extra || {};
@@ -1036,7 +1020,6 @@
       }
     };
 
-    // ========= MODULE: Mode =========
     const Mode = {
       setMode(mode) {
         Dom.cardsModePanel.style.display = mode === "cards" ? "" : "none";
@@ -1049,7 +1032,6 @@
         Dom.modeCompareBtn.classList.toggle("active", mode === "compare");
         Dom.modePreconsBtn.classList.toggle("active", mode === "precons");
       },
-
       init() {
         Dom.modeCardsBtn.addEventListener("click", () => Mode.setMode("cards"));
         Dom.modeDecksBtn.addEventListener("click", () => Mode.setMode("decks"));
@@ -1058,38 +1040,29 @@
       }
     };
 
-    // ========= MODULE: CardGrid & Filters =========
     const CardGrid = {
       buildFilterOptions() {
         const sets = new Set();
         const rarities = new Set();
-
         AppState.cards.forEach(card => {
           if (card.setName) sets.add(card.setName);
           if (card.rarity) rarities.add(card.rarity);
         });
-
         Dom.setFilter.innerHTML = '<option value="">All Sets</option>';
-        Array.from(sets)
-          .sort((a,b) => a.localeCompare(b))
-          .forEach(s => {
-            const opt = document.createElement("option");
-            opt.value = s;
-            opt.textContent = s;
-            Dom.setFilter.appendChild(opt);
-          });
-
+        Array.from(sets).sort().forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s;
+          opt.textContent = s;
+          Dom.setFilter.appendChild(opt);
+        });
         Dom.rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-        Array.from(rarities)
-          .sort((a,b) => a.localeCompare(b))
-          .forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r;
-            opt.textContent = r;
-            Dom.rarityFilter.appendChild(opt);
-          });
+        Array.from(rarities).sort().forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r;
+          opt.textContent = r;
+          Dom.rarityFilter.appendChild(opt);
+        });
       },
-
       getFilteredCards() {
         const q = Dom.searchInput.value.trim().toLowerCase();
         const type = Dom.typeFilter.value;
@@ -1101,12 +1074,10 @@
           if (type && card.type !== type) return false;
           if (setName && card.setName !== setName) return false;
           if (rarity && card.rarity !== rarity) return false;
-
           if (vehType) {
             const vt = CardData.getVehicleTypes(card);
             if (!vt.includes(vehType)) return false;
           }
-
           if (q) {
             const haystack = [
               card.name || "",
@@ -1117,15 +1088,12 @@
             ].join(" ").toLowerCase();
             if (!haystack.includes(q)) return false;
           }
-
           return true;
         });
       },
-
       renderGrid() {
         const cards = CardGrid.getFilteredCards();
         Dom.cardGrid.innerHTML = "";
-
         Dom.cardCountLabel.textContent = `${cards.length} card${cards.length === 1 ? "" : "s"} found`;
 
         if (!cards.length) {
@@ -1150,7 +1118,6 @@
 
             const imgWrap = document.createElement("div");
             imgWrap.className = "card-image-wrapper";
-
             const img = document.createElement("img");
             img.src = card.imageUrl || "";
             img.alt = card.name || "Card";
@@ -1158,25 +1125,17 @@
 
             const info = document.createElement("div");
             info.className = "card-info";
-
             const title = document.createElement("div");
             title.className = "card-title";
             title.textContent = card.name || "(No Name)";
-
             const sub = document.createElement("div");
             sub.className = "card-sub";
-
             const left = document.createElement("span");
             left.textContent = card.type || "";
-
             const right = document.createElement("span");
-            const setPart = card.setName || "";
-            const numPart = card.cardNumber ? ` #${card.cardNumber}` : "";
-            right.textContent = setPart + numPart;
-
+            right.textContent = (card.setName || "") + (card.cardNumber ? ` #${card.cardNumber}` : "");
             sub.appendChild(left);
             sub.appendChild(right);
-
             info.appendChild(title);
             info.appendChild(sub);
 
@@ -1192,7 +1151,6 @@
             Dom.cardGrid.appendChild(tile);
           });
       },
-
       init() {
         ["input", "change"].forEach(evt => {
           Dom.searchInput.addEventListener(evt, () => CardGrid.renderGrid());
@@ -1204,12 +1162,10 @@
       }
     };
 
-    // ========= MODULE: DetailPanel =========
     const DetailPanel = {
       render(cardId) {
         const card = CardData.getCardById(cardId);
         Dom.detailContainer.innerHTML = "";
-
         if (!card) {
           Dom.detailContainer.innerHTML = "<p class='small-note'>No card selected.</p>";
           return;
@@ -1253,10 +1209,9 @@
         row2.className = "detail-row";
         const vt = CardData.getVehicleTypes(card);
         const tags = card.tags || [];
-        const bits = [];
-        bits.push(`<span class="detail-label">Vehicle Types:</span> <span>${vt.length ? vt.join(", ") : "—"}</span>`);
-        bits.push(`<span class="detail-label">Tags:</span> <span>${tags.length ? tags.join(", ") : "—"}</span>`);
-        row2.innerHTML = bits.join(" · ");
+        row2.innerHTML =
+          `<span class="detail-label">Vehicle Types:</span> <span>${vt.length ? vt.join(", ") : "—"}</span>` +
+          ` · <span class="detail-label">Tags:</span> <span>${tags.length ? tags.join(", ") : "—"}</span>`;
 
         const row3 = document.createElement("div");
         row3.className = "detail-row";
@@ -1316,7 +1271,6 @@
       }
     };
 
-    // ========= MODULE: DeckManager =========
     const DeckManager = {
       loadFromStorage() {
         try {
@@ -1328,15 +1282,11 @@
             name: d.name || "Deck",
             cards: d.cards || {}
           }));
-        } catch {
-          // ignore
-        }
+        } catch {}
       },
-
       saveToStorage() {
         localStorage.setItem(STORAGE_KEYS.decks, JSON.stringify(AppState.decks));
       },
-
       setActiveDeck(index) {
         if (index < 0 || index > 2) return;
         AppState.activeDeckIndex = index;
@@ -1347,23 +1297,18 @@
         Dom.deckNameInput.value = deck.name || "";
         DeckManager.renderDeck();
       },
-
       renderDeck() {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
-
         Dom.deckList.innerHTML = "";
-
         const entries = Object.entries(deck.cards)
           .map(([cardId, qty]) => {
             const card = CardData.getCardById(cardId);
             return { cardId, card, qty: Number(qty) || 0 };
           })
-          .filter(entry => entry.card && entry.qty > 0)
+          .filter(e => e.card && e.qty > 0)
           .sort((a,b) => {
-            const aType = a.card.type || "";
-            const bType = b.card.type || "";
-            const typeCmp = aType.localeCompare(bType);
+            const typeCmp = (a.card.type || "").localeCompare(b.card.type || "");
             if (typeCmp !== 0) return typeCmp;
             return (a.card.name || "").localeCompare(b.card.name || "");
           });
@@ -1421,94 +1366,64 @@
 
         DeckManager.updateStats(deck);
       },
-
       updateStats(deck) {
         const total = Object.values(deck.cards).reduce((sum, qty) => sum + Number(qty || 0), 0);
         const typeCounts = {};
         let vehicleCount = 0;
-
         Object.entries(deck.cards).forEach(([cardId, qty]) => {
           const card = CardData.getCardById(cardId);
           if (!card) return;
           const n = Number(qty) || 0;
           const type = card.type || "Unknown";
           typeCounts[type] = (typeCounts[type] || 0) + n;
-          if (type === "Vehicle" || type === "Named Vehicle") {
-            vehicleCount += n;
-          }
+          if (type === "Vehicle" || type === "Named Vehicle") vehicleCount += n;
         });
 
         let html = `<h3>Deck Stats</h3>`;
         html += `<div class="small-note">Total Cards: ${total}</div>`;
-
         const lines = [];
         Object.entries(typeCounts)
           .sort((a,b) => a[0].localeCompare(b[0]))
-          .forEach(([type, count]) => {
-            lines.push(`${type}: ${count}`);
-          });
-        if (vehicleCount) {
-          lines.push(`Vehicles / Named Vehicles: ${vehicleCount}`);
-        }
-        if (lines.length) {
-          html += `<div class="small-note">${lines.join("<br>")}</div>`;
-        }
-
+          .forEach(([type, count]) => lines.push(`${type}: ${count}`));
+        if (vehicleCount) lines.push(`Vehicles / Named Vehicles: ${vehicleCount}`);
+        if (lines.length) html += `<div class="small-note">${lines.join("<br>")}</div>`;
         Dom.deckStats.innerHTML = html;
-        DeckManager.updateLegality(deck, total, vehicleCount);
+        DeckManager.updateLegality(total, vehicleCount);
       },
-
-      updateLegality(deck, total, vehicleCount) {
+      updateLegality(total, vehicleCount) {
         const issues = [];
-
         if (total !== 50) {
           issues.push({ level: "err", text: `Deck must contain exactly 50 cards (current: ${total}).` });
         } else {
           issues.push({ level: "ok", text: "Deck has 50 cards." });
         }
-
         if (vehicleCount < 2) {
           issues.push({ level: "warn", text: `Deck should contain at least 2 Vehicles / Named Vehicles (current: ${vehicleCount}).` });
         } else {
           issues.push({ level: "ok", text: `Vehicles / Named Vehicles: ${vehicleCount}.` });
         }
-
-        if (!issues.length) {
-          Dom.deckLegal.innerHTML = "";
-          return;
-        }
-
         Dom.deckLegal.innerHTML = issues
           .map(issue => `<div class="${issue.level}">${issue.text}</div>`)
           .join("");
       },
-
       addCard(cardId, delta) {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
         const current = Number(deck.cards[cardId] || 0);
         const next = Math.max(0, current + delta);
-        if (next === 0) {
-          delete deck.cards[cardId];
-        } else {
-          deck.cards[cardId] = next;
-        }
+        if (next === 0) delete deck.cards[cardId];
+        else deck.cards[cardId] = next;
         DeckManager.saveToStorage();
         DeckManager.renderDeck();
       },
-
       setCardQuantity(cardId, qty) {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
-        if (qty <= 0) {
-          delete deck.cards[cardId];
-        } else {
-          deck.cards[cardId] = qty;
-        }
+        if (qty <= 0) delete deck.cards[cardId];
+        else deck.cards[cardId] = qty;
         DeckManager.saveToStorage();
         DeckManager.renderDeck();
       },
-
       clearDeck() {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
@@ -1517,7 +1432,6 @@
         DeckManager.saveToStorage();
         DeckManager.renderDeck();
       },
-
       exportDeckAsJson() {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
@@ -1533,7 +1447,6 @@
         a.click();
         URL.revokeObjectURL(url);
       },
-
       exportDeckAsText() {
         const deck = AppState.decks[AppState.activeDeckIndex];
         if (!deck) return;
@@ -1559,76 +1472,57 @@
         a.click();
         URL.revokeObjectURL(url);
       },
-
       init() {
         DeckManager.loadFromStorage();
-
         Dom.deckTabs.forEach(tab => {
           tab.addEventListener("click", () => {
             const idx = Number(tab.dataset.deckIndex);
             DeckManager.setActiveDeck(idx);
           });
         });
-
         Dom.deckNameInput.addEventListener("input", () => {
           const deck = AppState.decks[AppState.activeDeckIndex];
           if (!deck) return;
           deck.name = Dom.deckNameInput.value.trim() || `Deck ${AppState.activeDeckIndex + 1}`;
           DeckManager.saveToStorage();
         });
-
         Dom.clearDeckBtn.addEventListener("click", () => DeckManager.clearDeck());
         Dom.exportDeckJsonBtn.addEventListener("click", () => DeckManager.exportDeckAsJson());
         Dom.exportDeckTextBtn.addEventListener("click", () => DeckManager.exportDeckAsText());
-
         DeckManager.setActiveDeck(AppState.activeDeckIndex);
       }
     };
 
-    // ========= MODULE: FullCardModal =========
     const FullCardModal = {
       open(cardId) {
         const card = CardData.getCardById(cardId);
         if (!card) return;
-
         Dom.fullCardTitle.textContent = card.name || "(No Name)";
         Dom.fullCardImage.src = card.imageUrl || "";
         Dom.fullCardImage.alt = card.name || "Card";
-
         Dom.fullCardType.textContent = card.type || "";
         Dom.fullCardSet.textContent = card.setName || "";
         Dom.fullCardRarity.textContent = card.rarity || "";
-
         const vt = CardData.getVehicleTypes(card);
         Dom.fullCardVehicles.textContent = vt.length ? vt.join(", ") : "—";
-
         const tags = card.tags || [];
         Dom.fullCardTags.textContent = tags.length ? tags.join(", ") : "—";
-
         const modStats = CardData.getModStats(card);
         const vehStats = CardData.getVehicleStats(card);
         const statPieces = [];
         if (modStats) statPieces.push(modStats);
         if (vehStats) statPieces.push(vehStats);
         Dom.fullCardStats.textContent = statPieces.length ? statPieces.join(" | ") : "—";
-
         Dom.fullCardRules.textContent = card.notes || "";
 
-        Dom.fullAddToDeckBtn.onclick = () => {
-          DeckManager.addCard(card.id, 1);
-        };
-
-        Dom.fullAddToCompareBtn.onclick = () => {
-          CompareModule.addCardToCompare(card.id);
-        };
+        Dom.fullAddToDeckBtn.onclick = () => DeckManager.addCard(card.id, 1);
+        Dom.fullAddToCompareBtn.onclick = () => CompareModule.addCardToCompare(card.id);
 
         Dom.fullCardOverlay.classList.add("open");
       },
-
       close() {
         Dom.fullCardOverlay.classList.remove("open");
       },
-
       init() {
         Dom.openFullCardBtn.addEventListener("click", () => {
           if (!selectedCardId) return;
@@ -1636,58 +1530,41 @@
         });
         Dom.closeFullCardBtn.addEventListener("click", () => FullCardModal.close());
         Dom.fullCardOverlay.addEventListener("click", e => {
-          if (e.target === Dom.fullCardOverlay) {
-            FullCardModal.close();
-          }
+          if (e.target === Dom.fullCardOverlay) FullCardModal.close();
         });
       }
     };
 
-    // ========= MODULE: CompareModule =========
     const CompareModule = {
       addCardToCompare(cardId) {
         const slots = AppState.compareSlots;
-        if (slots[0] === cardId) {
-          slots[0] = null;
-        } else if (slots[1] === cardId) {
-          slots[1] = null;
-        } else if (!slots[0]) {
-          slots[0] = cardId;
-        } else if (!slots[1]) {
-          slots[1] = cardId;
-        } else {
-          slots[1] = cardId;
-        }
+        if (slots[0] === cardId) slots[0] = null;
+        else if (slots[1] === cardId) slots[1] = null;
+        else if (!slots[0]) slots[0] = cardId;
+        else if (!slots[1]) slots[1] = cardId;
+        else slots[1] = cardId;
         CompareModule.syncSelects();
         CompareModule.render();
       },
-
       syncSelects() {
         const optsA = ['<option value="">Select Card A</option>'];
         const optsB = ['<option value="">Select Card B</option>'];
-
         AppState.cards
           .slice()
           .sort((a,b) => (a.name || "").localeCompare(b.name || ""))
           .forEach(card => {
-            const oA = `<option value="${card.id}">${card.name}</option>`;
-            const oB = `<option value="${card.id}">${card.name}</option>`;
-            optsA.push(oA);
-            optsB.push(oB);
+            optsA.push(`<option value="${card.id}">${card.name}</option>`);
+            optsB.push(`<option value="${card.id}">${card.name}</option>`);
           });
-
         Dom.compareSelectA.innerHTML = optsA.join("");
         Dom.compareSelectB.innerHTML = optsB.join("");
-
         Dom.compareSelectA.value = AppState.compareSlots[0] || "";
         Dom.compareSelectB.value = AppState.compareSlots[1] || "";
       },
-
       render() {
         const [idA, idB] = AppState.compareSlots;
         const cardA = CardData.getCardById(idA);
         const cardB = CardData.getCardById(idB);
-
         Dom.compareViewer.innerHTML = "";
 
         const createCompareCard = (label, card) => {
@@ -1702,7 +1579,6 @@
           badge.textContent = card ? (card.type || "") : "No card selected.";
           header.appendChild(h3);
           header.appendChild(badge);
-
           box.appendChild(header);
 
           if (!card) {
@@ -1730,75 +1606,55 @@
           const tags = card.tags || [];
           const modStats = CardData.getModStats(card);
           const vehStats = CardData.getVehicleStats(card);
-
-          const sections = [];
-
-          sections.push(`
-            <div class="compare-section">
-              <span class="compare-label">Type:</span> <span class="compare-value">${card.type || ""}</span>
-            </div>
-          `);
-          sections.push(`
-            <div class="compare-section">
-              <span class="compare-label">Set / Rarity:</span>
-              <span class="compare-value">${card.setName || ""} ${card.cardNumber ? ("#" + card.cardNumber) : ""} · ${card.rarity || ""}</span>
-            </div>
-          `);
-          sections.push(`
-            <div class="compare-section">
-              <span class="compare-label">Vehicle Types:</span>
-              <span class="compare-value">${vt.length ? vt.join(", ") : "—"}</span>
-            </div>
-          `);
-          sections.push(`
-            <div class="compare-section">
-              <span class="compare-label">Tags:</span>
-              <span class="compare-value">${tags.length ? tags.join(", ") : "—"}</span>
-            </div>
-          `);
-
           const statsPieces = [];
           if (modStats) statsPieces.push(modStats);
           if (vehStats) statsPieces.push(vehStats);
 
-          sections.push(`
+          meta.innerHTML = `
+            <div class="compare-section">
+              <span class="compare-label">Type:</span>
+              <span class="compare-value">${card.type || ""}</span>
+            </div>
+            <div class="compare-section">
+              <span class="compare-label">Set / Rarity:</span>
+              <span class="compare-value">${card.setName || ""} ${card.cardNumber ? ("#" + card.cardNumber) : ""} · ${card.rarity || ""}</span>
+            </div>
+            <div class="compare-section">
+              <span class="compare-label">Vehicle Types:</span>
+              <span class="compare-value">${vt.length ? vt.join(", ") : "—"}</span>
+            </div>
+            <div class="compare-section">
+              <span class="compare-label">Tags:</span>
+              <span class="compare-value">${tags.length ? tags.join(", ") : "—"}</span>
+            </div>
             <div class="compare-section">
               <span class="compare-label">Stats:</span>
               <span class="compare-value">${statsPieces.length ? statsPieces.join(" | ") : "—"}</span>
             </div>
-          `);
-
-          sections.push(`
             <div class="compare-section">
               <span class="compare-label">Rules:</span>
               <span class="compare-value">${(card.notes || "").replace(/\n/g,"<br>")}</span>
             </div>
-          `);
+          `;
 
-          meta.innerHTML = sections.join("");
           body.appendChild(imgWrap);
           body.appendChild(meta);
           box.appendChild(body);
-
           return box;
         };
 
         Dom.compareViewer.appendChild(createCompareCard("A", cardA));
         Dom.compareViewer.appendChild(createCompareCard("B", cardB));
       },
-
       init() {
         Dom.compareSelectA.addEventListener("change", () => {
-          const val = Dom.compareSelectA.value || null;
-          AppState.compareSlots[0] = val;
+          AppState.compareSlots[0] = Dom.compareSelectA.value || null;
           CompareModule.render();
         });
         Dom.compareSelectB.addEventListener("change", () => {
-          const val = Dom.compareSelectB.value || null;
-          AppState.compareSlots[1] = val;
+          AppState.compareSlots[1] = Dom.compareSelectB.value || null;
           CompareModule.render();
         });
-
         Dom.clearCompareABtn.addEventListener("click", () => {
           AppState.compareSlots[0] = null;
           CompareModule.syncSelects();
@@ -1812,7 +1668,6 @@
       }
     };
 
-    // ========= MODULE: PreconViewer =========
     const PreconViewer = {
       async loadPrecons() {
         try {
@@ -1827,10 +1682,8 @@
           console.error("Failed to load drive-precons.json", e);
           AppState.precons = [];
         }
-
         PreconViewer.renderSelect();
       },
-
       renderSelect() {
         Dom.preconSelect.innerHTML = '<option value="">Select Precon</option>';
         AppState.precons.forEach((p, idx) => {
@@ -1839,24 +1692,20 @@
           opt.textContent = p.name || `Precon ${idx + 1}`;
           Dom.preconSelect.appendChild(opt);
         });
-
         Dom.preconStats.textContent = AppState.precons.length
           ? `${AppState.precons.length} precon deck${AppState.precons.length === 1 ? "" : "s"} loaded`
           : "No precons found.";
       },
-
       renderPrecon(indexStr) {
         Dom.preconList.innerHTML = "";
         Dom.preconCards.innerHTML = "";
         Dom.preconDesc.textContent = "";
-
         if (!indexStr) return;
         const idx = Number(indexStr);
         const precon = AppState.precons[idx];
         if (!precon) return;
 
         Dom.preconDesc.textContent = precon.notes || "No description.";
-
         const cardsObj = precon.cards || {};
         const entries = Object.entries(cardsObj)
           .map(([cardId, qty]) => {
@@ -1868,9 +1717,7 @@
                         (a.card.name || "").localeCompare(b.card.name || ""));
 
         let total = 0;
-        entries.forEach(e => {
-          total += e.qty;
-        });
+        entries.forEach(e => total += e.qty);
 
         if (!entries.length) {
           Dom.preconCards.innerHTML = "<p class='small-note'>No cards in this precon.</p>";
@@ -1895,7 +1742,6 @@
 
             row.appendChild(main);
             row.appendChild(img);
-
             Dom.preconCards.appendChild(row);
           });
         }
@@ -1908,7 +1754,6 @@
             </div>
           </div>`;
       },
-
       init() {
         Dom.preconSelect.addEventListener("change", () => {
           PreconViewer.renderPrecon(Dom.preconSelect.value);
@@ -1917,7 +1762,6 @@
       }
     };
 
-    // ========= INIT =========
     (async function init() {
       Mode.init();
       DeckManager.init();
