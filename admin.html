@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <title>DRIVE TCG – Admin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- SheetJS for XLSX parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -19,14 +17,15 @@
     .app {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 1.25rem;
+      padding: 1rem;
     }
     header {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      margin-bottom: 0.75rem;
+      justify-content: space-between;
       align-items: baseline;
+      margin-bottom: 0.75rem;
     }
     header h1 {
       margin: 0;
@@ -36,18 +35,18 @@
       color: #9ca3af;
       font-size: 0.85rem;
     }
-    .mode-toggle {
+    .nav {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
       margin-bottom: 0.75rem;
+      align-items: center;
     }
-    .mode-label {
+    .nav-label {
       font-size: 0.8rem;
       color: #9ca3af;
     }
-    .mode-btn {
+    .nav-btn {
       border-radius: 999px;
       padding: 0.3rem 0.8rem;
       font-size: 0.8rem;
@@ -57,13 +56,13 @@
       cursor: pointer;
       transition: background 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
     }
-    .mode-btn:hover {
+    .nav-btn:hover {
       background: #030712;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     }
-    .mode-btn.active {
+    .nav-btn.active {
       border-color: #22c55e;
-      background: rgba(34,197,94,0.08);
+      background: rgba(34,197,94,0.12);
       box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
     }
     .panel {
@@ -78,9 +77,13 @@
       margin: 0 0 0.5rem;
       font-size: 1.1rem;
     }
+    .panel h3 {
+      margin: 0.5rem 0 0.4rem;
+      font-size: 0.95rem;
+    }
     .layout-two {
       display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.8fr);
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
       gap: 0.75rem;
     }
     @media (max-width: 900px) {
@@ -88,23 +91,44 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 0.35rem 0.6rem;
-      border-radius: 0.45rem;
+    .layout-three {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 1.1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 1100px) {
+      .layout-three {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      }
+    }
+    @media (max-width: 900px) {
+      .layout-three {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .toolbar input[type="text"],
+    .toolbar select {
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
       border: 1px solid #374151;
       background: #020617;
       color: #e5e7eb;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
-    textarea {
-      min-height: 80px;
-      resize: vertical;
+    .toolbar input[type="file"] {
+      font-size: 0.8rem;
     }
-    button {
+    .toolbar .spacer {
+      flex: 1;
+    }
+    .button {
       border-radius: 999px;
       border: 1px solid #374151;
       background: #111827;
@@ -114,179 +138,272 @@
       cursor: pointer;
       transition: background 0.08s ease, box-shadow 0.08s ease, transform 0.05s ease;
     }
-    button:hover {
+    .button:hover {
       background: #020617;
       box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       transform: translateY(-1px);
     }
-    button.secondary {
+    .button.secondary {
       background: #020617;
     }
-    button.danger {
+    .button.danger {
       border-color: #b91c1c;
       color: #fecaca;
     }
-    button.danger:hover {
+    .button.danger:hover {
       background: #7f1d1d;
-    }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-bottom: 0.5rem;
-      align-items: center;
     }
     .small-note {
       font-size: 0.78rem;
       color: #9ca3af;
     }
-    .card-list {
-      max-height: 420px;
-      overflow-y: auto;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.35rem;
+    .status {
+      font-size: 0.78rem;
+      margin-top: 0.25rem;
+    }
+    .status.ok {
+      color: #4ade80;
+    }
+    .status.warn {
+      color: #facc15;
+    }
+    .status.err {
+      color: #f97373;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      font-size: 0.78rem;
+    }
+    .field label {
+      color: #9ca3af;
+    }
+    .field input[type="text"],
+    .field input[type="number"],
+    .field select,
+    .field textarea {
+      padding: 0.3rem 0.5rem;
+      border-radius: 0.55rem;
+      border: 1px solid #374151;
       background: #020617;
+      color: #e5e7eb;
       font-size: 0.8rem;
     }
-    .card-row {
+    .field textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .card-preview {
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top left, rgba(148,163,184,0.16), #020617);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      padding: 0.6rem;
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      min-height: 180px;
+    }
+    .card-preview-img {
+      flex: 0 0 40%;
+      max-width: 40%;
+      background: #020617;
+      border-radius: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .card-preview-img img {
+      max-width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+    }
+    .card-preview-body {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.8rem;
+    }
+    .card-preview-header {
       display: flex;
       justify-content: space-between;
+      gap: 0.25rem;
+      align-items: baseline;
+    }
+    .card-preview-name {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .card-preview-type {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+    .card-preview-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .card-preview-label {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+    .card-preview-text {
+      border-radius: 0.5rem;
+      border: 1px solid rgba(148,163,184,0.6);
+      background: rgba(15,23,42,0.9);
+      padding: 0.4rem 0.5rem;
+      white-space: pre-wrap;
+      font-size: 0.78rem;
+    }
+
+    .json-view {
+      border-radius: 0.6rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      padding: 0.5rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      max-height: 260px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+
+    .bulk-grid {
+      max-height: calc(100vh - 260px);
+      overflow-y: auto;
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      padding: 0.4rem;
+      font-size: 0.78rem;
+    }
+    .bulk-row {
+      display: grid;
+      grid-template-columns: 2.2rem minmax(0, 2.5fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+      gap: 0.4rem;
       align-items: center;
-      gap: 0.35rem;
+      padding: 0.2rem 0.3rem;
+      border-radius: 0.4rem;
+    }
+    .bulk-row:nth-child(odd) {
+      background: rgba(15,23,42,0.7);
+    }
+    .bulk-row:nth-child(even) {
+      background: rgba(15,23,42,0.45);
+    }
+    .bulk-row-header {
+      font-weight: 600;
+      color: #9ca3af;
+      border-bottom: 1px solid #1f2937;
+      margin-bottom: 0.2rem;
+    }
+    .bulk-row input[type="checkbox"] {
+      transform: scale(1.1);
+    }
+
+    .library-list {
+      max-height: calc(100vh - 260px);
+      overflow-y: auto;
+      border-radius: 0.75rem;
+      border: 1px solid #1f2937;
+      background: #020617;
+      padding: 0.4rem;
+      font-size: 0.78rem;
+    }
+    .library-row {
+      display: grid;
+      grid-template-columns: 2.5rem minmax(0, 3fr) minmax(0, 1.5fr) minmax(0, 1.5fr) minmax(0, 1.4fr);
+      gap: 0.4rem;
+      align-items: center;
       padding: 0.2rem 0.3rem;
       border-radius: 0.4rem;
       cursor: pointer;
     }
-    .card-row:nth-child(odd) {
+    .library-row:nth-child(odd) {
       background: rgba(15,23,42,0.7);
     }
-    .card-row:nth-child(even) {
+    .library-row:nth-child(even) {
       background: rgba(15,23,42,0.45);
     }
-    .card-row.selected {
+    .library-row.selected {
       border: 1px solid #22c55e;
       box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
     }
-    .card-row-main {
+    .library-row span.truncate {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .card-row-sub {
-      font-size: 0.72rem;
-      color: #9ca3af;
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: minmax(0,1fr) minmax(0,1fr);
-      gap: 0.5rem;
-    }
-    @media (max-width: 900px) {
-      .form-grid {
-        grid-template-columns: minmax(0,1fr);
-      }
-    }
-    .form-group {
-      margin-bottom: 0.45rem;
-    }
-    .form-label {
-      display: block;
-      font-size: 0.8rem;
-      margin-bottom: 0.2rem;
-      color: #9ca3af;
-    }
-    .image-preview {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: #020617;
-      padding: 0.35rem;
-      display: flex;
-      justify-content: center;
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.9);
+      display: none;
       align-items: center;
-      min-height: 120px;
+      justify-content: center;
+      z-index: 50;
+      padding: 1rem;
     }
-    .image-preview img {
-      max-width: 100%;
-      max-height: 240px;
-      object-fit: contain;
-      border-radius: 0.45rem;
+    .modal-backdrop.open {
+      display: flex;
     }
-    .step-title {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-    .step-box {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.6rem;
-      background: rgba(15,23,42,0.8);
-      margin-bottom: 0.5rem;
-    }
-    .bulk-list {
-      max-height: 360px;
-      overflow-y: auto;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.35rem;
+    .modal {
       background: #020617;
-      font-size: 0.8rem;
-    }
-    .precon-layout {
-      display: grid;
-      grid-template-columns: minmax(0,1.2fr) minmax(0,1.8fr);
-      gap: 0.75rem;
-    }
-    @media (max-width: 900px) {
-      .precon-layout {
-        grid-template-columns: minmax(0,1fr);
-      }
-    }
-    .precon-list {
-      max-height: 360px;
-      overflow-y: auto;
-      border-radius: 0.6rem;
+      border-radius: 0.75rem;
       border: 1px solid #1f2937;
-      padding: 0.35rem;
-      background: #020617;
-      font-size: 0.8rem;
-    }
-    .precon-row {
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.4rem;
-      cursor: pointer;
-    }
-    .precon-row:nth-child(odd) {
-      background: rgba(15,23,42,0.7);
-    }
-    .precon-row:nth-child(even) {
-      background: rgba(15,23,42,0.45);
-    }
-    .precon-row.selected {
-      border: 1px solid #22c55e;
-      box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
-    }
-    .precon-cards {
-      max-height: 260px;
+      padding: 0.75rem;
+      max-width: 720px;
+      width: 100%;
+      max-height: 90vh;
       overflow-y: auto;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.35rem;
-      background: #020617;
-      font-size: 0.8rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.9);
     }
-    .precon-card-row {
+    .modal-header {
       display: flex;
       justify-content: space-between;
-      gap: 0.35rem;
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.4rem;
+      gap: 0.4rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
     }
-    .precon-card-row:nth-child(odd) {
-      background: rgba(15,23,42,0.7);
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1rem;
     }
-    .precon-card-row:nth-child(even) {
-      background: rgba(15,23,42,0.45);
+    .modal-close {
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #e5e7eb;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      background: #111827;
+    }
+    .modal-body {
+      font-size: 0.8rem;
+    }
+
+    .inline-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      background: rgba(15,23,42,0.9);
+      border-radius: 0.25rem;
+      padding: 0 0.25rem;
     }
   </style>
 </head>
@@ -295,255 +412,397 @@
     <header>
       <div>
         <h1>DRIVE TCG – Admin</h1>
-        <small>Manage the official card library, bulk imports, and preconstructed decks.</small>
+        <small>Manage drive-card.json and drive-precons.json for the public card library.</small>
       </div>
     </header>
 
-    <div class="mode-toggle">
-      <span class="mode-label">Mode:</span>
-      <button id="modeCardsBtn" class="mode-btn active">Card Editor</button>
-      <button id="modeBulkBtn" class="mode-btn">Bulk Import</button>
-      <button id="modePreconsBtn" class="mode-btn">Precon Admin</button>
-    </div>
+    <nav class="nav">
+      <span class="nav-label">Section:</span>
+      <button id="navSingleBtn" class="nav-btn active" type="button">Single Card Editor</button>
+      <button id="navBulkBtn" class="nav-btn" type="button">Bulk Import from Excel</button>
+      <button id="navPreconsBtn" class="nav-btn" type="button">Preconstructed Decks</button>
+      <button id="navHelpBtn" class="nav-btn" type="button">Help / Workflow</button>
+    </nav>
 
-    <!-- CARD EDITOR LAYOUT -->
-    <div id="cardAdminLayout">
-      <div class="panel">
-        <div class="toolbar">
-          <button id="loadLibraryBtn" type="button">Load Library JSON</button>
-          <input id="loadLibraryInput" type="file" accept="application/json" style="display:none;" />
-          <button id="saveLibraryBtn" type="button">Download Library JSON</button>
-          <span class="small-note" id="librarySummary"></span>
-        </div>
-      </div>
+    <!-- SINGLE CARD EDITOR -->
+    <section id="singleSection" class="panel">
+      <h2>Single Card Editor</h2>
+      <p class="small-note">
+        Edit or create a card entry for <span class="inline-code">drive-card.json</span>. Use the bulk importer for large updates.
+      </p>
 
       <div class="layout-two">
-        <section class="panel">
-          <h2>Cards in Library</h2>
-          <div class="toolbar">
-            <input id="cardListSearch" type="text" placeholder="Search name / type / set..." />
-            <button id="newCardBtn" type="button">+ New Card</button>
-            <button id="deleteCardBtn" class="danger" type="button">Delete Selected</button>
-          </div>
-          <div id="cardList" class="card-list"></div>
-        </section>
-
-        <section class="panel">
-          <h2>Card Details</h2>
-          <div class="form-grid">
-            <div>
-              <div class="form-group">
-                <label class="form-label" for="cardNameInput">Card Name</label>
-                <input id="cardNameInput" type="text" />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cardTypeInput">Card Type</label>
-                <select id="cardTypeInput">
-                  <option value="">-- Select Type --</option>
-                  <option value="Crew">Crew</option>
-                  <option value="Driver">Driver</option>
-                  <option value="Named Driver">Named Driver</option>
-                  <option value="Mod">Mod</option>
-                  <option value="Vehicle">Vehicle</option>
-                  <option value="Named Vehicle">Named Vehicle</option>
-                  <option value="Track">Track</option>
-                  <option value="Condition">Condition</option>
-                  <option value="Misc">Misc</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cardRarityInput">Rarity</label>
-                <input id="cardRarityInput" type="text" placeholder="Common, Rare, etc." />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cardSetInput">Set Name</label>
-                <input id="cardSetInput" type="text" placeholder="Set 1, Set 1 & 2, etc." />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cardNumberInput">Card Number</label>
-                <input id="cardNumberInput" type="text" placeholder="001, 02A, etc." />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="cardTagsInput">Tags (comma separated)</label>
-                <input id="cardTagsInput" type="text" placeholder="Starter, Promo, Junkyard, ..." />
-              </div>
+        <div>
+          <h3>Card Fields</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="cardIdInput">Card ID (internal)</label>
+              <input id="cardIdInput" type="text" placeholder="auto or existing id" />
             </div>
-            <div>
-              <div id="extraFieldsContainer"></div>
-              <div class="form-group">
-                <label class="form-label" for="cardImageUrlInput">Card Image URL / Path</label>
-                <input
-                  id="cardImageUrlInput"
-                  type="text"
-                  placeholder="e.g. images/set1/001.png"
-                />
-                <div class="image-preview" id="cardImagePreview">
-                  <span class="small-note">No image preview.</span>
-                </div>
-              </div>
+            <div class="field">
+              <label for="cardNameInput">Name</label>
+              <input id="cardNameInput" type="text" />
+            </div>
+            <div class="field">
+              <label for="cardTypeInput">Type</label>
+              <select id="cardTypeInput">
+                <option value="">– Select –</option>
+                <option value="Crew">Crew</option>
+                <option value="Driver">Driver</option>
+                <option value="Named Driver">Named Driver</option>
+                <option value="Mod">Mod</option>
+                <option value="Vehicle">Vehicle</option>
+                <option value="Named Vehicle">Named Vehicle</option>
+                <option value="Track">Track</option>
+                <option value="Condition">Condition</option>
+                <option value="Misc">Misc</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cardSetNameInput">Set Name (display)</label>
+              <input id="cardSetNameInput" type="text" placeholder="Set 1 – 1…2…3…Race!" />
+            </div>
+            <div class="field">
+              <label for="cardNumberInput">Card Number (within set)</label>
+              <input id="cardNumberInput" type="text" placeholder="01-001" />
+            </div>
+            <div class="field">
+              <label for="cardRarityInput">Rarity</label>
+              <input id="cardRarityInput" type="text" placeholder="Common / Rare / Promo…" />
+            </div>
+            <div class="field">
+              <label for="cardVehicleTypesInput">Vehicle Types (comma separated)</label>
+              <input id="cardVehicleTypesInput" type="text" placeholder="Drag, Drift…" />
+            </div>
+            <div class="field">
+              <label for="cardTagsInput">Tags (comma separated)</label>
+              <input id="cardTagsInput" type="text" placeholder="Sponsor, Junkyard, Father&#39;s Day…" />
+            </div>
+            <div class="field">
+              <label for="cardImageUrlInput">Image URL (relative)</label>
+              <input id="cardImageUrlInput" type="text" placeholder="images/set1/dannys_r-2-4.png" />
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="cardNotesInput">Rules Text</label>
-            <textarea id="cardNotesInput" placeholder="Enter rules text here..."></textarea>
+          <h3>Type-Specific Extras</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="modBasePartInput">Mod – Base Part</label>
+              <input id="modBasePartInput" type="text" placeholder="Engine, Headers, Tires…" />
+            </div>
+            <div class="field">
+              <label for="modL1Input">Mod – Level 1</label>
+              <input id="modL1Input" type="text" placeholder="1/2 etc" />
+            </div>
+            <div class="field">
+              <label for="modL2Input">Mod – Level 2</label>
+              <input id="modL2Input" type="text" />
+            </div>
+            <div class="field">
+              <label for="modL3Input">Mod – Level 3</label>
+              <input id="modL3Input" type="text" />
+            </div>
+            <div class="field">
+              <label for="modL4Input">Mod – Level 4</label>
+              <input id="modL4Input" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="vehicleHpConInput">Vehicle / Named Vehicle – HP/CON</label>
+              <input id="vehicleHpConInput" type="text" placeholder="10/4 etc" />
+            </div>
+            <div class="field">
+              <label for="extraJsonInput">Extra JSON (advanced)</label>
+              <input id="extraJsonInput" type="text" placeholder='{"sponsorBrand":"WOLF"}' />
+            </div>
           </div>
 
-          <div class="toolbar">
-            <button id="saveCardBtn" type="button">Save Card</button>
-            <button id="duplicateCardBtn" class="secondary" type="button">Duplicate Card</button>
+          <h3>Rules Text</h3>
+          <div class="field">
+            <label for="cardNotesInput">Rules / Trait Text</label>
+            <textarea id="cardNotesInput"></textarea>
           </div>
-          <p class="small-note">
-            Extra fields automatically change based on the Card Type (Mod levels, Vehicle HP/CON, Driver/Track vehicle types, etc.).
-          </p>
-        </section>
+
+          <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <button id="singleNewBtn" class="button secondary" type="button">New Card</button>
+            <button id="singleSaveBtn" class="button" type="button">Save / Update in Library</button>
+            <button id="singleDeleteBtn" class="button danger" type="button">Delete from Library</button>
+          </div>
+          <div id="singleStatus" class="status small-note"></div>
+        </div>
+
+        <div>
+          <h3>Preview & JSON</h3>
+          <div id="singlePreview" class="card-preview">
+            <div class="card-preview-img">
+              <span class="small-note">No image</span>
+            </div>
+            <div class="card-preview-body">
+              <div class="card-preview-header">
+                <div class="card-preview-name">(No Name)</div>
+                <div class="card-preview-type">–</div>
+              </div>
+              <div class="card-preview-row">
+                <span class="card-preview-label">Set:</span>
+                <span>–</span>
+              </div>
+              <div class="card-preview-row">
+                <span class="card-preview-label">Rarity:</span>
+                <span>–</span>
+              </div>
+              <div class="card-preview-row">
+                <span class="card-preview-label">Vehicle Types:</span>
+                <span>–</span>
+              </div>
+              <div class="card-preview-row">
+                <span class="card-preview-label">Tags:</span>
+                <span>–</span>
+              </div>
+              <div class="card-preview-row">
+                <span class="card-preview-label">Stats:</span>
+                <span>–</span>
+              </div>
+              <div class="card-preview-text">Rules text will appear here.</div>
+            </div>
+          </div>
+
+          <h3>Raw JSON for this Card</h3>
+          <pre id="singleJsonView" class="json-view">{}</pre>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- BULK IMPORT LAYOUT -->
-    <div id="bulkLayout" style="display:none;">
-      <section class="panel">
-        <h2>Bulk Import from Excel</h2>
-        <p class="small-note">
-          Recommended flow: export from your master <strong>Drive Cards.xlsx</strong>, then use:
-          Step 1 (load workbook) → Step 2 (filter & select rows) → Step 3 (import).
-          Images are <strong>not</strong> handled in bulk import—set them in the Card Editor using image paths.
-        </p>
+    <!-- BULK IMPORT SECTION -->
+    <section id="bulkSection" class="panel" style="display:none;">
+      <h2>Bulk Import from Excel</h2>
+      <p class="small-note">
+        Load your <span class="inline-code">Drive Cards.xlsx</span>, pick a sheet, then select which rows to import into
+        <span class="inline-code">drive-card.json</span>. Existing cards with the same name + type + set will be updated.
+      </p>
 
-        <!-- STEP 1 -->
-        <div class="step-box">
-          <div class="step-title">Step 1 – Upload .xlsx and choose sheet</div>
+      <div class="layout-three">
+        <div>
+          <h3>Step 1 – Upload Excel & pick sheet</h3>
           <div class="toolbar">
             <input id="bulkFileInput" type="file" accept=".xlsx" />
-            <select id="bulkSheetSelect" style="max-width:220px;">
-              <option value="">-- Sheet --</option>
-            </select>
-            <button id="bulkParseSheetBtn" type="button">Parse Sheet</button>
           </div>
-          <div id="bulkStep1Status" class="small-note"></div>
+          <div class="field">
+            <label for="bulkSheetSelect">Sheet</label>
+            <select id="bulkSheetSelect">
+              <option value="">– No workbook loaded –</option>
+            </select>
+          </div>
+          <p id="bulkStep1Status" class="status small-note"></p>
+          <button id="bulkParseSheetBtn" class="button" type="button">Parse Selected Sheet</button>
         </div>
 
-        <!-- STEP 2 -->
-        <div id="bulkStep2" class="step-box" style="display:none;">
-          <div class="step-title">Step 2 – Filter & select cards to include</div>
-          <div id="bulkFilters" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem; align-items:center;">
-            <input
-              id="bulkFilterText"
-              type="text"
-              placeholder="Filter by name / type / set..."
-              style="flex:1; min-width:180px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
-            />
-            <select
-              id="bulkFilterType"
-              style="min-width:140px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
-            >
+        <div>
+          <h3>Step 2 – Filter & select cards to include</h3>
+          <div class="field">
+            <input id="bulkSearchInput" type="text" placeholder="Filter by name / type / set…" />
+          </div>
+          <div class="field">
+            <select id="bulkTypeFilter">
               <option value="">All Types</option>
             </select>
-            <select
-              id="bulkFilterSet"
-              style="min-width:140px; padding:0.3rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.85rem;"
-            >
+          </div>
+          <div class="field">
+            <select id="bulkSetFilter">
               <option value="">All Sets</option>
             </select>
-            <button id="bulkSelectShownBtn" type="button">Select shown</button>
-            <button id="bulkClearShownBtn" type="button">Clear shown</button>
           </div>
-          <div id="bulkSelectionList" class="bulk-list"></div>
-          <div style="margin-top:0.4rem; display:flex; justify-content:flex-end; gap:0.4rem;">
-            <button id="bulkToStep3Btn" type="button">Continue to Step 3</button>
+
+          <div id="bulkGrid" class="bulk-grid">
+            <div class="bulk-row bulk-row-header">
+              <div></div>
+              <div>Name</div>
+              <div>Type</div>
+              <div>Set</div>
+              <div>Rarity</div>
+            </div>
+            <p class="small-note">No sheet parsed yet.</p>
           </div>
+          <p id="bulkStep2Status" class="status small-note"></p>
         </div>
 
-        <!-- STEP 3 -->
-        <div id="bulkStep3" class="step-box" style="display:none;">
-          <div class="step-title">Step 3 – Import selected cards</div>
+        <div>
+          <h3>Step 3 – Apply to drive-card.json</h3>
           <p class="small-note">
-            This will add the selected rows as cards in the library (without images).
-            After importing, use the Card Editor to set each card’s image URL/path.
+            Selected rows will either create new card entries, or update existing ones that match by
+            <strong>Name + Type + Set</strong>.
           </p>
-          <div style="margin-top:0.4rem; display:flex; justify-content:space-between; gap:0.4rem; flex-wrap:wrap;">
-            <span class="small-note" id="bulkStep3Summary"></span>
-            <button id="bulkImportFinishBtn" type="button">Finish Import (add to library)</button>
+          <div class="field">
+            <label>When matching existing cards…</label>
+            <select id="bulkUpdateModeSelect">
+              <option value="update">Update existing card &amp; create new if missing</option>
+              <option value="createOnly">Only create new cards (do not update existing)</option>
+              <option value="updateOnly">Only update existing (ignore new names)</option>
+            </select>
           </div>
-        </div>
-      </section>
-    </div>
+          <button id="bulkApplyBtn" class="button" type="button">Apply to in-memory Library</button>
+          <p id="bulkStep3Status" class="status small-note"></p>
 
-    <!-- PRECON ADMIN LAYOUT -->
-    <div id="preconLayout" style="display:none;">
-      <section class="panel">
-        <h2>Precon Admin</h2>
-        <div class="toolbar">
-          <button id="loadPreconsBtn" type="button">Load Precons JSON</button>
-          <input id="loadPreconsInput" type="file" accept="application/json" style="display:none;" />
-          <button id="savePreconsBtn" type="button">Download Precons JSON</button>
-          <button id="newPreconBtn" type="button">+ New Precon</button>
-          <button id="deletePreconBtn" class="danger" type="button">Delete Selected</button>
+          <h3>Save Updated Library</h3>
+          <button id="downloadCardsJsonBtn" class="button secondary" type="button">
+            Download drive-card.json
+          </button>
+          <p class="small-note">
+            After download, upload <span class="inline-code">drive-card.json</span> to your GitHub repo root (same folder as
+            <span class="inline-code">index.html</span> and <span class="inline-code">admin.html</span>).
+          </p>
         </div>
-        <div class="precon-layout">
-          <div>
-            <div class="precon-list" id="preconList"></div>
+      </div>
+    </section>
+
+    <!-- PRECONSTRUCTED DECKS SECTION -->
+    <section id="preconsSection" class="panel" style="display:none;">
+      <h2>Preconstructed Decks</h2>
+      <p class="small-note">
+        Manage <span class="inline-code">drive-precons.json</span>. Each precon is a named deck with an id, description,
+        and a mapping of cardId → quantity.
+      </p>
+
+      <div class="layout-two">
+        <div>
+          <h3>Precon List</h3>
+          <div class="toolbar">
+            <button id="preconNewBtn" class="button secondary" type="button">New Precon</button>
+            <button id="preconDeleteBtn" class="button danger" type="button">Delete Selected</button>
+            <span class="spacer"></span>
+            <button id="preconReloadBtn" class="button secondary" type="button">Reload from JSON</button>
           </div>
-          <div>
-            <div class="form-group">
-              <label class="form-label" for="preconNameInput">Precon Name</label>
+          <div id="preconLibraryList" class="library-list"></div>
+          <p id="preconListStatus" class="status small-note"></p>
+
+          <h3>Save JSON</h3>
+          <button id="downloadPreconsJsonBtn" class="button secondary" type="button">
+            Download drive-precons.json
+          </button>
+        </div>
+
+        <div>
+          <h3>Precon Details</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="preconIdInput">Precon ID</label>
+              <input id="preconIdInput" type="text" placeholder="starter-set1-speed" />
+            </div>
+            <div class="field">
+              <label for="preconNameInput">Name</label>
               <input id="preconNameInput" type="text" />
             </div>
-            <div class="form-group">
-              <label class="form-label" for="preconNotesInput">Precon Notes / Description</label>
-              <textarea id="preconNotesInput"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Cards in Precon</label>
-              <div id="preconCardsList" class="precon-cards"></div>
-            </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="preconCardSelect">Add Card</label>
-                <select id="preconCardSelect"></select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="preconCardQtyInput">Qty</label>
-                <input id="preconCardQtyInput" type="number" min="1" value="1" />
-              </div>
-            </div>
-            <div class="toolbar">
-              <button id="preconAddCardBtn" type="button">Add Card to Precon</button>
-              <button id="preconSaveBtn" type="button">Save Precon Changes</button>
-            </div>
-            <p class="small-note" id="preconStatsInfo"></p>
           </div>
+          <div class="field">
+            <label for="preconNotesInput">Description / Notes</label>
+            <textarea id="preconNotesInput"></textarea>
+          </div>
+
+          <h3>Cards in this Precon</h3>
+          <div class="field">
+            <label for="preconCardSearchInput">Add Card (search by name)</label>
+            <input id="preconCardSearchInput" type="text" placeholder="Start typing a card name…" />
+          </div>
+          <p class="small-note">
+            Enter a name substring, then choose a result to add or adjust its quantity. Use 0 to remove a card.
+          </p>
+          <div id="preconCardList" class="library-list"></div>
+
+          <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <button id="preconSaveBtn" class="button" type="button">Save Changes to Precon</button>
+          </div>
+          <p id="preconEditStatus" class="status small-note"></p>
         </div>
-      </section>
+      </div>
+    </section>
+
+    <!-- HELP SECTION -->
+    <section id="helpSection" class="panel" style="display:none;">
+      <h2>Admin Workflow & Tips</h2>
+      <p class="small-note">
+        This page never writes directly to GitHub. It only loads and saves JSON in your browser.
+        You always manually upload the resulting <span class="inline-code">drive-card.json</span> and
+        <span class="inline-code">drive-precons.json</span> to your GitHub repo.
+      </p>
+
+      <h3>Folder / Repo Structure</h3>
+      <ul class="small-note">
+        <li><span class="inline-code">/index.html</span> – public Card Library & Deck Builder</li>
+        <li><span class="inline-code">/admin.html</span> – this admin page</li>
+        <li><span class="inline-code">/drive-card.json</span> – all card entries (no images inside JSON)</li>
+        <li><span class="inline-code">/drive-precons.json</span> – all preconstructed decks</li>
+        <li><span class="inline-code">/images/set1/…</span> – card images (PNG, JPG)</li>
+      </ul>
+
+      <h3>Single Card Workflow</h3>
+      <ol class="small-note">
+        <li>Load existing <span class="inline-code">drive-card.json</span> automatically (the page does this on load).</li>
+        <li>Use <strong>Single Card Editor</strong> to tweak or create a card.</li>
+        <li>Set <strong>imageUrl</strong> to a relative path like
+          <span class="inline-code">images/set1/dannys_r-2-4.png</span>.
+        </li>
+        <li>Click <strong>Save / Update in Library</strong>.</li>
+        <li>When finished with a batch, click <strong>Download drive-card.json</strong>
+          and upload it to GitHub.
+        </li>
+      </ol>
+
+      <h3>Bulk Import Workflow (Excel)</h3>
+      <ol class="small-note">
+        <li>Export or maintain your master <span class="inline-code">Drive Cards.xlsx</span>.</li>
+        <li>In <strong>Bulk Import</strong>, upload the <span class="inline-code">.xlsx</span> file.</li>
+        <li>Select a sheet (e.g. <strong>Crew Cards</strong>) and click
+          <strong>Parse Selected Sheet</strong>.
+        </li>
+        <li>Filter by type / set, tick the rows you want, and choose your
+          update mode (update / create / update-only).
+        </li>
+        <li>Click <strong>Apply to in-memory Library</strong>.</li>
+        <li>Repeat for other sheets if needed.</li>
+        <li>When done, click <strong>Download drive-card.json</strong> and upload to GitHub.</li>
+      </ol>
+
+      <h3>Precon Workflow</h3>
+      <ol class="small-note">
+        <li>Go to <strong>Preconstructed Decks</strong>.</li>
+        <li>Use <strong>Reload from JSON</strong> to load existing precons, or
+          <strong>New Precon</strong> to start a fresh one.</li>
+        <li>Fill in id, name, description.</li>
+        <li>Use the card search to add cards and set quantities.</li>
+        <li>Click <strong>Save Changes to Precon</strong>.</li>
+        <li>When all precons are ready, click <strong>Download drive-precons.json</strong>
+          and upload it to GitHub.</li>
+      </ol>
+
+      <h3>Image URL Tips</h3>
+      <ul class="small-note">
+        <li>Use lowercase, no spaces: <span class="inline-code">images/set1/dannys_r-2-4.png</span></li>
+        <li>Keep filenames simple: letters, numbers, <span class="inline-code">_</span>, <span class="inline-code">-</span></li>
+        <li>Do <strong>not</strong> include the domain in <span class="inline-code">imageUrl</span> –
+          just the path from the repo root.</li>
+      </ul>
+    </section>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Debug / Info</h3>
+        <button id="modalCloseBtn" class="modal-close" type="button">✕</button>
+      </div>
+      <div id="modalBody" class="modal-body small-note"></div>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
-    /*********************************
-     * Shared state & helpers
-     *********************************/
-    const AdminState = {
+    const AppState = {
       cards: [],
-      selectedCardId: null,
+      cardsById: {},
       precons: [],
-      selectedPreconIndex: null
+      selectedLibraryCardId: null,
+      selectedPreconId: null
     };
 
-    let bulkWorkbook = null;
-    let bulkCards = [];
-    const bulkFilterState = { text: "", type: "", set: "" };
-
-    const STORAGE_KEYS = {
-      lastMode: "driveAdminMode_v1"
-    };
-
-    // Default JSON paths (relative to /Drive-TCG/)
-    const DEFAULT_PATHS = {
-      library: "drive-card.json",
-      precons: "drive-precons.json"
-    };
-
-    // Mapping spreadsheet sheets/columns → library fields
     const SHEET_CONFIG = {
       "Crew Cards": {
         type: "Crew",
@@ -558,14 +817,11 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "Mod Ability",
-        extra: (row, card) => {
-          card.extra.modBasePart = row["Base Part"] || "";
-          card.extra.modLevel1   = row["Mod Lvl 1"] || "";
-          card.extra.modLevel2   = row["Mod Lvl 2"] || "";
-          card.extra.modLevel3   = row["Mod Lvl 3"] || "";
-          card.extra.modLevel4   = row["Mod Lvl 4"] || "";
-          card.extra.modType     = row["Mod TYPE"] || "";
-        }
+        modBasePartCol: "MOD BASE PART",
+        modL1Col: "MOD LVL 1",
+        modL2Col: "MOD LVL 2",
+        modL3Col: "MOD LVL 3",
+        modL4Col: "MOD LVL 4"
       },
       "Driver Cards": {
         type: "Driver",
@@ -594,26 +850,7 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "Track Trait",
-        extra: (row, card) => {
-          const vtRaw = row["Vehicle Type"];
-          if (!vtRaw) return;
-          const upper = String(vtRaw).toUpperCase();
-          if (upper.includes("ALL")) {
-            card.extra.vehicleTypes = ["Drag","Drift","Off-Road","Rally"];
-          } else {
-            const map = {
-              "DRAG": "Drag",
-              "DRIFT": "Drift",
-              "OFF-ROAD": "Off-Road",
-              "OFF ROAD": "Off-Road",
-              "RALLY": "Rally"
-            };
-            const parts = upper.split(/[\/,]/).map(s => s.trim()).filter(Boolean);
-            card.extra.vehicleTypes = Array.from(
-              new Set(parts.map(p => map[p] || null).filter(Boolean))
-            );
-          }
-        }
+        vehicleTypeCol: "TRACK VEHICLE TYPE"
       },
       "Vehicle Cards": {
         type: "Vehicle",
@@ -621,12 +858,8 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "TRAIT",
-        extra: (row, card) => {
-          card.extra.vehicleType = row["Vehicle Type"] || "";
-          const hpCon = parseHpCon(row["VEHICLE HP/CON"]);
-          if (hpCon.hp !== undefined) card.extra.hp = hpCon.hp;
-          if (hpCon.con !== undefined) card.extra.con = hpCon.con;
-        }
+        vehicleTypeCol: "VEHICLE TYPE",
+        hpConCol: "HP/CON"
       },
       "NAMED VEHICLE": {
         type: "Named Vehicle",
@@ -634,12 +867,8 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "VEHICLE TRAIT",
-        extra: (row, card) => {
-          card.extra.vehicleType = row["Vehicle Type"] || "";
-          const hpCon = parseHpCon(row["VEHICLE HP/CON"]);
-          if (hpCon.hp !== undefined) card.extra.hp = hpCon.hp;
-          if (hpCon.con !== undefined) card.extra.con = hpCon.con;
-        }
+        vehicleTypeCol: "VEHICLE TYPE",
+        hpConCol: "HP/CON"
       },
       "MISC": {
         type: "Misc",
@@ -651,80 +880,173 @@
     };
 
     const Dom = {
-      modeCardsBtn: document.getElementById("modeCardsBtn"),
-      modeBulkBtn: document.getElementById("modeBulkBtn"),
-      modePreconsBtn: document.getElementById("modePreconsBtn"),
+      navSingleBtn: document.getElementById("navSingleBtn"),
+      navBulkBtn: document.getElementById("navBulkBtn"),
+      navPreconsBtn: document.getElementById("navPreconsBtn"),
+      navHelpBtn: document.getElementById("navHelpBtn"),
 
-      cardAdminLayout: document.getElementById("cardAdminLayout"),
-      bulkLayout: document.getElementById("bulkLayout"),
-      preconLayout: document.getElementById("preconLayout"),
+      singleSection: document.getElementById("singleSection"),
+      bulkSection: document.getElementById("bulkSection"),
+      preconsSection: document.getElementById("preconsSection"),
+      helpSection: document.getElementById("helpSection"),
 
-      loadLibraryBtn: document.getElementById("loadLibraryBtn"),
-      loadLibraryInput: document.getElementById("loadLibraryInput"),
-      saveLibraryBtn: document.getElementById("saveLibraryBtn"),
-      librarySummary: document.getElementById("librarySummary"),
-
-      cardList: document.getElementById("cardList"),
-      cardListSearch: document.getElementById("cardListSearch"),
-      newCardBtn: document.getElementById("newCardBtn"),
-      deleteCardBtn: document.getElementById("deleteCardBtn"),
-
+      cardIdInput: document.getElementById("cardIdInput"),
       cardNameInput: document.getElementById("cardNameInput"),
       cardTypeInput: document.getElementById("cardTypeInput"),
-      cardRarityInput: document.getElementById("cardRarityInput"),
-      cardSetInput: document.getElementById("cardSetInput"),
+      cardSetNameInput: document.getElementById("cardSetNameInput"),
       cardNumberInput: document.getElementById("cardNumberInput"),
+      cardRarityInput: document.getElementById("cardRarityInput"),
+      cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
       cardTagsInput: document.getElementById("cardTagsInput"),
-      cardNotesInput: document.getElementById("cardNotesInput"),
-      extraFieldsContainer: document.getElementById("extraFieldsContainer"),
       cardImageUrlInput: document.getElementById("cardImageUrlInput"),
-      cardImagePreview: document.getElementById("cardImagePreview"),
+      modBasePartInput: document.getElementById("modBasePartInput"),
+      modL1Input: document.getElementById("modL1Input"),
+      modL2Input: document.getElementById("modL2Input"),
+      modL3Input: document.getElementById("modL3Input"),
+      modL4Input: document.getElementById("modL4Input"),
+      vehicleHpConInput: document.getElementById("vehicleHpConInput"),
+      extraJsonInput: document.getElementById("extraJsonInput"),
+      cardNotesInput: document.getElementById("cardNotesInput"),
 
-      saveCardBtn: document.getElementById("saveCardBtn"),
-      duplicateCardBtn: document.getElementById("duplicateCardBtn"),
+      singleNewBtn: document.getElementById("singleNewBtn"),
+      singleSaveBtn: document.getElementById("singleSaveBtn"),
+      singleDeleteBtn: document.getElementById("singleDeleteBtn"),
+      singleStatus: document.getElementById("singleStatus"),
+
+      singlePreview: document.getElementById("singlePreview"),
+      singleJsonView: document.getElementById("singleJsonView"),
 
       bulkFileInput: document.getElementById("bulkFileInput"),
       bulkSheetSelect: document.getElementById("bulkSheetSelect"),
       bulkParseSheetBtn: document.getElementById("bulkParseSheetBtn"),
       bulkStep1Status: document.getElementById("bulkStep1Status"),
-      bulkStep2: document.getElementById("bulkStep2"),
-      bulkStep3: document.getElementById("bulkStep3"),
-      bulkSelectionList: document.getElementById("bulkSelectionList"),
-      bulkFilterText: document.getElementById("bulkFilterText"),
-      bulkFilterType: document.getElementById("bulkFilterType"),
-      bulkFilterSet: document.getElementById("bulkFilterSet"),
-      bulkSelectShownBtn: document.getElementById("bulkSelectShownBtn"),
-      bulkClearShownBtn: document.getElementById("bulkClearShownBtn"),
-      bulkToStep3Btn: document.getElementById("bulkToStep3Btn"),
-      bulkStep3Summary: document.getElementById("bulkStep3Summary"),
-      bulkImportFinishBtn: document.getElementById("bulkImportFinishBtn"),
 
-      loadPreconsBtn: document.getElementById("loadPreconsBtn"),
-      loadPreconsInput: document.getElementById("loadPreconsInput"),
-      savePreconsBtn: document.getElementById("savePreconsBtn"),
-      newPreconBtn: document.getElementById("newPreconBtn"),
-      deletePreconBtn: document.getElementById("deletePreconBtn"),
-      preconList: document.getElementById("preconList"),
+      bulkSearchInput: document.getElementById("bulkSearchInput"),
+      bulkTypeFilter: document.getElementById("bulkTypeFilter"),
+      bulkSetFilter: document.getElementById("bulkSetFilter"),
+      bulkGrid: document.getElementById("bulkGrid"),
+      bulkStep2Status: document.getElementById("bulkStep2Status"),
+
+      bulkUpdateModeSelect: document.getElementById("bulkUpdateModeSelect"),
+      bulkApplyBtn: document.getElementById("bulkApplyBtn"),
+      bulkStep3Status: document.getElementById("bulkStep3Status"),
+
+      downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
+
+      preconNewBtn: document.getElementById("preconNewBtn"),
+      preconDeleteBtn: document.getElementById("preconDeleteBtn"),
+      preconReloadBtn: document.getElementById("preconReloadBtn"),
+      preconLibraryList: document.getElementById("preconLibraryList"),
+      preconListStatus: document.getElementById("preconListStatus"),
+      preconIdInput: document.getElementById("preconIdInput"),
       preconNameInput: document.getElementById("preconNameInput"),
       preconNotesInput: document.getElementById("preconNotesInput"),
-      preconCardsList: document.getElementById("preconCardsList"),
-      preconCardSelect: document.getElementById("preconCardSelect"),
-      preconCardQtyInput: document.getElementById("preconCardQtyInput"),
-      preconAddCardBtn: document.getElementById("preconAddCardBtn"),
+      preconCardSearchInput: document.getElementById("preconCardSearchInput"),
+      preconCardList: document.getElementById("preconCardList"),
       preconSaveBtn: document.getElementById("preconSaveBtn"),
-      preconStatsInfo: document.getElementById("preconStatsInfo")
+      preconEditStatus: document.getElementById("preconEditStatus"),
+      downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
+
+      modalBackdrop: document.getElementById("modalBackdrop"),
+      modalBody: document.getElementById("modalBody"),
+      modalCloseBtn: document.getElementById("modalCloseBtn")
     };
 
-    /*********************************
-     * Small helpers
-     *********************************/
-    function readCell(row, ...keys) {
-      for (const k of keys) {
-        if (k && row[k] !== undefined && row[k] !== null && row[k] !== "") {
-          return row[k];
-        }
+    function showSection(section) {
+      Dom.singleSection.style.display = section === "single" ? "" : "none";
+      Dom.bulkSection.style.display = section === "bulk" ? "" : "none";
+      Dom.preconsSection.style.display = section === "precons" ? "" : "none";
+      Dom.helpSection.style.display = section === "help" ? "" : "none";
+
+      Dom.navSingleBtn.classList.toggle("active", section === "single");
+      Dom.navBulkBtn.classList.toggle("active", section === "bulk");
+      Dom.navPreconsBtn.classList.toggle("active", section === "precons");
+      Dom.navHelpBtn.classList.toggle("active", section === "help");
+    }
+
+    function openModal(html) {
+      Dom.modalBody.innerHTML = html;
+      Dom.modalBackdrop.classList.add("open");
+    }
+    function closeModal() {
+      Dom.modalBackdrop.classList.remove("open");
+    }
+
+    function normalizeNameTypeSet(card) {
+      const name = (card.name || "").trim().toLowerCase();
+      const type = (card.type || "").trim().toLowerCase();
+      const setName = (card.setName || "").trim().toLowerCase();
+      return `${name}||${type}||${setName}`;
+    }
+
+    function ensureExtras(card) {
+      if (!card.extra || typeof card.extra !== "object") {
+        card.extra = {};
       }
-      return "";
+      return card.extra;
+    }
+
+    function loadCards() {
+      return fetch("drive-card.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch drive-card.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json)) throw new Error("drive-card.json is not an array.");
+          AppState.cards = json;
+          AppState.cardsById = {};
+          AppState.cards.forEach(card => {
+            if (!card.id) {
+              card.id = "card-" + Math.random().toString(36).slice(2);
+            }
+            if (!card.extra) card.extra = {};
+            if (!Array.isArray(card.tags)) card.tags = [];
+            if (typeof card.imageUrl !== "string") card.imageUrl = "";
+            AppState.cardsById[card.id] = card;
+          });
+          console.log("Loaded cards:", AppState.cards.length);
+        })
+        .catch(err => {
+          console.error(err);
+          AppState.cards = [];
+          AppState.cardsById = {};
+        });
+    }
+
+    function loadPrecons() {
+      return fetch("drive-precons.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json)) throw new Error("drive-precons.json is not an array");
+          AppState.precons = json;
+          console.log("Loaded precons:", AppState.precons.length);
+          renderPreconList();
+        })
+        .catch(err => {
+          console.error(err);
+          AppState.precons = [];
+          renderPreconList();
+        });
+    }
+
+    function parseVehicleTypes(str) {
+      if (!str) return [];
+      return String(str)
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function parseTags(str) {
+      if (!str) return [];
+      return String(str)
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
     }
 
     function parseHpCon(val) {
@@ -737,425 +1059,294 @@
       return out;
     }
 
-    /*********************************
-     * Mode switching
-     *********************************/
-    const Mode = {
-      set(mode) {
-        Dom.cardAdminLayout.style.display = mode === "cards" ? "" : "none";
-        Dom.bulkLayout.style.display = mode === "bulk" ? "" : "none";
-        Dom.preconLayout.style.display = mode === "precons" ? "" : "none";
-
-        Dom.modeCardsBtn.classList.toggle("active", mode === "cards");
-        Dom.modeBulkBtn.classList.toggle("active", mode === "bulk");
-        Dom.modePreconsBtn.classList.toggle("active", mode === "precons");
-
-        localStorage.setItem(STORAGE_KEYS.lastMode, mode);
-      },
-      init() {
-        Dom.modeCardsBtn.addEventListener("click", () => Mode.set("cards"));
-        Dom.modeBulkBtn.addEventListener("click", () => Mode.set("bulk"));
-        Dom.modePreconsBtn.addEventListener("click", () => Mode.set("precons"));
-
-        const last = localStorage.getItem(STORAGE_KEYS.lastMode) || "cards";
-        Mode.set(last);
-      }
-    };
-
-    /*********************************
-     * Card library editor
-     *********************************/
-    const CardLib = {
-      createEmptyCard() {
-        return {
-          id: "card-" + Math.random().toString(36).slice(2),
-          name: "",
-          type: "",
-          rarity: "",
-          setName: "",
-          cardNumber: "",
-          notes: "",
-          tags: [],
-          imageUrl: "",
-          extra: {}
-        };
-      },
-
-      getCardById(id) {
-        return AdminState.cards.find(c => c.id === id) || null;
-      },
-
-      updateLibrarySummary() {
-        const total = AdminState.cards.length;
-        const types = {};
-        AdminState.cards.forEach(c => {
-          types[c.type || "Unknown"] = (types[c.type || "Unknown"] || 0) + 1;
-        });
-        const parts = Object.entries(types)
-          .sort((a,b) => a[0].localeCompare(b[0]))
-          .map(([t,n]) => `${t}: ${n}`);
-        Dom.librarySummary.textContent = `${total} cards in library` +
-          (parts.length ? " · " + parts.join(" · ") : "");
-      },
-
-      renderCardList() {
-        const q = Dom.cardListSearch.value.trim().toLowerCase();
-        Dom.cardList.innerHTML = "";
-
-        const filtered = AdminState.cards.filter(c => {
-          if (!q) return true;
-          const haystack = [
-            c.name || "",
-            c.type || "",
-            c.setName || "",
-            c.cardNumber || ""
-          ].join(" ").toLowerCase();
-          return haystack.includes(q);
-        });
-
-        if (!filtered.length) {
-          Dom.cardList.innerHTML = "<div class='small-note'>No cards match this search.</div>";
-          return;
-        }
-
-        filtered
-          .slice()
-          .sort((a,b) => {
-            return (a.type || "").localeCompare(b.type || "") ||
-                   (a.setName || "").localeCompare(b.setName || "") ||
-                   (a.cardNumber || "").localeCompare(b.cardNumber || "") ||
-                   (a.name || "").localeCompare(b.name || "");
-          })
-          .forEach(card => {
-            const div = document.createElement("div");
-            div.className = "card-row" + (card.id === AdminState.selectedCardId ? " selected" : "");
-            div.dataset.cardId = card.id;
-
-            const info = document.createElement("div");
-            info.style.flex = "1";
-            info.style.minWidth = "0";
-
-            const main = document.createElement("div");
-            main.className = "card-row-main";
-            main.textContent = card.name || "(No Name)";
-
-            const sub = document.createElement("div");
-            sub.className = "card-row-sub";
-            const num = card.cardNumber ? " #" + card.cardNumber : "";
-            sub.textContent = `${card.type || ""} · ${card.setName || ""}${num}`;
-
-            info.appendChild(main);
-            info.appendChild(sub);
-            div.appendChild(info);
-
-            div.addEventListener("click", () => {
-              AdminState.selectedCardId = card.id;
-              CardLib.renderCardList();
-              CardLib.loadSelectedCardIntoForm();
-            });
-
-            Dom.cardList.appendChild(div);
-          });
-      },
-
-      loadSelectedCardIntoForm() {
-        const card = CardLib.getCardById(AdminState.selectedCardId);
-        if (!card) {
-          Dom.cardNameInput.value = "";
-          Dom.cardTypeInput.value = "";
-          Dom.cardRarityInput.value = "";
-          Dom.cardSetInput.value = "";
-          Dom.cardNumberInput.value = "";
-          Dom.cardTagsInput.value = "";
-          Dom.cardNotesInput.value = "";
-          Dom.cardImageUrlInput.value = "";
-          CardLib.renderExtraFields("");
-          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image preview.</span>";
-          return;
-        }
-
-        Dom.cardNameInput.value = card.name || "";
-        Dom.cardTypeInput.value = card.type || "";
-        Dom.cardRarityInput.value = card.rarity || "";
-        Dom.cardSetInput.value = card.setName || "";
-        Dom.cardNumberInput.value = card.cardNumber || "";
-        Dom.cardTagsInput.value = (card.tags || []).join(", ");
-        Dom.cardNotesInput.value = card.notes || "";
-        Dom.cardImageUrlInput.value = card.imageUrl || "";
-
-        CardLib.renderExtraFields(card.type || "", card.extra || {});
-        if (card.imageUrl) {
-          Dom.cardImagePreview.innerHTML = "";
-          const img = document.createElement("img");
-          img.src = card.imageUrl;
-          Dom.cardImagePreview.appendChild(img);
-        } else {
-          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image preview.</span>";
-        }
-      },
-
-      renderExtraFields(type, extra = {}) {
-        const container = Dom.extraFieldsContainer;
-        container.innerHTML = "";
-
-        const addField = (label, id, value, placeholder = "", typeInput="text") => {
-          const wrap = document.createElement("div");
-          wrap.className = "form-group";
-          const lab = document.createElement("label");
-          lab.className = "form-label";
-          lab.textContent = label;
-          const input = document.createElement("input");
-          input.id = id;
-          input.type = typeInput;
-          input.value = value ?? "";
-          input.placeholder = placeholder;
-          wrap.appendChild(lab);
-          wrap.appendChild(input);
-          container.appendChild(wrap);
-        };
-
-        if (type === "Vehicle" || type === "Named Vehicle") {
-          addField("Vehicle Type", "extraVehicleTypeInput", extra.vehicleType || "", "Drag, Drift, Off-Road, Rally...");
-          addField("HP", "extraHpInput", extra.hp ?? "", "", "number");
-          addField("CON", "extraConInput", extra.con ?? "", "", "number");
-        } else if (type === "Driver" || type === "Named Driver" || type === "Track") {
-          const wrap = document.createElement("div");
-          wrap.className = "form-group";
-          const lab = document.createElement("label");
-          lab.className = "form-label";
-          lab.textContent = "Vehicle Types (Drag, Drift, Off-Road, Rally – choose one or more)";
-          const select = document.createElement("select");
-          select.id = "extraVehicleTypesInput";
-          select.multiple = true;
-          select.size = 4;
-          select.style.height = "90px";
-
-          const typesArr = ["Drag","Drift","Off-Road","Rally"];
-          const chosen = extra.vehicleTypes || [];
-          typesArr.forEach(t => {
-            const opt = document.createElement("option");
-            opt.value = t;
-            opt.textContent = t;
-            opt.selected = chosen.includes(t);
-            select.appendChild(opt);
-          });
-
-          wrap.appendChild(lab);
-          wrap.appendChild(select);
-          container.appendChild(wrap);
-        } else if (type === "Mod") {
-          addField("Base Part", "extraModBasePartInput", extra.modBasePart || "", "Engine, Headers, Tires...");
-          addField("Level 1", "extraModL1Input", extra.modLevel1 || "", "e.g., 1/2");
-          addField("Level 2", "extraModL2Input", extra.modLevel2 || "", "e.g., 2/2");
-          addField("Level 3", "extraModL3Input", extra.modLevel3 || "", "e.g., 3/3");
-          addField("Level 4", "extraModL4Input", extra.modLevel4 || "", "e.g., 5/3");
-        } else {
-          container.innerHTML = "<p class='small-note'>No extra fields for this card type.</p>";
-        }
-      },
-
-      readExtraFromForm(type) {
-        const extra = {};
-        if (type === "Vehicle" || type === "Named Vehicle") {
-          const vType = document.getElementById("extraVehicleTypeInput")?.value || "";
-          const hpVal = document.getElementById("extraHpInput")?.value;
-          const conVal = document.getElementById("extraConInput")?.value;
-          if (vType) extra.vehicleType = vType;
-          if (hpVal !== "") extra.hp = Number(hpVal);
-          if (conVal !== "") extra.con = Number(conVal);
-        } else if (type === "Driver" || type === "Named Driver" || type === "Track") {
-          const select = document.getElementById("extraVehicleTypesInput");
-          if (select) {
-            extra.vehicleTypes = Array.from(select.selectedOptions).map(o => o.value);
+    // Tolerant cell reader: exact match first, then case/whitespace-insensitive
+    function readCell(row, ...keys) {
+      // 1) Exact header match first
+      for (const k of keys) {
+        if (!k) continue;
+        if (Object.prototype.hasOwnProperty.call(row, k)) {
+          const v = row[k];
+          if (v !== undefined && v !== null && v !== "") {
+            return v;
           }
-        } else if (type === "Mod") {
-          extra.modBasePart = document.getElementById("extraModBasePartInput")?.value || "";
-          extra.modLevel1   = document.getElementById("extraModL1Input")?.value || "";
-          extra.modLevel2   = document.getElementById("extraModL2Input")?.value || "";
-          extra.modLevel3   = document.getElementById("extraModL3Input")?.value || "";
-          extra.modLevel4   = document.getElementById("extraModL4Input")?.value || "";
         }
-        return extra;
-      },
+      }
 
-      saveCurrentCard() {
-        let card = CardLib.getCardById(AdminState.selectedCardId);
-        if (!card) {
-          card = CardLib.createEmptyCard();
-          AdminState.cards.push(card);
-          AdminState.selectedCardId = card.id;
+      // 2) Fuzzy fallback: case + whitespace insensitive
+      //    e.g. "SET", "Set", " set " are treated the same
+      const cols = Object.keys(row).map(col => ({
+        name: col,
+        norm: col.toLowerCase().replace(/\s+/g, "")
+      }));
+
+      for (const k of keys) {
+        if (!k) continue;
+        const target = String(k).toLowerCase().replace(/\s+/g, "");
+        for (const col of cols) {
+          if (col.norm === target) {
+            const v = row[col.name];
+            if (v !== undefined && v !== null && v !== "") {
+              return v;
+            }
+          }
         }
+      }
 
-        card.name = Dom.cardNameInput.value.trim();
-        card.type = Dom.cardTypeInput.value;
-        card.rarity = Dom.cardRarityInput.value.trim();
-        card.setName = Dom.cardSetInput.value.trim();
-        card.cardNumber = Dom.cardNumberInput.value.trim();
-        card.notes = Dom.cardNotesInput.value;
-        card.tags = (Dom.cardTagsInput.value || "")
-          .split(",")
-          .map(t => t.trim())
-          .filter(t => t);
+      return "";
+    }
 
-        card.imageUrl = Dom.cardImageUrlInput.value.trim();
-        card.extra = CardLib.readExtraFromForm(card.type);
+    function cardToJson(card) {
+      const clean = JSON.parse(JSON.stringify(card));
+      ["tempSheet", "tempRow", "selected"].forEach(k => delete clean[k]);
+      return clean;
+    }
 
-        AdminState.cards = AdminState.cards.map(c => (c.id === card.id ? card : c));
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        alert("Card saved.");
-      },
+    function renderSinglePreview() {
+      const card = collectSingleCardFromInputs(false);
+      const previewEl = Dom.singlePreview;
+      previewEl.innerHTML = "";
 
-      duplicateSelectedCard() {
-        const original = CardLib.getCardById(AdminState.selectedCardId);
-        if (!original) {
-          alert("No card selected to duplicate.");
-          return;
-        }
-        const copy = JSON.parse(JSON.stringify(original));
-        copy.id = "card-" + Math.random().toString(36).slice(2);
-        copy.name = original.name + " (Copy)";
-        AdminState.cards.push(copy);
-        AdminState.selectedCardId = copy.id;
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        CardLib.loadSelectedCardIntoForm();
-      },
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "card-preview-img";
+      if (card.imageUrl) {
+        const img = document.createElement("img");
+        img.src = card.imageUrl;
+        img.alt = card.name || "Card";
+        imgWrap.appendChild(img);
+      } else {
+        const span = document.createElement("span");
+        span.className = "small-note";
+        span.textContent = "No image";
+        imgWrap.appendChild(span);
+      }
 
-      deleteSelectedCard() {
-        if (!AdminState.selectedCardId) {
-          alert("No card selected.");
-          return;
-        }
-        const card = CardLib.getCardById(AdminState.selectedCardId);
-        if (!card) return;
-        if (!confirm(`Delete card "${card.name}" from the library?`)) return;
-        AdminState.cards = AdminState.cards.filter(c => c.id !== card.id);
-        AdminState.selectedCardId = null;
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        CardLib.loadSelectedCardIntoForm();
-      },
+      const body = document.createElement("div");
+      body.className = "card-preview-body";
 
-      async loadLibraryFromFile(file) {
+      const header = document.createElement("div");
+      header.className = "card-preview-header";
+      const nameEl = document.createElement("div");
+      nameEl.className = "card-preview-name";
+      nameEl.textContent = card.name || "(No Name)";
+      const typeEl = document.createElement("div");
+      typeEl.className = "card-preview-type";
+      typeEl.textContent = card.type || "–";
+      header.appendChild(nameEl);
+      header.appendChild(typeEl);
+
+      const rowSet = document.createElement("div");
+      rowSet.className = "card-preview-row";
+      rowSet.innerHTML = `<span class="card-preview-label">Set:</span> <span>${card.setName || "–"}</span>`;
+
+      const rowRarity = document.createElement("div");
+      rowRarity.className = "card-preview-row";
+      rowRarity.innerHTML = `<span class="card-preview-label">Rarity:</span> <span>${card.rarity || "–"}</span>`;
+
+      const rowVehicles = document.createElement("div");
+      rowVehicles.className = "card-preview-row";
+      const vt = CardData.getVehicleTypes(card);
+      rowVehicles.innerHTML = `<span class="card-preview-label">Vehicle Types:</span> <span>${vt.length ? vt.join(", ") : "–"}</span>`;
+
+      const rowTags = document.createElement("div");
+      rowTags.className = "card-preview-row";
+      const tags = card.tags || [];
+      rowTags.innerHTML = `<span class="card-preview-label">Tags:</span> <span>${tags.length ? tags.join(", ") : "–"}</span>`;
+
+      const rowStats = document.createElement("div");
+      rowStats.className = "card-preview-row";
+      const modStats = CardData.getModStats(card);
+      const vehStats = CardData.getVehicleStats(card);
+      const statPieces = [];
+      if (modStats) statPieces.push(modStats);
+      if (vehStats) statPieces.push(vehStats);
+      rowStats.innerHTML = `<span class="card-preview-label">Stats:</span> <span>${statPieces.length ? statPieces.join(" | ") : "–"}</span>`;
+
+      const rulesEl = document.createElement("div");
+      rulesEl.className = "card-preview-text";
+      rulesEl.textContent = card.notes || "Rules text will appear here.";
+
+      body.appendChild(header);
+      body.appendChild(rowSet);
+      body.appendChild(rowRarity);
+      body.appendChild(rowVehicles);
+      body.appendChild(rowTags);
+      body.appendChild(rowStats);
+      body.appendChild(rulesEl);
+
+      previewEl.appendChild(imgWrap);
+      previewEl.appendChild(body);
+      Dom.singleJsonView.textContent = JSON.stringify(cardToJson(card), null, 2);
+    }
+
+    function collectSingleCardFromInputs(requireId) {
+      const id = Dom.cardIdInput.value.trim();
+      const name = Dom.cardNameInput.value.trim();
+      const type = Dom.cardTypeInput.value;
+      const setName = Dom.cardSetNameInput.value.trim();
+      const cardNumber = Dom.cardNumberInput.value.trim();
+      const rarity = Dom.cardRarityInput.value.trim();
+      const vehTypesStr = Dom.cardVehicleTypesInput.value.trim();
+      const tagsStr = Dom.cardTagsInput.value.trim();
+      const imageUrl = Dom.cardImageUrlInput.value.trim();
+      const notes = Dom.cardNotesInput.value;
+
+      const vehTypes = parseVehicleTypes(vehTypesStr);
+      const tags = parseTags(tagsStr);
+
+      const modBase = Dom.modBasePartInput.value.trim();
+      const modL1 = Dom.modL1Input.value.trim();
+      const modL2 = Dom.modL2Input.value.trim();
+      const modL3 = Dom.modL3Input.value.trim();
+      const modL4 = Dom.modL4Input.value.trim();
+
+      const hpConStr = Dom.vehicleHpConInput.value.trim();
+      const hpCon = parseHpCon(hpConStr);
+
+      let extra = {};
+      if (Dom.extraJsonInput.value.trim()) {
         try {
-          const text = await file.text();
-          const json = JSON.parse(text);
-          AdminState.cards = Array.isArray(json) ? json : [];
-          AdminState.cards.forEach(c => {
-            if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
-            if (!c.extra) c.extra = {};
-            if (!Array.isArray(c.tags)) c.tags = [];
-            if (typeof c.imageUrl !== "string") c.imageUrl = "";
-          });
-          AdminState.selectedCardId = null;
-          CardLib.updateLibrarySummary();
-          CardLib.renderCardList();
-          CardLib.loadSelectedCardIntoForm();
-          alert("Library loaded.");
+          extra = JSON.parse(Dom.extraJsonInput.value);
         } catch (e) {
-          console.error(e);
-          alert("Error reading JSON library.");
+          console.error("Invalid extra JSON, ignoring:", e);
+          extra = {};
         }
-      },
+      }
 
-      // Auto-load library from default URL, allowing normal caching
-      async loadLibraryFromUrl(url = DEFAULT_PATHS.library) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
+      if (type === "Mod") {
+        extra.modBasePart = modBase || undefined;
+        extra.modLevel1 = modL1 || undefined;
+        extra.modLevel2 = modL2 || undefined;
+        extra.modLevel3 = modL3 || undefined;
+        extra.modLevel4 = modL4 || undefined;
+      }
 
-          AdminState.cards = Array.isArray(json) ? json : [];
-          AdminState.cards.forEach(c => {
-            if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
-            if (!c.extra) c.extra = {};
-            if (!Array.isArray(c.tags)) c.tags = [];
-            if (typeof c.imageUrl !== "string") c.imageUrl = "";
-          });
-          AdminState.selectedCardId = null;
-          CardLib.updateLibrarySummary();
-          CardLib.renderCardList();
-          CardLib.loadSelectedCardIntoForm();
-          console.log("Auto-loaded card library from", url);
-        } catch (e) {
-          console.warn("Unable to auto-load library JSON from", url, e);
+      if (type === "Vehicle" || type === "Named Vehicle") {
+        extra.hp = hpCon.hp !== undefined ? hpCon.hp : extra.hp;
+        extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
+      }
+
+      const card = {
+        id: id || (requireId ? "" : "card-" + Math.random().toString(36).slice(2)),
+        name,
+        type,
+        setName,
+        cardNumber,
+        rarity,
+        tags,
+        notes,
+        imageUrl,
+        extra,
+        vehicleTypes: vehTypes
+      };
+      return card;
+    }
+
+    function fillSingleCardInputs(card) {
+      Dom.cardIdInput.value = card.id || "";
+      Dom.cardNameInput.value = card.name || "";
+      Dom.cardTypeInput.value = card.type || "";
+      Dom.cardSetNameInput.value = card.setName || "";
+      Dom.cardNumberInput.value = card.cardNumber || "";
+      Dom.cardRarityInput.value = card.rarity || "";
+      Dom.cardVehicleTypesInput.value = (card.vehicleTypes || []).join(", ");
+      Dom.cardTagsInput.value = (card.tags || []).join(", ");
+      Dom.cardImageUrlInput.value = card.imageUrl || "";
+      Dom.cardNotesInput.value = card.notes || "";
+
+      const e = card.extra || {};
+      Dom.modBasePartInput.value = e.modBasePart || "";
+      Dom.modL1Input.value = e.modLevel1 || "";
+      Dom.modL2Input.value = e.modLevel2 || "";
+      Dom.modL3Input.value = e.modLevel3 || "";
+      Dom.modL4Input.value = e.modLevel4 || "";
+
+      const hpConStr =
+        e.hp !== undefined || e.con !== undefined ? `${e.hp || ""}/${e.con || ""}` : "";
+      Dom.vehicleHpConInput.value = hpConStr;
+
+      const extraClean = JSON.parse(JSON.stringify(e || {}));
+      Dom.extraJsonInput.value = Object.keys(extraClean).length
+        ? JSON.stringify(extraClean)
+        : "";
+      renderSinglePreview();
+    }
+
+    const CardData = {
+      getVehicleTypes(card) {
+        if (!card) return [];
+        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) {
+          return card.vehicleTypes;
         }
+        const e = card.extra || {};
+        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) {
+          return e.vehicleTypes;
+        }
+        if (e.vehicleType) return [e.vehicleType];
+        return [];
       },
-
-      saveLibraryToFile() {
-        // Strip any legacy imageData field to keep JSON small
-        const cleaned = AdminState.cards.map(c => {
-          const { imageData, ...rest } = c;
-          return rest;
-        });
-
-        const blob = new Blob([JSON.stringify(cleaned, null, 2)], {
-          type: "application/json"
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "drive-card.json";
-        a.click();
-        URL.revokeObjectURL(url);
+      getModStats(card) {
+        if (!card || card.type !== "Mod") return "";
+        const e = card.extra || {};
+        const parts = [];
+        if (e.modBasePart) parts.push(`Base: ${e.modBasePart}`);
+        const levels = [];
+        if (e.modLevel1) levels.push(`L1 ${e.modLevel1}`);
+        if (e.modLevel2) levels.push(`L2 ${e.modLevel2}`);
+        if (e.modLevel3) levels.push(`L3 ${e.modLevel3}`);
+        if (e.modLevel4) levels.push(`L4 ${e.modLevel4}`);
+        if (levels.length) parts.push(levels.join(" · "));
+        return parts.join(" | ");
       },
-
-      init() {
-        Dom.cardTypeInput.addEventListener("change", () => {
-          CardLib.renderExtraFields(Dom.cardTypeInput.value || "", {});
-        });
-
-        Dom.cardListSearch.addEventListener("input", () => CardLib.renderCardList());
-        Dom.newCardBtn.addEventListener("click", () => {
-          const card = CardLib.createEmptyCard();
-          AdminState.cards.push(card);
-          AdminState.selectedCardId = card.id;
-          CardLib.updateLibrarySummary();
-          CardLib.renderCardList();
-          CardLib.loadSelectedCardIntoForm();
-        });
-        Dom.deleteCardBtn.addEventListener("click", () => CardLib.deleteSelectedCard());
-        Dom.saveCardBtn.addEventListener("click", () => CardLib.saveCurrentCard());
-        Dom.duplicateCardBtn.addEventListener("click", () => CardLib.duplicateSelectedCard());
-
-        Dom.loadLibraryBtn.addEventListener("click", () => Dom.loadLibraryInput.click());
-        Dom.loadLibraryInput.addEventListener("change", e => {
-          const file = e.target.files[0];
-          if (file) CardLib.loadLibraryFromFile(file);
-        });
-        Dom.saveLibraryBtn.addEventListener("click", () => CardLib.saveLibraryToFile());
-
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        CardLib.loadSelectedCardIntoForm();
+      getVehicleStats(card) {
+        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return "";
+        const e = card.extra || {};
+        const bits = [];
+        if (typeof e.hp === "number") bits.push(`HP: ${e.hp}`);
+        if (typeof e.con === "number") bits.push(`CON: ${e.con}`);
+        return bits.join(" · ");
       }
     };
 
-    /*********************************
-     * Bulk import from Excel
-     *********************************/
-    const BulkImport = {
-      handleFileChange(file) {
-        if (!file) return;
+    function renderLibraryList() {
+      const container = Dom.preconLibraryList; // reused only in precons; no separate library view for cards here
+    }
+
+    let bulkWorkbook = null;
+    let bulkCards = [];
+    let bulkFilterSearch = "";
+    let bulkFilterType = "";
+    let bulkFilterSet = "";
+
+    const Bulk = {
+      handleFileChange(evt) {
+        const file = evt.target.files[0];
+        if (!file) {
+          bulkWorkbook = null;
+          Dom.bulkSheetSelect.innerHTML = '<option value="">– No workbook loaded –</option>';
+          Dom.bulkStep1Status.textContent = "";
+          return;
+        }
         const reader = new FileReader();
         reader.onload = e => {
           try {
             const data = new Uint8Array(e.target.result);
             bulkWorkbook = XLSX.read(data, { type: "array" });
-            Dom.bulkSheetSelect.innerHTML = "<option value=''>-- Sheet --</option>";
-            bulkWorkbook.SheetNames.forEach(name => {
-              const opt = document.createElement("option");
-              opt.value = name;
-              opt.textContent = name;
-              Dom.bulkSheetSelect.appendChild(opt);
-            });
+            Dom.bulkSheetSelect.innerHTML =
+              '<option value="">– Select sheet –</option>' +
+              bulkWorkbook.SheetNames.map(
+                name => `<option value="${name}">${name}</option>`
+              ).join("");
             Dom.bulkStep1Status.textContent =
-              `Workbook loaded. Sheets: ${bulkWorkbook.SheetNames.join(", ")}. Select a sheet and click “Parse Sheet”.`;
+              "Workbook loaded. Select a sheet and click Parse.";
+            Dom.bulkStep1Status.className = "status small-note ok";
           } catch (err) {
             console.error(err);
+            bulkWorkbook = null;
+            Dom.bulkSheetSelect.innerHTML =
+              '<option value="">– Error loading workbook –</option>';
             Dom.bulkStep1Status.textContent =
-              "Error reading workbook. Make sure it's a valid .xlsx file.";
+              "Could not read this file. Make sure it's a valid .xlsx file.";
+            Dom.bulkStep1Status.className = "status small-note err";
           }
         };
         reader.readAsArrayBuffer(file);
@@ -1175,6 +1366,7 @@
         const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
         if (!rows.length) {
           Dom.bulkStep1Status.textContent = "Sheet has no rows.";
+          Dom.bulkStep1Status.className = "status small-note warn";
           return;
         }
 
@@ -1183,7 +1375,7 @@
           .map((row, idx) => {
             const name    = readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
             const type    = cfg.type || readCell(row, "Card Type", "Type");
-            const setName = readCell(row, cfg.setCol, "SET", "Set", "Set Name");
+            const setName = readCell(row, cfg.setCol, "SET", "Set", "Set Name", "Set 1", "SET 1", "Set Code");
             const rarity  = readCell(row, cfg.rarityCol, "RARITY", "Rarity");
 
             return {
@@ -1197,492 +1389,626 @@
               selected: !!name
             };
           })
-          .filter(c => c.name);
+          .filter(row => row.name);
 
         Dom.bulkStep1Status.textContent =
           `Parsed ${bulkCards.length} potential cards from "${sheetName}".`;
+        Dom.bulkStep1Status.className = "status small-note ok";
 
-        BulkImport.buildFilterOptions();
-        BulkImport.renderSelectionList();
-        Dom.bulkStep2.style.display = "";
-        Dom.bulkStep3.style.display = "none";
-      },
-
-      buildFilterOptions() {
         const typeSet = new Set();
-        const setSet = new Set();
-
-        bulkCards.forEach(c => {
-          if (c.type) typeSet.add(c.type);
-          if (c.setName) setSet.add(c.setName);
+        const setNameSet = new Set();
+        bulkCards.forEach(r => {
+          if (r.type) typeSet.add(r.type);
+          if (r.setName) setNameSet.add(r.setName);
         });
+        Dom.bulkTypeFilter.innerHTML =
+          '<option value="">All Types</option>' +
+          Array.from(typeSet)
+            .sort()
+            .map(t => `<option value="${t}">${t}</option>`)
+            .join("");
 
-        Dom.bulkFilterType.innerHTML = "<option value=''>All Types</option>";
-        Dom.bulkFilterSet.innerHTML = "<option value=''>All Sets</option>";
+        Dom.bulkSetFilter.innerHTML =
+          '<option value="">All Sets</option>' +
+          Array.from(setNameSet)
+            .sort()
+            .map(s => `<option value="${s}">${s}</option>`)
+            .join("");
 
-        Array.from(typeSet).sort().forEach(t => {
-          const opt = document.createElement("option");
-          opt.value = t;
-          opt.textContent = t;
-          Dom.bulkFilterType.appendChild(opt);
-        });
-
-        Array.from(setSet).sort().forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = s;
-          Dom.bulkFilterSet.appendChild(opt);
-        });
+        bulkFilterSearch = "";
+        bulkFilterType = "";
+        bulkFilterSet = "";
+        Dom.bulkSearchInput.value = "";
+        Dom.bulkTypeFilter.value = "";
+        Dom.bulkSetFilter.value = "";
+        Bulk.renderGrid();
       },
 
-      renderSelectionList() {
-        Dom.bulkSelectionList.innerHTML = "";
+      renderGrid() {
+        const container = Dom.bulkGrid;
+        container.innerHTML =
+          '<div class="bulk-row bulk-row-header">' +
+          '<div><input id="bulkSelectAllCheckbox" type="checkbox" /></div>' +
+          "<div>Name</div>" +
+          "<div>Type</div>" +
+          "<div>Set</div>" +
+          "<div>Rarity</div>" +
+          "</div>";
 
-        const q  = bulkFilterState.text.trim().toLowerCase();
-        const tf = bulkFilterState.type;
-        const sf = bulkFilterState.set;
-
-        const filtered = bulkCards.filter(card => {
-          if (tf && card.type !== tf) return false;
-          if (sf && card.setName !== sf) return false;
-
+        const q = bulkFilterSearch.trim().toLowerCase();
+        const rows = bulkCards.filter(r => {
+          if (bulkFilterType && r.type !== bulkFilterType) return false;
+          if (bulkFilterSet && r.setName !== bulkFilterSet) return false;
           if (q) {
-            const haystack = [
-              card.name || "",
-              card.type || "",
-              card.setName || "",
-              card.rarity || ""
-            ].join(" ").toLowerCase();
+            const haystack = `${r.name} ${r.type} ${r.setName} ${r.rarity}`.toLowerCase();
             if (!haystack.includes(q)) return false;
           }
           return true;
         });
 
-        if (!filtered.length) {
-          Dom.bulkSelectionList.innerHTML =
-            "<div class='small-note'>No rows match the current filters.</div>";
-          return;
-        }
-
-        filtered.forEach(card => {
-          const row = document.createElement("div");
-          row.style.display = "flex";
-          row.style.alignItems = "center";
-          row.style.justifyContent = "space-between";
-          row.style.gap = "0.5rem";
-          row.style.padding = "0.2rem 0.3rem";
-          row.style.borderRadius = "0.4rem";
-          row.style.background =
-            card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
-
-          const left = document.createElement("div");
-          left.style.display = "flex";
-          left.style.alignItems = "center";
-          left.style.gap = "0.4rem";
-          left.style.flex = "1";
-
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = !!card.selected;
-          checkbox.addEventListener("change", () => {
-            card.selected = checkbox.checked;
-          });
-
-          const label = document.createElement("div");
-          label.style.fontSize = "0.8rem";
-          label.innerHTML = `<strong>${card.name}</strong><br>
-            <span style="color:#9ca3af; font-size:0.75rem;">${card.type || ""} · ${card.setName || ""}</span>`;
-
-          left.appendChild(checkbox);
-          left.appendChild(label);
-
-          row.appendChild(left);
-          Dom.bulkSelectionList.appendChild(row);
-        });
-      },
-
-      goToStep3() {
-        const chosen = bulkCards.filter(c => c.selected);
-        if (!chosen.length) {
-          alert("No cards selected. Use the checkboxes in Step 2.");
-          return;
-        }
-        Dom.bulkStep3Summary.textContent =
-          `${chosen.length} cards selected. Click “Finish Import” to add them to the library.`;
-        Dom.bulkStep3.style.display = "";
-      },
-
-      finishImport() {
-        const selected = bulkCards.filter(c => c.selected);
-        if (!selected.length) {
-          alert("No cards selected.");
-          return;
-        }
-
-        let countAdded = 0;
-
-        const parseTags = (val) =>
-          String(val || "")
-            .split(",")
-            .map(t => t.trim())
-            .filter(Boolean);
-
-        selected.forEach(bc => {
-          const row   = bc.raw || {};
-          const sheet = bc.sheetName || "";
-          const cfg   = SHEET_CONFIG[sheet] || {};
-
-          const card = CardLib.createEmptyCard();
-          card.name     = bc.name || readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
-          card.type     = cfg.type || bc.type || readCell(row, "Card Type", "Type");
-          card.setName  = bc.setName || readCell(row, cfg.setCol, "SET", "Set", "Set Name");
-          card.rarity   = bc.rarity || readCell(row, cfg.rarityCol, "RARITY", "Rarity");
-          card.cardNumber = readCell(row, "Card Number", "Number", "#");
-
-          card.tags     = parseTags(readCell(row, "Tags", "Tag"));
-          card.imageUrl = ""; // no image via bulk import
-          card.extra    = {};
-
-          if (cfg.notesCol) {
-            card.notes = readCell(row, cfg.notesCol, "Rules Text", "Text", "Rules");
-          } else {
-            card.notes = readCell(row, "Rules Text", "Text", "Rules");
-          }
-
-          if (typeof cfg.extra === "function") {
-            cfg.extra(row, card);
-          }
-
-          AdminState.cards.push(card);
-          countAdded++;
-        });
-
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        alert(`Imported ${countAdded} cards into the library. You can now set image URLs in the Card Editor and download the updated JSON.`);
-      },
-
-      init() {
-        Dom.bulkFileInput.addEventListener("change", e => {
-          const file = e.target.files[0];
-          if (file) BulkImport.handleFileChange(file);
-        });
-        Dom.bulkParseSheetBtn.addEventListener("click", () => BulkImport.parseSheet());
-
-        Dom.bulkFilterText.addEventListener("input", () => {
-          bulkFilterState.text = Dom.bulkFilterText.value;
-          BulkImport.renderSelectionList();
-        });
-        Dom.bulkFilterType.addEventListener("change", () => {
-          bulkFilterState.type = Dom.bulkFilterType.value;
-          BulkImport.renderSelectionList();
-        });
-        Dom.bulkFilterSet.addEventListener("change", () => {
-          bulkFilterState.set = Dom.bulkFilterSet.value;
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkSelectShownBtn.addEventListener("click", () => {
-          const q  = bulkFilterState.text.trim().toLowerCase();
-          const tf = bulkFilterState.type;
-          const sf = bulkFilterState.set;
-
-          bulkCards.forEach(card => {
-            if (tf && card.type !== tf) return;
-            if (sf && card.setName !== sf) return;
-
-            if (q) {
-              const haystack = [
-                card.name || "",
-                card.type || "",
-                card.setName || "",
-                card.rarity || ""
-              ].join(" ").toLowerCase();
-              if (!haystack.includes(q)) return;
-            }
-            card.selected = true;
-          });
-
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkClearShownBtn.addEventListener("click", () => {
-          const q  = bulkFilterState.text.trim().toLowerCase();
-          const tf = bulkFilterState.type;
-          const sf = bulkFilterState.set;
-
-          bulkCards.forEach(card => {
-            if (tf && card.type !== tf) return;
-            if (sf && card.setName !== sf) return;
-
-            if (q) {
-              const haystack = [
-                card.name || "",
-                card.type || "",
-                card.setName || "",
-                card.rarity || ""
-              ].join(" ").toLowerCase();
-              if (!haystack.includes(q)) return;
-            }
-            card.selected = false;
-          });
-
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkToStep3Btn.addEventListener("click", () => BulkImport.goToStep3());
-        Dom.bulkImportFinishBtn.addEventListener("click", () => BulkImport.finishImport());
-      }
-    };
-
-    /*********************************
-     * Precon admin
-     *********************************/
-    const PreconAdmin = {
-      getActivePrecon() {
-        if (AdminState.selectedPreconIndex == null) return null;
-        return AdminState.precons[AdminState.selectedPreconIndex] || null;
-      },
-
-      totalCards(precon) {
-        return Object.values(precon.cards || {}).reduce((a,b) => a + Number(b || 0), 0);
-      },
-
-      renderPreconList() {
-        Dom.preconList.innerHTML = "";
-        if (!AdminState.precons.length) {
-          Dom.preconList.innerHTML =
-            "<div class='small-note'>No precons yet. Create one with “+ New Precon”.</div>";
-          return;
-        }
-        AdminState.precons.forEach((p, idx) => {
-          const div = document.createElement("div");
-          div.className = "precon-row" +
-            (idx === AdminState.selectedPreconIndex ? " selected" : "");
-          div.innerHTML = `<strong>${p.name || "(Untitled Precon)"}</strong><br>
-            <span style="font-size:0.75rem; color:#9ca3af;">Cards: ${PreconAdmin.totalCards(p)}</span>`;
-          div.addEventListener("click", () => {
-            AdminState.selectedPreconIndex = idx;
-            PreconAdmin.renderPreconList();
-            PreconAdmin.loadActivePreconIntoForm();
-          });
-          Dom.preconList.appendChild(div);
-        });
-      },
-
-      loadActivePreconIntoForm() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          Dom.preconNameInput.value = "";
-          Dom.preconNotesInput.value = "";
-          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
-          Dom.preconStatsInfo.textContent = "";
-          return;
-        }
-
-        Dom.preconNameInput.value = p.name || "";
-        Dom.preconNotesInput.value = p.notes || "";
-        PreconAdmin.renderPreconCardsList();
-      },
-
-      renderPreconCardsList() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
-          return;
-        }
-        const entries = Object.entries(p.cards || {});
-        Dom.preconCardsList.innerHTML = "";
-
-        if (!entries.length) {
-          Dom.preconCardsList.innerHTML =
-            "<div class='small-note'>No cards in this precon yet.</div>";
-          Dom.preconStatsInfo.textContent = "Cards: 0";
-          return;
-        }
-
-        entries
-          .slice()
-          .sort(([aId],[bId]) => {
-            const a = CardLib.getCardById(aId);
-            const b = CardLib.getCardById(bId);
-            if (!a || !b) return 0;
-            return (a.type || "").localeCompare(b.type || "") ||
-                   (a.name || "").localeCompare(b.name || "");
-          })
-          .forEach(([cardId, qty]) => {
-            const card = CardLib.getCardById(cardId);
-            const row = document.createElement("div");
-            row.className = "precon-card-row";
-
-            const info = document.createElement("div");
-            info.style.flex = "1";
-            info.style.minWidth = "0";
-            info.innerHTML = `<div class="card-row-main">${qty}x ${card ? card.name : "(Unknown card)"}</div>
-              <div class="card-row-sub">${card ? (card.type || "") : cardId}</div>`;
-
-            const btn = document.createElement("button");
-            btn.className = "secondary";
-            btn.type = "button";
-            btn.textContent = "Remove";
-            btn.addEventListener("click", () => {
-              delete p.cards[cardId];
-              PreconAdmin.renderPreconCardsList();
+        if (!rows.length) {
+          const p = document.createElement("p");
+          p.className = "small-note";
+          p.textContent = "No rows match the current filters.";
+          container.appendChild(p);
+        } else {
+          rows.forEach(r => {
+            const rowEl = document.createElement("div");
+            rowEl.className = "bulk-row";
+            const cbCell = document.createElement("div");
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.checked = r.selected;
+            cb.addEventListener("change", () => {
+              r.selected = cb.checked;
             });
+            cbCell.appendChild(cb);
 
-            row.appendChild(info);
-            row.appendChild(btn);
-            Dom.preconCardsList.appendChild(row);
+            const nameCell = document.createElement("div");
+            nameCell.textContent = r.name;
+            const typeCell = document.createElement("div");
+            typeCell.textContent = r.type;
+            const setCell = document.createElement("div");
+            setCell.textContent = r.setName;
+            const rarityCell = document.createElement("div");
+            rarityCell.textContent = r.rarity;
+
+            rowEl.appendChild(cbCell);
+            rowEl.appendChild(nameCell);
+            rowEl.appendChild(typeCell);
+            rowEl.appendChild(setCell);
+            rowEl.appendChild(rarityCell);
+            container.appendChild(rowEl);
           });
+        }
 
-        Dom.preconStatsInfo.textContent = `Cards: ${PreconAdmin.totalCards(p)}`;
-      },
+        Dom.bulkStep2Status.textContent = `${rows.length} row(s) shown.`;
+        Dom.bulkStep2Status.className = "status small-note";
 
-      refreshPreconCardSelect() {
-        Dom.preconCardSelect.innerHTML = "";
-        const optNone = document.createElement("option");
-        optNone.value = "";
-        optNone.textContent = "-- Select card --";
-        Dom.preconCardSelect.appendChild(optNone);
-
-        AdminState.cards
-          .slice()
-          .sort((a,b) => (a.name || "").localeCompare(b.name || ""))
-          .forEach(card => {
-            const opt = document.createElement("option");
-            opt.value = card.id;
-            opt.textContent = `${card.name} [${card.type || ""}]`;
-            Dom.preconCardSelect.appendChild(opt);
+        const selectAllCb = document.getElementById("bulkSelectAllCheckbox");
+        if (selectAllCb) {
+          selectAllCb.addEventListener("change", () => {
+            const isChecked = selectAllCb.checked;
+            rows.forEach(r => {
+              r.selected = isChecked;
+            });
+            Bulk.renderGrid();
           });
+        }
       },
 
-      newPrecon() {
-        const p = { name: "New Precon", notes: "", cards: {} };
-        AdminState.precons.push(p);
-        AdminState.selectedPreconIndex = AdminState.precons.length - 1;
-        PreconAdmin.renderPreconList();
-        PreconAdmin.loadActivePreconIntoForm();
-      },
-
-      deletePrecon() {
-        if (AdminState.selectedPreconIndex == null) {
-          alert("No precon selected.");
+      applyToLibrary() {
+        if (!bulkCards.length) {
+          alert("No parsed sheet data. Parse a sheet first.");
           return;
         }
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) return;
-        if (!confirm(`Delete precon "${p.name}"?`)) return;
-        AdminState.precons.splice(AdminState.selectedPreconIndex, 1);
-        AdminState.selectedPreconIndex = null;
-        PreconAdmin.renderPreconList();
-        PreconAdmin.loadActivePreconIntoForm();
-      },
-
-      saveActivePrecon() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          alert("No precon selected.");
+        const selectedRows = bulkCards.filter(r => r.selected);
+        if (!selectedRows.length) {
+          alert("No rows selected.");
           return;
         }
-        p.name = Dom.preconNameInput.value.trim() || p.name || "Precon";
-        p.notes = Dom.preconNotesInput.value;
-        PreconAdmin.renderPreconList();
-        alert("Precon changes saved (in memory). Download JSON to persist.");
-      },
 
-      addCardToPrecon() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          alert("No precon selected.");
-          return;
-        }
-        const cardId = Dom.preconCardSelect.value;
-        if (!cardId) {
-          alert("Select a card to add.");
-          return;
-        }
-        const qty = Number(Dom.preconCardQtyInput.value) || 1;
-        p.cards[cardId] = (p.cards[cardId] || 0) + qty;
-        PreconAdmin.renderPreconCardsList();
-      },
-
-      async loadPreconsFromFile(file) {
-        try {
-          const text = await file.text();
-          const json = JSON.parse(text);
-          AdminState.precons = Array.isArray(json) ? json : [];
-          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
-          PreconAdmin.renderPreconList();
-          PreconAdmin.loadActivePreconIntoForm();
-          alert("Precons loaded.");
-        } catch (e) {
-          console.error(e);
-          alert("Error reading precons JSON.");
-        }
-      },
-
-      // Auto-load precons from default URL
-      async loadPreconsFromUrl(url = DEFAULT_PATHS.precons) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-
-          AdminState.precons = Array.isArray(json) ? json : [];
-          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
-          PreconAdmin.renderPreconList();
-          PreconAdmin.loadActivePreconIntoForm();
-          console.log("Auto-loaded precons from", url);
-        } catch (e) {
-          console.warn("Unable to auto-load precons JSON from", url, e);
-        }
-      },
-
-      savePreconsToFile() {
-        const blob = new Blob([JSON.stringify(AdminState.precons, null, 2)], {
-          type: "application/json"
+        const mode = Dom.bulkUpdateModeSelect.value;
+        const cardIndex = {};
+        AppState.cards.forEach(card => {
+          const key = normalizeNameTypeSet(card);
+          if (!cardIndex[key]) cardIndex[key] = [];
+          cardIndex[key].push(card);
         });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "drive-precons.json";
-        a.click();
-        URL.revokeObjectURL(url);
-      },
 
-      init() {
-        Dom.newPreconBtn.addEventListener("click", () => PreconAdmin.newPrecon());
-        Dom.deletePreconBtn.addEventListener("click", () => PreconAdmin.deletePrecon());
-        Dom.preconAddCardBtn.addEventListener("click", () => PreconAdmin.addCardToPrecon());
-        Dom.preconSaveBtn.addEventListener("click", () => PreconAdmin.saveActivePrecon());
+        let created = 0;
+        let updated = 0;
+        let skipped = 0;
 
-        Dom.loadPreconsBtn.addEventListener("click", () => Dom.loadPreconsInput.click());
-        Dom.loadPreconsInput.addEventListener("change", e => {
-          const file = e.target.files[0];
-          if (file) PreconAdmin.loadPreconsFromFile(file);
+        selectedRows.forEach(row => {
+          const cfg = SHEET_CONFIG[row.sheetName] || {};
+          const raw = row.raw;
+
+          const name = row.name;
+          const type = row.type;
+          const setName = row.setName;
+          const rarity = row.rarity;
+
+          const key = `${name.trim().toLowerCase()}||${type.trim().toLowerCase()}||${setName.trim().toLowerCase()}`;
+          const matches = cardIndex[key] || [];
+
+          const newCard = {
+            id: "card-" + Math.random().toString(36).slice(2),
+            name,
+            type,
+            setName,
+            cardNumber: "",
+            rarity,
+            tags: [],
+            notes: "",
+            imageUrl: "",
+            extra: {},
+            vehicleTypes: []
+          };
+
+          if (cfg.vehicleTypeCol) {
+            const vtRaw = readCell(raw, cfg.vehicleTypeCol, "TRACK VEHICLE TYPE", "VEHICLE TYPE");
+            newCard.vehicleTypes = parseVehicleTypes(vtRaw);
+          }
+
+          if (cfg.modBasePartCol) {
+            const e = ensureExtras(newCard);
+            e.modBasePart = readCell(raw, cfg.modBasePartCol, "MOD BASE PART");
+            e.modLevel1 = readCell(raw, cfg.modL1Col, "MOD LVL 1");
+            e.modLevel2 = readCell(raw, cfg.modL2Col, "MOD LVL 2");
+            e.modLevel3 = readCell(raw, cfg.modL3Col, "MOD LVL 3");
+            e.modLevel4 = readCell(raw, cfg.modL4Col, "MOD LVL 4");
+          }
+
+          if (cfg.hpConCol) {
+            const hpConVal = readCell(raw, cfg.hpConCol, "HP/CON");
+            const parsed = parseHpCon(hpConVal);
+            const e = ensureExtras(newCard);
+            if (parsed.hp !== undefined) e.hp = parsed.hp;
+            if (parsed.con !== undefined) e.con = parsed.con;
+          }
+
+          newCard.notes = readCell(raw, cfg.notesCol, "Crew Trait", "Driver Trait", "Condition Trait", "Track Trait", "TRAIT", "ABILITY");
+
+          if (matches.length) {
+            if (mode === "createOnly") {
+              skipped++;
+              return;
+            }
+            const card = matches[0];
+            card.rarity = newCard.rarity || card.rarity;
+            card.notes = newCard.notes || card.notes;
+            card.vehicleTypes = newCard.vehicleTypes.length ? newCard.vehicleTypes : card.vehicleTypes;
+            card.extra = Object.assign({}, card.extra || {}, newCard.extra || {});
+            updated++;
+          } else {
+            if (mode === "updateOnly") {
+              skipped++;
+              return;
+            }
+            AppState.cards.push(newCard);
+            const libIdxKey = normalizeNameTypeSet(newCard);
+            if (!cardIndex[libIdxKey]) cardIndex[libIdxKey] = [];
+            cardIndex[libIdxKey].push(newCard);
+            created++;
+          }
         });
-        Dom.savePreconsBtn.addEventListener("click", () => PreconAdmin.savePreconsToFile());
+
+        Dom.bulkStep3Status.textContent =
+          `Done. Created ${created}, updated ${updated}, skipped ${skipped}. Remember to download drive-card.json.`;
+        Dom.bulkStep3Status.className = "status small-note ok";
       }
     };
 
-    /*********************************
-     * Init
-     *********************************/
-    (function init() {
-      Mode.init();
-      CardLib.init();
-      BulkImport.init();
-      PreconAdmin.init();
+    function renderCardLibraryForPrecons() {
+      const container = Dom.preconCardList;
+      const selectedPrecon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
+      const cardsMap = selectedPrecon ? selectedPrecon.cards || {} : {};
+      container.innerHTML = "";
 
-      const originalUpdateSummary = CardLib.updateLibrarySummary;
-      CardLib.updateLibrarySummary = function() {
-        originalUpdateSummary.call(CardLib);
-        PreconAdmin.refreshPreconCardSelect();
-      };
-      PreconAdmin.refreshPreconCardSelect();
+      const entries = Object.entries(cardsMap)
+        .map(([cardId, qty]) => {
+          const card = AppState.cardsById[cardId];
+          return { cardId, card, qty: Number(qty) || 0 };
+        })
+        .filter(e => e.card && e.qty > 0)
+        .sort((a, b) => (a.card.type || "").localeCompare(b.card.type || "") || (a.card.name || "").localeCompare(b.card.name || ""));
 
-      // Auto-load default JSON files (silent if missing)
-      CardLib.loadLibraryFromUrl();
-      PreconAdmin.loadPreconsFromUrl();
+      if (!entries.length) {
+        const p = document.createElement("p");
+        p.className = "small-note";
+        p.textContent = "No cards in this precon.";
+        container.appendChild(p);
+        return;
+      }
+
+      entries.forEach((entry, idx) => {
+        const row = document.createElement("div");
+        row.className = "library-row";
+
+        const idxCell = document.createElement("div");
+        idxCell.textContent = String(idx + 1);
+
+        const nameCell = document.createElement("span");
+        nameCell.className = "truncate";
+        nameCell.textContent = `${entry.qty}x ${entry.card.name}`;
+
+        const typeCell = document.createElement("span");
+        typeCell.className = "truncate";
+        typeCell.textContent = entry.card.type || "";
+
+        const setCell = document.createElement("span");
+        setCell.className = "truncate";
+        setCell.textContent = entry.card.setName || "";
+
+        const qtyCell = document.createElement("span");
+        qtyCell.textContent = entry.qty;
+
+        row.appendChild(idxCell);
+        row.appendChild(nameCell);
+        row.appendChild(typeCell);
+        row.appendChild(setCell);
+        row.appendChild(qtyCell);
+
+        row.addEventListener("click", () => {
+          const newQtyStr = prompt(`Set quantity for "${entry.card.name}" (0 to remove):`, String(entry.qty));
+          if (newQtyStr === null) return;
+          const newQty = Math.max(0, Number(newQtyStr) || 0);
+          if (!selectedPrecon.cards) selectedPrecon.cards = {};
+          if (newQty === 0) {
+            delete selectedPrecon.cards[entry.cardId];
+          } else {
+            selectedPrecon.cards[entry.cardId] = newQty;
+          }
+          renderCardLibraryForPrecons();
+        });
+
+        container.appendChild(row);
+      });
+    }
+
+    function renderPreconList() {
+      const container = Dom.preconLibraryList;
+      container.innerHTML = "";
+      if (!AppState.precons.length) {
+        const p = document.createElement("p");
+        p.className = "small-note";
+        p.textContent = "No precons loaded yet.";
+        container.appendChild(p);
+      } else {
+        AppState.precons.forEach((precon, idx) => {
+          const row = document.createElement("div");
+          row.className = "library-row" + (precon.id === AppState.selectedPreconId ? " selected" : "");
+          const idxCell = document.createElement("div");
+          idxCell.textContent = String(idx + 1);
+          const nameCell = document.createElement("span");
+          nameCell.className = "truncate";
+          nameCell.textContent = precon.name || precon.id || "(Unnamed)";
+          const idCell = document.createElement("span");
+          idCell.className = "truncate";
+          idCell.textContent = precon.id || "–";
+          const cardCount = precon.cards ? Object.values(precon.cards).reduce((sum, n) => sum + Number(n || 0), 0) : 0;
+          const cardsCell = document.createElement("span");
+          cardsCell.textContent = `${cardCount} cards`;
+
+          row.appendChild(idxCell);
+          row.appendChild(nameCell);
+          row.appendChild(idCell);
+          row.appendChild(cardsCell);
+
+          row.addEventListener("click", () => {
+            AppState.selectedPreconId = precon.id;
+            fillPreconEditor(precon);
+            renderPreconList();
+          });
+
+          container.appendChild(row);
+        });
+      }
+
+      Dom.preconListStatus.textContent = `${AppState.precons.length} precon deck(s) in memory.`;
+      Dom.preconListStatus.className = "status small-note";
+      const selectedPrecon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
+      if (selectedPrecon) {
+        renderCardLibraryForPrecons();
+      } else {
+        Dom.preconCardList.innerHTML = "<p class='small-note'>Select a precon to view its cards.</p>";
+      }
+    }
+
+    function fillPreconEditor(precon) {
+      Dom.preconIdInput.value = precon.id || "";
+      Dom.preconNameInput.value = precon.name || "";
+      Dom.preconNotesInput.value = precon.notes || "";
+      renderCardLibraryForPrecons();
+      Dom.preconEditStatus.textContent = "";
+    }
+
+    function collectPreconFromInputs() {
+      const id = Dom.preconIdInput.value.trim();
+      const name = Dom.preconNameInput.value.trim();
+      const notes = Dom.preconNotesInput.value;
+      let existing = AppState.precons.find(p => p.id === id);
+      if (!existing) {
+        existing = { id, name, notes, cards: {} };
+        AppState.precons.push(existing);
+      } else {
+        existing.name = name;
+        existing.notes = notes;
+      }
+      return existing;
+    }
+
+    function handlePreconCardSearch() {
+      const q = Dom.preconCardSearchInput.value.trim().toLowerCase();
+      if (!q) return;
+      const matches = AppState.cards.filter(c =>
+        (c.name || "").toLowerCase().includes(q)
+      );
+      if (!matches.length) {
+        alert("No cards found matching that search.");
+        return;
+      }
+      const options = matches
+        .slice(0, 25)
+        .map((c, idx) => `${idx + 1}) ${c.name} [${c.type || ""}]`)
+        .join("\n");
+      const choice = prompt(
+        `Choose a card number to add/update (1-${matches.length}):\n\n${options}`
+      );
+      if (!choice) return;
+      const idx = Number(choice) - 1;
+      if (idx < 0 || idx >= matches.length) {
+        alert("Invalid choice.");
+        return;
+      }
+      const card = matches[idx];
+      const selectedPrecon = collectPreconFromInputs();
+      if (!selectedPrecon.cards) selectedPrecon.cards = {};
+      const currentQty = Number(selectedPrecon.cards[card.id] || 0);
+      const newQtyStr = prompt(
+        `Set quantity for "${card.name}" (0 to remove):`,
+        String(currentQty || 1)
+      );
+      if (newQtyStr === null) return;
+      const newQty = Math.max(0, Number(newQtyStr) || 0);
+      if (newQty === 0) {
+        delete selectedPrecon.cards[card.id];
+      } else {
+        selectedPrecon.cards[card.id] = newQty;
+      }
+      AppState.selectedPreconId = selectedPrecon.id;
+      Dom.preconEditStatus.textContent =
+        `Updated "${card.name}" quantity to ${newQty} in "${selectedPrecon.name || selectedPrecon.id}".`;
+      Dom.preconEditStatus.className = "status small-note ok";
+      renderPreconList();
+      Dom.preconCardSearchInput.value = "";
+    }
+
+    function handleSingleSave() {
+      const card = collectSingleCardFromInputs(false);
+      if (!card.name || !card.type || !card.setName) {
+        Dom.singleStatus.textContent =
+          "Name, Type, and Set Name are required to save.";
+        Dom.singleStatus.className = "status small-note err";
+        return;
+      }
+
+      const key = normalizeNameTypeSet(card);
+      let existing = null;
+      let existingIndex = -1;
+      for (let i = 0; i < AppState.cards.length; i++) {
+        const c = AppState.cards[i];
+        if (normalizeNameTypeSet(c) === key) {
+          existing = c;
+          existingIndex = i;
+          break;
+        }
+      }
+
+      if (existing) {
+        card.id = existing.id || card.id;
+        AppState.cards[existingIndex] = card;
+        AppState.cardsById[card.id] = card;
+        Dom.singleStatus.textContent =
+          "Updated existing card in library (match by Name+Type+Set).";
+        Dom.singleStatus.className = "status small-note ok";
+      } else {
+        if (!card.id) {
+          card.id = "card-" + Math.random().toString(36).slice(2);
+        }
+        AppState.cards.push(card);
+        AppState.cardsById[card.id] = card;
+        Dom.singleStatus.textContent = "Added new card to library.";
+        Dom.singleStatus.className = "status small-note ok";
+      }
+      renderSinglePreview();
+    }
+
+    function handleSingleDelete() {
+      const id = Dom.cardIdInput.value.trim();
+      if (!id) {
+        Dom.singleStatus.textContent = "No card id to delete.";
+        Dom.singleStatus.className = "status small-note err";
+        return;
+      }
+      const idx = AppState.cards.findIndex(c => c.id === id);
+      if (idx === -1) {
+        Dom.singleStatus.textContent = "Card id not found in library.";
+        Dom.singleStatus.className = "status small-note err";
+        return;
+      }
+      if (!confirm("Delete this card from the in-memory library?")) return;
+      AppState.cards.splice(idx, 1);
+      delete AppState.cardsById[id];
+      Dom.singleStatus.textContent = "Card removed from in-memory library.";
+      Dom.singleStatus.className = "status small-note ok";
+    }
+
+    function handleSingleNew() {
+      Dom.cardIdInput.value = "";
+      Dom.cardNameInput.value = "";
+      Dom.cardTypeInput.value = "";
+      Dom.cardSetNameInput.value = "";
+      Dom.cardNumberInput.value = "";
+      Dom.cardRarityInput.value = "";
+      Dom.cardVehicleTypesInput.value = "";
+      Dom.cardTagsInput.value = "";
+      Dom.cardImageUrlInput.value = "";
+      Dom.cardNotesInput.value = "";
+      Dom.modBasePartInput.value = "";
+      Dom.modL1Input.value = "";
+      Dom.modL2Input.value = "";
+      Dom.modL3Input.value = "";
+      Dom.modL4Input.value = "";
+      Dom.vehicleHpConInput.value = "";
+      Dom.extraJsonInput.value = "";
+      Dom.singleStatus.textContent = "";
+      renderSinglePreview();
+    }
+
+    function downloadJson(filename, data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function initNav() {
+      Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
+      Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
+      Dom.navPreconsBtn.addEventListener("click", () => showSection("precons"));
+      Dom.navHelpBtn.addEventListener("click", () => showSection("help"));
+    }
+
+    function initSingleEditor() {
+      [
+        Dom.cardIdInput,
+        Dom.cardNameInput,
+        Dom.cardTypeInput,
+        Dom.cardSetNameInput,
+        Dom.cardNumberInput,
+        Dom.cardRarityInput,
+        Dom.cardVehicleTypesInput,
+        Dom.cardTagsInput,
+        Dom.cardImageUrlInput,
+        Dom.cardNotesInput,
+        Dom.modBasePartInput,
+        Dom.modL1Input,
+        Dom.modL2Input,
+        Dom.modL3Input,
+        Dom.modL4Input,
+        Dom.vehicleHpConInput,
+        Dom.extraJsonInput
+      ].forEach(el => {
+        el.addEventListener("input", renderSinglePreview);
+        el.addEventListener("change", renderSinglePreview);
+      });
+
+      Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
+      Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
+      Dom.singleNewBtn.addEventListener("click", handleSingleNew);
+    }
+
+    function initBulk() {
+      Dom.bulkFileInput.addEventListener("change", Bulk.handleFileChange);
+      Dom.bulkParseSheetBtn.addEventListener("click", () => Bulk.parseSheet());
+      Dom.bulkSearchInput.addEventListener("input", () => {
+        bulkFilterSearch = Dom.bulkSearchInput.value;
+        Bulk.renderGrid();
+      });
+      Dom.bulkTypeFilter.addEventListener("change", () => {
+        bulkFilterType = Dom.bulkTypeFilter.value;
+        Bulk.renderGrid();
+      });
+      Dom.bulkSetFilter.addEventListener("change", () => {
+        bulkFilterSet = Dom.bulkSetFilter.value;
+        Bulk.renderGrid();
+      });
+      Dom.bulkApplyBtn.addEventListener("click", () => Bulk.applyToLibrary());
+      Dom.downloadCardsJsonBtn.addEventListener("click", () => {
+        downloadJson("drive-card.json", AppState.cards.map(cardToJson));
+      });
+    }
+
+    function initPrecons() {
+      Dom.preconNewBtn.addEventListener("click", () => {
+        const id = prompt("New precon id (e.g., starter-set1-speed):");
+        if (!id) return;
+        const name = prompt("Precon name:", "");
+        const precon = { id: id.trim(), name: name || id.trim(), notes: "", cards: {} };
+        AppState.precons.push(precon);
+        AppState.selectedPreconId = precon.id;
+        fillPreconEditor(precon);
+        renderPreconList();
+      });
+
+      Dom.preconDeleteBtn.addEventListener("click", () => {
+        if (!AppState.selectedPreconId) {
+          alert("No precon selected.");
+          return;
+        }
+        if (!confirm("Delete this precon from the in-memory list?")) return;
+        AppState.precons = AppState.precons.filter(p => p.id !== AppState.selectedPreconId);
+        AppState.selectedPreconId = null;
+        Dom.preconIdInput.value = "";
+        Dom.preconNameInput.value = "";
+        Dom.preconNotesInput.value = "";
+        Dom.preconCardList.innerHTML = "<p class='small-note'>No precon selected.</p>";
+        Dom.preconEditStatus.textContent = "";
+        renderPreconList();
+      });
+
+      Dom.preconReloadBtn.addEventListener("click", () => {
+        loadPrecons();
+      });
+
+      Dom.preconSaveBtn.addEventListener("click", () => {
+        const precon = collectPreconFromInputs();
+        AppState.selectedPreconId = precon.id;
+        renderPreconList();
+        Dom.preconEditStatus.textContent = "Precon saved in memory. Remember to download drive-precons.json.";
+        Dom.preconEditStatus.className = "status small-note ok";
+      });
+
+      Dom.preconCardSearchInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handlePreconCardSearch();
+        }
+      });
+
+      Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
+        downloadJson("drive-precons.json", AppState.precons);
+      });
+    }
+
+    function initModal() {
+      Dom.modalCloseBtn.addEventListener("click", closeModal);
+      Dom.modalBackdrop.addEventListener("click", e => {
+        if (e.target === Dom.modalBackdrop) {
+          closeModal();
+        }
+      });
+    }
+
+    (async function init() {
+      initNav();
+      initSingleEditor();
+      initBulk();
+      initPrecons();
+      initModal();
+
+      await loadCards();
+      renderSinglePreview();
+      await loadPrecons();
+
+      showSection("single");
     })();
   </script>
 </body>
