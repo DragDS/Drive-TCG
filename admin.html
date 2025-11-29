@@ -226,7 +226,8 @@
     input[type="text"],
     select,
     textarea,
-    input[type="file"] {
+    input[type="file"],
+    input[type="number"] {
       border-radius: 0.5rem;
       border: 1px solid #1f2937;
       background: rgba(15, 23, 42, 0.95);
@@ -239,7 +240,8 @@
 
     input[type="text"]:focus,
     select:focus,
-    textarea:focus {
+    textarea:focus,
+    input[type="number"]:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
     }
@@ -483,8 +485,7 @@
       <div>
         <h1>DRIVE TCG – Admin Panel</h1>
         <p>
-          Edit single cards, bulk-import from Excel, and manage preconstructed
-          decks in your browser.
+          Edit single cards, bulk-import from Excel, and manage preconstructed decks in your browser.
         </p>
       </div>
     </header>
@@ -572,14 +573,14 @@
 
           <h3>Traits & Tags</h3>
           <div class="field-grid">
-            <div class="field">
+            <div class="field" data-show-for="Track,Vehicle,Named Vehicle">
               <label for="cardVehicleTypesInput">Vehicle Types</label>
               <input
                 id="cardVehicleTypesInput"
                 type="text"
                 placeholder="Drag, Drift, Off-Road…"
               />
-              <p class="small-note">Comma separated. Example: Drag, Drift</p>
+              <p class="small-note">Used by Tracks and Vehicles (Vehicle Type column).</p>
             </div>
             <div class="field">
               <label for="cardTagsInput">Tags</label>
@@ -593,6 +594,7 @@
 
           <h3>Art, Mods & HP/CON</h3>
           <div class="field-grid">
+            <!-- Image URL: shown for all types -->
             <div class="field">
               <label for="cardImageUrlInput">Image URL</label>
               <input
@@ -601,40 +603,60 @@
                 placeholder="images/Set1/DANNYS_R-2-4.png"
               />
               <p class="small-note">
-                Relative URL from your site root (same as used on the main card
-                viewer).
+                Relative URL from your site root (same as used on the main card viewer).
               </p>
             </div>
 
-            <div class="field">
+            <!-- Mod-only fields -->
+            <div class="field" data-show-for="Mod">
+              <label for="modTypeInput">Mod Type</label>
+              <input
+                id="modTypeInput"
+                type="text"
+                placeholder="TYPE from Excel (e.g., ALL, Drag)"
+              />
+            </div>
+            <div class="field" data-show-for="Mod">
               <label for="modBasePartInput">Mod – Base Part</label>
               <input
                 id="modBasePartInput"
                 type="text"
-                placeholder="Headers, Tires…"
+                placeholder="Base Part (Engine, Headers, Tires…)"
               />
             </div>
-            <div class="field">
+            <div class="field" data-show-for="Mod">
               <label for="modL1Input">Mod – Level 1</label>
-              <input id="modL1Input" type="text" placeholder="1/2 etc" />
+              <input id="modL1Input" type="text" placeholder="Mod Lvl 1 (e.g., 1/2)" />
             </div>
-            <div class="field">
+            <div class="field" data-show-for="Mod">
               <label for="modL2Input">Mod – Level 2</label>
-              <input id="modL2Input" type="text" />
+              <input id="modL2Input" type="text" placeholder="Mod Lvl 2" />
             </div>
-            <div class="field">
+            <div class="field" data-show-for="Mod">
               <label for="modL3Input">Mod – Level 3</label>
-              <input id="modL3Input" type="text" />
+              <input id="modL3Input" type="text" placeholder="Mod Lvl 3" />
             </div>
-            <div class="field">
+            <div class="field" data-show-for="Mod">
               <label for="modL4Input">Mod – Level 4</label>
-              <input id="modL4Input" type="text" />
+              <input id="modL4Input" type="text" placeholder="Mod Lvl 4" />
             </div>
 
-            <div class="field">
+            <!-- Vehicle / Named Vehicle-only fields -->
+            <div class="field" data-show-for="Vehicle,Named Vehicle">
               <label for="vehicleHpConInput">Vehicle / Named Vehicle – HP/CON</label>
-              <input id="vehicleHpConInput" type="text" placeholder="10/4 etc" />
+              <input id="vehicleHpConInput" type="text" placeholder="VEHICLE HP/CON (e.g., 10/4)" />
             </div>
+            <div class="field" data-show-for="Vehicle,Named Vehicle">
+              <label for="pitCostInput">Pit Cost</label>
+              <input
+                id="pitCostInput"
+                type="number"
+                min="0"
+                placeholder="PIT COST from Excel"
+              />
+            </div>
+
+            <!-- Extra JSON always visible, advanced -->
             <div class="field">
               <label for="extraJsonInput">Extra JSON (advanced)</label>
               <input
@@ -667,7 +689,7 @@
           <div id="singleStatus" class="status small-note"></div>
         </div>
 
-        <!-- Right: preview + card library (JSON view removed) -->
+        <!-- Right: preview + card library -->
         <div>
           <h3>Preview</h3>
           <div id="singlePreview" class="card-preview">
@@ -968,8 +990,8 @@
         </li>
         <li>Fill in Name, Type, Set, Rarity, and rules text.</li>
         <li>
-          For Mods, fill Mod Base Part + Level stats. For Vehicles / Named
-          Vehicles, fill HP/CON.
+          For Mods, fill Mod Type, Base Part, and Level stats. For Vehicles /
+          Named Vehicles, fill HP/CON and Pit Cost.
         </li>
         <li>
           Click <strong>Save / Update in Library</strong> to keep the card in
@@ -984,7 +1006,7 @@
 
       <h3>Bulk Import Workflow (Excel)</h3>
       <ol class="small-note">
-        <li>Export or maintain your master <span class="inline-code">Drive Cards.xlsx</span>.</li>
+        <li>Use your master <span class="inline-code">Drive Cards.xlsx</span>.</li>
         <li>
           In <strong>Bulk Import</strong>, upload the
           <span class="inline-code">.xlsx</span> file.
@@ -1025,14 +1047,6 @@
           deck file and upload it to GitHub.
         </li>
       </ol>
-
-      <h3>Debug / Info Panel</h3>
-      <p class="small-note">
-        If something looks wrong (missing cards, header mismatch, etc.), the
-        admin can show a debug modal with a summary of what was parsed and
-        loaded. This is purely for inspection—no data is automatically sent
-        anywhere.
-      </p>
     </section>
   </div>
 
@@ -1060,13 +1074,15 @@
       bulkRows: []
     };
 
+    // SHEET_CONFIG now matches your Drive Cards.xlsx columns
     const SHEET_CONFIG = {
       "Crew Cards": {
         type: "Crew",
         nameCol: "Crew Name",
         setCol: "SET",
         rarityCol: "RARITY",
-        notesCol: "Crew Trait"
+        notesCol: "Crew Trait",
+        cardNumberCol: "Card Number"
       },
       "Mod Cards": {
         type: "Mod",
@@ -1074,32 +1090,37 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "Mod Ability",
-        modBasePartCol: "MOD BASE PART",
-        modL1Col: "MOD LVL 1",
-        modL2Col: "MOD LVL 2",
-        modL3Col: "MOD LVL 3",
-        modL4Col: "MOD LVL 4"
+        cardNumberCol: "Card Number",
+        modTypeCol: "Mod TYPE",
+        modBasePartCol: "Base Part",
+        modL1Col: "Mod Lvl 1",
+        modL2Col: "Mod Lvl 2",
+        modL3Col: "Mod Lvl 3",
+        modL4Col: "Mod Lvl 4"
       },
       "Driver Cards": {
         type: "Driver",
         nameCol: "Driver Name",
         setCol: "SET",
         rarityCol: "RARITY",
-        notesCol: "Driver Trait"
+        notesCol: "Driver Trait",
+        cardNumberCol: "Card Number"
       },
       "Named Driver Cards": {
         type: "Named Driver",
         nameCol: "Driver Name",
         setCol: "SET",
         rarityCol: "RARITY",
-        notesCol: "Driver Trait"
+        notesCol: "Driver Trait",
+        cardNumberCol: "Card Number"
       },
       "Condition Cards": {
         type: "Condition",
         nameCol: "Condition Name",
         setCol: "SET",
         rarityCol: "RARITY",
-        notesCol: "Condition Trait"
+        notesCol: "Condition Trait",
+        cardNumberCol: "Card Number"
       },
       "Track Cards": {
         type: "Track",
@@ -1107,7 +1128,8 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "Track Trait",
-        vehicleTypeCol: "TRACK VEHICLE TYPE"
+        cardNumberCol: "Card Number",
+        vehicleTypeCol: "Vehicle Type"
       },
       "Vehicle Cards": {
         type: "Vehicle",
@@ -1115,8 +1137,10 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "TRAIT",
-        vehicleTypeCol: "VEHICLE TYPE",
-        hpConCol: "HP/CON"
+        cardNumberCol: "Card Number",
+        vehicleTypeCol: "Vehicle Type",
+        hpConCol: "VEHICLE HP/CON",
+        pitCostCol: "PIT COST"
       },
       "NAMED VEHICLE": {
         type: "Named Vehicle",
@@ -1124,19 +1148,23 @@
         setCol: "SET",
         rarityCol: "RARITY",
         notesCol: "VEHICLE TRAIT",
-        vehicleTypeCol: "VEHICLE TYPE",
-        hpConCol: "HP/CON"
+        cardNumberCol: "Card Number",
+        vehicleTypeCol: "Vehicle Type",
+        hpConCol: "VEHICLE HP/CON",
+        pitCostCol: "PIT COST"
       },
       "MISC": {
         type: "Misc",
         nameCol: "TOKENS/COUNTERS",
         setCol: null,
         rarityCol: "RARITY",
-        notesCol: "ABILITY"
+        notesCol: "ABILITY",
+        cardNumberCol: "Card Number"
       }
     };
 
     const Dom = {
+      // nav
       navSingleBtn: document.getElementById("navSingleBtn"),
       navBulkBtn: document.getElementById("navBulkBtn"),
       navPreconsBtn: document.getElementById("navPreconsBtn"),
@@ -1147,6 +1175,7 @@
       preconsSection: document.getElementById("preconsSection"),
       helpSection: document.getElementById("helpSection"),
 
+      // single card inputs
       cardIdInput: document.getElementById("cardIdInput"),
       cardNameInput: document.getElementById("cardNameInput"),
       cardTypeInput: document.getElementById("cardTypeInput"),
@@ -1156,12 +1185,16 @@
       cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
       cardTagsInput: document.getElementById("cardTagsInput"),
       cardImageUrlInput: document.getElementById("cardImageUrlInput"),
+
+      modTypeInput: document.getElementById("modTypeInput"),
       modBasePartInput: document.getElementById("modBasePartInput"),
       modL1Input: document.getElementById("modL1Input"),
       modL2Input: document.getElementById("modL2Input"),
       modL3Input: document.getElementById("modL3Input"),
       modL4Input: document.getElementById("modL4Input"),
+
       vehicleHpConInput: document.getElementById("vehicleHpConInput"),
+      pitCostInput: document.getElementById("pitCostInput"),
       extraJsonInput: document.getElementById("extraJsonInput"),
       cardNotesInput: document.getElementById("cardNotesInput"),
 
@@ -1175,6 +1208,7 @@
       cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
       cardLibraryList: document.getElementById("cardLibraryList"),
 
+      // bulk
       bulkFileInput: document.getElementById("bulkFileInput"),
       bulkSheetSelect: document.getElementById("bulkSheetSelect"),
       bulkParseSheetBtn: document.getElementById("bulkParseSheetBtn"),
@@ -1193,11 +1227,13 @@
       downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn"),
       downloadCardsJsonBtn_bulk: document.getElementById("downloadCardsJsonBtn_bulk"),
 
+      // precons
       preconNewBtn: document.getElementById("preconNewBtn"),
       preconDeleteBtn: document.getElementById("preconDeleteBtn"),
       preconReloadBtn: document.getElementById("preconReloadBtn"),
       preconLibraryList: document.getElementById("preconLibraryList"),
       preconListStatus: document.getElementById("preconListStatus"),
+
       preconIdInput: document.getElementById("preconIdInput"),
       preconNameInput: document.getElementById("preconNameInput"),
       preconNotesInput: document.getElementById("preconNotesInput"),
@@ -1207,6 +1243,7 @@
       preconEditStatus: document.getElementById("preconEditStatus"),
       downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
 
+      // modal
       modalBackdrop: document.getElementById("modalBackdrop"),
       modalBody: document.getElementById("modalBody"),
       modalCloseBtn: document.getElementById("modalCloseBtn")
@@ -1238,62 +1275,6 @@
       const type = (card.type || "").trim().toLowerCase();
       const setName = (card.setName || "").trim().toLowerCase();
       return `${name}||${type}||${setName}`;
-    }
-
-    function ensureExtras(card) {
-      if (!card.extra || typeof card.extra !== "object") {
-        card.extra = {};
-      }
-      return card.extra;
-    }
-
-    function loadCards() {
-      return fetch("drive-card.json")
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to fetch drive-card.json");
-          return res.json();
-        })
-        .then(json => {
-          if (!Array.isArray(json))
-            throw new Error("drive-card.json is not an array.");
-          AppState.cards = json;
-          AppState.cardsById = {};
-          AppState.cards.forEach(card => {
-            if (!card.id) {
-              card.id = "card-" + Math.random().toString(36).slice(2);
-            }
-            if (!card.extra) card.extra = {};
-            if (!Array.isArray(card.tags)) card.tags = [];
-            if (typeof card.imageUrl !== "string") card.imageUrl = "";
-            AppState.cardsById[card.id] = card;
-          });
-          renderCardLibraryList();
-        })
-        .catch(err => {
-          console.error(err);
-          AppState.cards = [];
-          AppState.cardsById = {};
-          renderCardLibraryList();
-        });
-    }
-
-    function loadPrecons() {
-      return fetch("drive-precons.json")
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
-          return res.json();
-        })
-        .then(json => {
-          if (!Array.isArray(json))
-            throw new Error("drive-precons.json is not an array");
-          AppState.precons = json;
-          renderPreconList();
-        })
-        .catch(err => {
-          console.error(err);
-          AppState.precons = [];
-          renderPreconList();
-        });
     }
 
     function parseVehicleTypes(str) {
@@ -1379,17 +1360,41 @@
         if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
         if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
         if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
-        if (!parts.length) return null;
-        return `${e.modBasePart || "Mod"}: ${parts.join(" / ")}`;
+        if (!parts.length && !e.modBasePart) return null;
+        const label = e.modType
+          ? `${e.modType} ${e.modBasePart || "Mod"}`
+          : (e.modBasePart || "Mod");
+        return parts.length ? `${label}: ${parts.join(" / ")}` : label;
       },
       getVehicleStats(card) {
         if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle"))
           return null;
         const e = card.extra || {};
-        if (e.hp === undefined && e.con === undefined) return null;
-        return `HP/CON: ${e.hp || "?"}/${e.con || "?"}`;
+        const bits = [];
+        if (e.hp !== undefined || e.con !== undefined) {
+          bits.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
+        }
+        if (e.pitCost !== undefined) {
+          bits.push(`PIT: ${e.pitCost}`);
+        }
+        return bits.length ? bits.join(" | ") : null;
       }
     };
+
+    // Show/hide type-specific fields based on data-show-for attribute
+    function updateFieldVisibility() {
+      const type = Dom.cardTypeInput.value || "";
+      const nodes = document.querySelectorAll("[data-show-for]");
+      nodes.forEach(el => {
+        const spec = (el.getAttribute("data-show-for") || "")
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean);
+        const show =
+          !spec.length || spec.includes("*") || spec.includes(type);
+        el.style.display = show ? "" : "none";
+      });
+    }
 
     function renderSinglePreview() {
       const card = collectSingleCardFromInputs(false);
@@ -1497,6 +1502,7 @@
       const vehTypes = parseVehicleTypes(vehTypesStr);
       const tags = parseTags(tagsStr);
 
+      const modType = Dom.modTypeInput.value.trim();
       const modBase = Dom.modBasePartInput.value.trim();
       const modL1 = Dom.modL1Input.value.trim();
       const modL2 = Dom.modL2Input.value.trim();
@@ -1505,6 +1511,9 @@
 
       const hpConStr = Dom.vehicleHpConInput.value.trim();
       const hpCon = parseHpCon(hpConStr);
+
+      const pitCostStr = Dom.pitCostInput.value.trim();
+      const pitCost = pitCostStr !== "" ? Number(pitCostStr) : undefined;
 
       let extra = {};
       if (Dom.extraJsonInput.value.trim()) {
@@ -1517,6 +1526,7 @@
       }
 
       if (type === "Mod") {
+        extra.modType = modType || undefined;
         extra.modBasePart = modBase || undefined;
         extra.modLevel1 = modL1 || undefined;
         extra.modLevel2 = modL2 || undefined;
@@ -1525,8 +1535,11 @@
       }
 
       if (type === "Vehicle" || type === "Named Vehicle") {
-        extra.hp = hpCon.hp !== undefined ? hpCon.hp : extra.hp;
-        extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
+        if (hpCon.hp !== undefined) extra.hp = hpCon.hp;
+        if (hpCon.con !== undefined) extra.con = hpCon.con;
+        if (pitCost !== undefined && !Number.isNaN(pitCost)) {
+          extra.pitCost = pitCost;
+        }
       }
 
       const card = {
@@ -1558,6 +1571,7 @@
       Dom.cardNotesInput.value = card.notes || "";
 
       const e = card.extra || {};
+      Dom.modTypeInput.value = e.modType || "";
       Dom.modBasePartInput.value = e.modBasePart || "";
       Dom.modL1Input.value = e.modLevel1 || "";
       Dom.modL2Input.value = e.modLevel2 || "";
@@ -1570,12 +1584,16 @@
           : "";
       Dom.vehicleHpConInput.value = hpConStr;
 
+      Dom.pitCostInput.value =
+        e.pitCost !== undefined && e.pitCost !== null ? String(e.pitCost) : "";
+
       const extraClean = JSON.parse(JSON.stringify(e || {}));
       Dom.extraJsonInput.value = Object.keys(extraClean).length
         ? JSON.stringify(extraClean)
         : "";
 
       renderSinglePreview();
+      updateFieldVisibility();
     }
 
     function renderCardLibraryList() {
@@ -1679,17 +1697,20 @@
       Dom.cardTagsInput.value = "";
       Dom.cardImageUrlInput.value = "";
       Dom.cardNotesInput.value = "";
+      Dom.modTypeInput.value = "";
       Dom.modBasePartInput.value = "";
       Dom.modL1Input.value = "";
       Dom.modL2Input.value = "";
       Dom.modL3Input.value = "";
       Dom.modL4Input.value = "";
       Dom.vehicleHpConInput.value = "";
+      Dom.pitCostInput.value = "";
       Dom.extraJsonInput.value = "";
       Dom.singleStatus.textContent = "New blank card.";
       Dom.singleStatus.className = "status small-note";
       renderSinglePreview();
       renderCardLibraryList();
+      updateFieldVisibility();
     }
 
     function handleSingleSave() {
@@ -1831,9 +1852,14 @@
           };
 
           let type = cfg ? cfg.type : "";
-          let name = cfg ? readCell(raw, cfg.nameCol) : raw["Name"] || raw["Card Name"] || "";
-          let setName = cfg ? readCell(raw, cfg.setCol, "SET") : raw["SET"] || "";
-          let rarity = cfg ? readCell(raw, cfg.rarityCol, "RARITY") : raw["RARITY"] || "";
+          let name = cfg ? readCell(raw, cfg.nameCol) :
+            raw["Name"] || raw["Card Name"] || "";
+          let setName = cfg
+            ? readCell(raw, cfg.setCol, "SET")
+            : raw["SET"] || "";
+          let rarity = cfg
+            ? readCell(raw, cfg.rarityCol, "RARITY")
+            : raw["RARITY"] || "";
           let notes = cfg
             ? readCell(
                 raw,
@@ -1846,27 +1872,41 @@
                 "ABILITY"
               )
             : raw["TRAIT"] || raw["ABILITY"] || "";
+          let cardNumber = cfg
+            ? readCell(raw, cfg.cardNumberCol, "Card Number")
+            : raw["Card Number"] || "";
 
           const extra = {};
           let vehicleTypes = [];
+
           if (cfg && cfg.vehicleTypeCol) {
-            const vtVal = readCell(raw, cfg.vehicleTypeCol, "VEHICLE TYPE");
+            const vtVal = readCell(raw, cfg.vehicleTypeCol, "Vehicle Type");
             vehicleTypes = parseVehicleTypes(vtVal);
           }
 
+          if (cfg && cfg.modTypeCol) {
+            extra.modType = readCell(raw, cfg.modTypeCol, "Mod TYPE") || undefined;
+          }
+
           if (cfg && cfg.modBasePartCol) {
-            extra.modBasePart = readCell(raw, cfg.modBasePartCol, "MOD BASE PART") || undefined;
-            extra.modLevel1 = readCell(raw, cfg.modL1Col, "MOD LVL 1") || undefined;
-            extra.modLevel2 = readCell(raw, cfg.modL2Col, "MOD LVL 2") || undefined;
-            extra.modLevel3 = readCell(raw, cfg.modL3Col, "MOD LVL 3") || undefined;
-            extra.modLevel4 = readCell(raw, cfg.modL4Col, "MOD LVL 4") || undefined;
+            extra.modBasePart = readCell(raw, cfg.modBasePartCol, "Base Part") || undefined;
+            extra.modLevel1 = readCell(raw, cfg.modL1Col, "Mod Lvl 1") || undefined;
+            extra.modLevel2 = readCell(raw, cfg.modL2Col, "Mod Lvl 2") || undefined;
+            extra.modLevel3 = readCell(raw, cfg.modL3Col, "Mod Lvl 3") || undefined;
+            extra.modLevel4 = readCell(raw, cfg.modL4Col, "Mod Lvl 4") || undefined;
           }
 
           if (cfg && cfg.hpConCol) {
-            const hpConVal = readCell(raw, cfg.hpConCol, "HP/CON");
+            const hpConVal = readCell(raw, cfg.hpConCol, "VEHICLE HP/CON", "HP/CON");
             const parsed = parseHpCon(hpConVal);
             if (parsed.hp !== undefined) extra.hp = parsed.hp;
             if (parsed.con !== undefined) extra.con = parsed.con;
+          }
+
+          if (cfg && cfg.pitCostCol) {
+            const pitVal = readCell(raw, cfg.pitCostCol, "PIT COST");
+            const n = pitVal === "" ? undefined : Number(pitVal);
+            if (n !== undefined && !Number.isNaN(n)) extra.pitCost = n;
           }
 
           out.card = {
@@ -1874,7 +1914,7 @@
             name: name,
             type: type || raw["TYPE"] || "",
             setName,
-            cardNumber: "",
+            cardNumber,
             rarity,
             tags: [],
             notes,
@@ -2017,6 +2057,7 @@
             const card = matches[0];
             card.rarity = newCard.rarity || card.rarity;
             card.notes = newCard.notes || card.notes;
+            card.cardNumber = newCard.cardNumber || card.cardNumber;
             card.vehicleTypes = newCard.vehicleTypes.length
               ? newCard.vehicleTypes
               : card.vehicleTypes;
@@ -2327,6 +2368,55 @@
       });
     }
 
+    function loadCards() {
+      return fetch("drive-card.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch drive-card.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json))
+            throw new Error("drive-card.json is not an array.");
+          AppState.cards = json;
+          AppState.cardsById = {};
+          AppState.cards.forEach(card => {
+            if (!card.id) {
+              card.id = "card-" + Math.random().toString(36).slice(2);
+            }
+            if (!card.extra) card.extra = {};
+            if (!Array.isArray(card.tags)) card.tags = [];
+            if (typeof card.imageUrl !== "string") card.imageUrl = "";
+            AppState.cardsById[card.id] = card;
+          });
+          renderCardLibraryList();
+        })
+        .catch(err => {
+          console.error(err);
+          AppState.cards = [];
+          AppState.cardsById = {};
+          renderCardLibraryList();
+        });
+    }
+
+    function loadPrecons() {
+      return fetch("drive-precons.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json))
+            throw new Error("drive-precons.json is not an array");
+          AppState.precons = json;
+          renderPreconList();
+        })
+        .catch(err => {
+          console.error(err);
+          AppState.precons = [];
+          renderPreconList();
+        });
+    }
+
     function init() {
       Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
       Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
@@ -2348,15 +2438,23 @@
         Dom.cardTagsInput,
         Dom.cardImageUrlInput,
         Dom.cardNotesInput,
+        Dom.modTypeInput,
         Dom.modBasePartInput,
         Dom.modL1Input,
         Dom.modL2Input,
         Dom.modL3Input,
         Dom.modL4Input,
         Dom.vehicleHpConInput,
+        Dom.pitCostInput,
         Dom.extraJsonInput
       ].forEach(el => {
         el.addEventListener("input", renderSinglePreview);
+      });
+
+      // Update visible fields when type changes
+      Dom.cardTypeInput.addEventListener("change", () => {
+        updateFieldVisibility();
+        renderSinglePreview();
       });
 
       Dom.singleNewBtn.addEventListener("click", handleSingleNew);
@@ -2396,11 +2494,16 @@
         "input",
         handlePreconCardSearch
       );
+      Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
+        const data = AppState.precons;
+        downloadJsonFile("drive-precons.json", data);
+      });
 
       handleSingleNew();
       loadCards();
       loadPrecons();
       showSection("single");
+      updateFieldVisibility();
     }
 
     init();
