@@ -754,8 +754,7 @@
           <strong>Parse Selected Sheet</strong>.
         </li>
         <li>Filter by type / set, tick the rows you want, and choose your
-          update mode (update / create / update-only).
-        </li>
+          update mode (update / create / update-only).</li>
         <li>Click <strong>Apply to in-memory Library</strong>.</li>
         <li>Repeat for other sheets if needed.</li>
         <li>When done, click <strong>Download drive-card.json</strong> and upload to GitHub.</li>
@@ -770,7 +769,7 @@
         <li>Use the card search to add cards and set quantities.</li>
         <li>Click <strong>Save Changes to Precon</strong>.</li>
         <li>When all precons are ready, click <strong>Download drive-precons.json</strong>
-          and upload it to GitHub.</li>
+          and upload to GitHub.</li>
       </ol>
 
       <h3>Image URL Tips</h3>
@@ -1366,7 +1365,6 @@
         const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
         if (!rows.length) {
           Dom.bulkStep1Status.textContent = "Sheet has no rows.";
-          Dom.bulkStep1Status.className = "status small-note warn";
           return;
         }
 
