@@ -1274,4 +1274,416 @@
           row.style.background =
             card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
 
-          const left = document.createE
+          const left = document.createElement("div");
+          left.style.display = "flex";
+          left.style.alignItems = "center";
+          left.style.gap = "0.4rem";
+          left.style.flex = "1";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = !!card.selected;
+          checkbox.addEventListener("change", () => {
+            card.selected = checkbox.checked;
+          });
+
+          const label = document.createElement("div");
+          label.style.fontSize = "0.8rem";
+          label.innerHTML = `<strong>${card.name}</strong><br>
+            <span style="color:#9ca3af; font-size:0.75rem;">${card.type || ""} · ${card.setName || ""}</span>`;
+
+          left.appendChild(checkbox);
+          left.appendChild(label);
+
+          row.appendChild(left);
+          Dom.bulkSelectionList.appendChild(row);
+        });
+      },
+
+      goToStep3() {
+        const chosen = bulkCards.filter(c => c.selected);
+        if (!chosen.length) {
+          alert("No cards selected. Use the checkboxes in Step 2.");
+          return;
+        }
+        Dom.bulkStep3Summary.textContent =
+          `${chosen.length} cards selected. Click “Finish Import” to add them to the library.`;
+        Dom.bulkStep3.style.display = "";
+      },
+
+      finishImport() {
+        const selected = bulkCards.filter(c => c.selected);
+        if (!selected.length) {
+          alert("No cards selected.");
+          return;
+        }
+
+        let countAdded = 0;
+
+        const parseTags = (val) =>
+          String(val || "")
+            .split(",")
+            .map(t => t.trim())
+            .filter(Boolean);
+
+        selected.forEach(bc => {
+          const row   = bc.raw || {};
+          const sheet = bc.sheetName || "";
+          const cfg   = SHEET_CONFIG[sheet] || {};
+
+          const card = CardLib.createEmptyCard();
+          card.name     = bc.name || readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
+          card.type     = cfg.type || bc.type || readCell(row, "Card Type", "Type");
+          card.setName  = bc.setName || readCell(row, cfg.setCol, "SET", "Set", "Set Name");
+          card.rarity   = bc.rarity || readCell(row, cfg.rarityCol, "RARITY", "Rarity");
+          card.cardNumber = readCell(row, "Card Number", "Number", "#");
+
+          card.tags     = parseTags(readCell(row, "Tags", "Tag"));
+          card.imageUrl = ""; // no image via bulk import
+          card.extra    = {};
+
+          if (cfg.notesCol) {
+            card.notes = readCell(row, cfg.notesCol, "Rules Text", "Text", "Rules");
+          } else {
+            card.notes = readCell(row, "Rules Text", "Text", "Rules");
+          }
+
+          if (typeof cfg.extra === "function") {
+            cfg.extra(row, card);
+          }
+
+          AdminState.cards.push(card);
+          countAdded++;
+        });
+
+        CardLib.updateLibrarySummary();
+        CardLib.renderCardList();
+        alert(`Imported ${countAdded} cards into the library. You can now set image URLs in the Card Editor and download the updated JSON.`);
+      },
+
+      init() {
+        Dom.bulkFileInput.addEventListener("change", e => {
+          const file = e.target.files[0];
+          if (file) BulkImport.handleFileChange(file);
+        });
+        Dom.bulkParseSheetBtn.addEventListener("click", () => BulkImport.parseSheet());
+
+        Dom.bulkFilterText.addEventListener("input", () => {
+          bulkFilterState.text = Dom.bulkFilterText.value;
+          BulkImport.renderSelectionList();
+        });
+        Dom.bulkFilterType.addEventListener("change", () => {
+          bulkFilterState.type = Dom.bulkFilterType.value;
+          BulkImport.renderSelectionList();
+        });
+        Dom.bulkFilterSet.addEventListener("change", () => {
+          bulkFilterState.set = Dom.bulkFilterSet.value;
+          BulkImport.renderSelectionList();
+        });
+
+        Dom.bulkSelectShownBtn.addEventListener("click", () => {
+          const q  = bulkFilterState.text.trim().toLowerCase();
+          const tf = bulkFilterState.type;
+          const sf = bulkFilterState.set;
+
+          bulkCards.forEach(card => {
+            if (tf && card.type !== tf) return;
+            if (sf && card.setName !== sf) return;
+
+            if (q) {
+              const haystack = [
+                card.name || "",
+                card.type || "",
+                card.setName || "",
+                card.rarity || ""
+              ].join(" ").toLowerCase();
+              if (!haystack.includes(q)) return;
+            }
+            card.selected = true;
+          });
+
+          BulkImport.renderSelectionList();
+        });
+
+        Dom.bulkClearShownBtn.addEventListener("click", () => {
+          const q  = bulkFilterState.text.trim().toLowerCase();
+          const tf = bulkFilterState.type;
+          const sf = bulkFilterState.set;
+
+          bulkCards.forEach(card => {
+            if (tf && card.type !== tf) return;
+            if (sf && card.setName !== sf) return;
+
+            if (q) {
+              const haystack = [
+                card.name || "",
+                card.type || "",
+                card.setName || "",
+                card.rarity || ""
+              ].join(" ").toLowerCase();
+              if (!haystack.includes(q)) return;
+            }
+            card.selected = false;
+          });
+
+          BulkImport.renderSelectionList();
+        });
+
+        Dom.bulkToStep3Btn.addEventListener("click", () => BulkImport.goToStep3());
+        Dom.bulkImportFinishBtn.addEventListener("click", () => BulkImport.finishImport());
+      }
+    };
+
+    /*********************************
+     * Precon admin
+     *********************************/
+    const PreconAdmin = {
+      getActivePrecon() {
+        if (AdminState.selectedPreconIndex == null) return null;
+        return AdminState.precons[AdminState.selectedPreconIndex] || null;
+      },
+
+      totalCards(precon) {
+        return Object.values(precon.cards || {}).reduce((a,b) => a + Number(b || 0), 0);
+      },
+
+      renderPreconList() {
+        Dom.preconList.innerHTML = "";
+        if (!AdminState.precons.length) {
+          Dom.preconList.innerHTML =
+            "<div class='small-note'>No precons yet. Create one with “+ New Precon”.</div>";
+          return;
+        }
+        AdminState.precons.forEach((p, idx) => {
+          const div = document.createElement("div");
+          div.className = "precon-row" +
+            (idx === AdminState.selectedPreconIndex ? " selected" : "");
+          div.innerHTML = `<strong>${p.name || "(Untitled Precon)"}</strong><br>
+            <span style="font-size:0.75rem; color:#9ca3af;">Cards: ${PreconAdmin.totalCards(p)}</span>`;
+          div.addEventListener("click", () => {
+            AdminState.selectedPreconIndex = idx;
+            PreconAdmin.renderPreconList();
+            PreconAdmin.loadActivePreconIntoForm();
+          });
+          Dom.preconList.appendChild(div);
+        });
+      },
+
+      loadActivePreconIntoForm() {
+        const p = PreconAdmin.getActivePrecon();
+        if (!p) {
+          Dom.preconNameInput.value = "";
+          Dom.preconNotesInput.value = "";
+          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
+          Dom.preconStatsInfo.textContent = "";
+          return;
+        }
+
+        Dom.preconNameInput.value = p.name || "";
+        Dom.preconNotesInput.value = p.notes || "";
+        PreconAdmin.renderPreconCardsList();
+      },
+
+      renderPreconCardsList() {
+        const p = PreconAdmin.getActivePrecon();
+        if (!p) {
+          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
+          return;
+        }
+        const entries = Object.entries(p.cards || {});
+        Dom.preconCardsList.innerHTML = "";
+
+        if (!entries.length) {
+          Dom.preconCardsList.innerHTML =
+            "<div class='small-note'>No cards in this precon yet.</div>";
+          Dom.preconStatsInfo.textContent = "Cards: 0";
+          return;
+        }
+
+        entries
+          .slice()
+          .sort(([aId],[bId]) => {
+            const a = CardLib.getCardById(aId);
+            const b = CardLib.getCardById(bId);
+            if (!a || !b) return 0;
+            return (a.type || "").localeCompare(b.type || "") ||
+                   (a.name || "").localeCompare(b.name || "");
+          })
+          .forEach(([cardId, qty]) => {
+            const card = CardLib.getCardById(cardId);
+            const row = document.createElement("div");
+            row.className = "precon-card-row";
+
+            const info = document.createElement("div");
+            info.style.flex = "1";
+            info.style.minWidth = "0";
+            info.innerHTML = `<div class="card-row-main">${qty}x ${card ? card.name : "(Unknown card)"}</div>
+              <div class="card-row-sub">${card ? (card.type || "") : cardId}</div>`;
+
+            const btn = document.createElement("button");
+            btn.className = "secondary";
+            btn.type = "button";
+            btn.textContent = "Remove";
+            btn.addEventListener("click", () => {
+              delete p.cards[cardId];
+              PreconAdmin.renderPreconCardsList();
+            });
+
+            row.appendChild(info);
+            row.appendChild(btn);
+            Dom.preconCardsList.appendChild(row);
+          });
+
+        Dom.preconStatsInfo.textContent = `Cards: ${PreconAdmin.totalCards(p)}`;
+      },
+
+      refreshPreconCardSelect() {
+        Dom.preconCardSelect.innerHTML = "";
+        const optNone = document.createElement("option");
+        optNone.value = "";
+        optNone.textContent = "-- Select card --";
+        Dom.preconCardSelect.appendChild(optNone);
+
+        AdminState.cards
+          .slice()
+          .sort((a,b) => (a.name || "").localeCompare(b.name || ""))
+          .forEach(card => {
+            const opt = document.createElement("option");
+            opt.value = card.id;
+            opt.textContent = `${card.name} [${card.type || ""}]`;
+            Dom.preconCardSelect.appendChild(opt);
+          });
+      },
+
+      newPrecon() {
+        const p = { name: "New Precon", notes: "", cards: {} };
+        AdminState.precons.push(p);
+        AdminState.selectedPreconIndex = AdminState.precons.length - 1;
+        PreconAdmin.renderPreconList();
+        PreconAdmin.loadActivePreconIntoForm();
+      },
+
+      deletePrecon() {
+        if (AdminState.selectedPreconIndex == null) {
+          alert("No precon selected.");
+          return;
+        }
+        const p = PreconAdmin.getActivePrecon();
+        if (!p) return;
+        if (!confirm(`Delete precon "${p.name}"?`)) return;
+        AdminState.precons.splice(AdminState.selectedPreconIndex, 1);
+        AdminState.selectedPreconIndex = null;
+        PreconAdmin.renderPreconList();
+        PreconAdmin.loadActivePreconIntoForm();
+      },
+
+      saveActivePrecon() {
+        const p = PreconAdmin.getActivePrecon();
+        if (!p) {
+          alert("No precon selected.");
+          return;
+        }
+        p.name = Dom.preconNameInput.value.trim() || p.name || "Precon";
+        p.notes = Dom.preconNotesInput.value;
+        PreconAdmin.renderPreconList();
+        alert("Precon changes saved (in memory). Download JSON to persist.");
+      },
+
+      addCardToPrecon() {
+        const p = PreconAdmin.getActivePrecon();
+        if (!p) {
+          alert("No precon selected.");
+          return;
+        }
+        const cardId = Dom.preconCardSelect.value;
+        if (!cardId) {
+          alert("Select a card to add.");
+          return;
+        }
+        const qty = Number(Dom.preconCardQtyInput.value) || 1;
+        p.cards[cardId] = (p.cards[cardId] || 0) + qty;
+        PreconAdmin.renderPreconCardsList();
+      },
+
+      async loadPreconsFromFile(file) {
+        try {
+          const text = await file.text();
+          const json = JSON.parse(text);
+          AdminState.precons = Array.isArray(json) ? json : [];
+          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
+          PreconAdmin.renderPreconList();
+          PreconAdmin.loadActivePreconIntoForm();
+          alert("Precons loaded.");
+        } catch (e) {
+          console.error(e);
+          alert("Error reading precons JSON.");
+        }
+      },
+
+      // Auto-load precons from default URL
+      async loadPreconsFromUrl(url = DEFAULT_PATHS.precons) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+
+          AdminState.precons = Array.isArray(json) ? json : [];
+          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
+          PreconAdmin.renderPreconList();
+          PreconAdmin.loadActivePreconIntoForm();
+          console.log("Auto-loaded precons from", url);
+        } catch (e) {
+          console.warn("Unable to auto-load precons JSON from", url, e);
+        }
+      },
+
+      savePreconsToFile() {
+        const blob = new Blob([JSON.stringify(AdminState.precons, null, 2)], {
+          type: "application/json"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "drive-precons.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+
+      init() {
+        Dom.newPreconBtn.addEventListener("click", () => PreconAdmin.newPrecon());
+        Dom.deletePreconBtn.addEventListener("click", () => PreconAdmin.deletePrecon());
+        Dom.preconAddCardBtn.addEventListener("click", () => PreconAdmin.addCardToPrecon());
+        Dom.preconSaveBtn.addEventListener("click", () => PreconAdmin.saveActivePrecon());
+
+        Dom.loadPreconsBtn.addEventListener("click", () => Dom.loadPreconsInput.click());
+        Dom.loadPreconsInput.addEventListener("change", e => {
+          const file = e.target.files[0];
+          if (file) PreconAdmin.loadPreconsFromFile(file);
+        });
+        Dom.savePreconsBtn.addEventListener("click", () => PreconAdmin.savePreconsToFile());
+      }
+    };
+
+    /*********************************
+     * Init
+     *********************************/
+    (function init() {
+      Mode.init();
+      CardLib.init();
+      BulkImport.init();
+      PreconAdmin.init();
+
+      const originalUpdateSummary = CardLib.updateLibrarySummary;
+      CardLib.updateLibrarySummary = function() {
+        originalUpdateSummary.call(CardLib);
+        PreconAdmin.refreshPreconCardSelect();
+      };
+      PreconAdmin.refreshPreconCardSelect();
+
+      // Auto-load default JSON files (silent if missing)
+      CardLib.loadLibraryFromUrl();
+      PreconAdmin.loadPreconsFromUrl();
+    })();
+  </script>
+</body>
+</html>
