@@ -159,7 +159,7 @@
       "hp": 5,
       "con": 5
     },
-    "imageUrl": "https://github.com/DragDS/Drive-TCG/blob/main/images/DANNY'S%20R-2-4.png"
+    "imageUrl": "https://dragds.github.io/Drive-TCG/images/Set%201/DANNY%27S%20R-2-4.png"
   },
   {
     "id": "card-vm2p77gewgn",
@@ -256,41 +256,5 @@
       "con": 8
     },
     "imageUrl": ""
-  },
-  {
-    "id": "card-rs5ia5s7g2",
-    "name": "DRAG RACING ENTHUSIAST",
-    "type": "Driver",
-    "rarity": "COMMON",
-    "setName": "SET 1",
-    "cardNumber": "01-055",
-    "notes": "TYPE: DRAG\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL HP IS GREATER THAN 10.\n+6/0",
-    "tags": [],
-    "imageUrl": "",
-    "extra": {}
-  },
-  {
-    "id": "card-41mwbgtjm01",
-    "name": "DRIFT RACING ENTHUSIAST",
-    "type": "Driver",
-    "rarity": "COMMON",
-    "setName": "SET 1",
-    "cardNumber": "01-056",
-    "notes": "TYPE: DRIFT\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL CON IS GREATER THAN 10.\n+0/6",
-    "tags": [],
-    "imageUrl": "",
-    "extra": {}
-  },
-  {
-    "id": "card-i34rv2qlgk",
-    "name": "YOUNGSTER",
-    "type": "Driver",
-    "rarity": "RARE",
-    "setName": "SET 1",
-    "cardNumber": "01-060",
-    "notes": "TYPE: ALL\nWHILE IN THE PIT, YOU MAY SWITCH THE EQUIPPED VEHICLE AND YOUR VEHICLE IN THE RACE WITHOUT PAYING A PIT COST.",
-    "tags": [],
-    "imageUrl": "",
-    "extra": {}
   }
 ]
