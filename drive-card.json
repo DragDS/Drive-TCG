@@ -114,7 +114,7 @@
   {
     "id": "fd8fca63-81e1-42d2-aebd-68d5ac7df947",
     "name": "Josh's Firehawk",
-    "type": "Named Driver",
+    "type": "Named Vehicle",
     "rarity": "Rare",
     "setName": "Set 1",
     "cardNumber": "01-090",
@@ -122,12 +122,14 @@
     "notes": "IF A TRACK IS IN  PLAY THAT AFFECTS DRAG VEHICLES, ADD +6/0 TO THIS VEHICLE",
     "createdAt": 1763874406458,
     "extra": {
-      "vehicleType": "Drag",
       "hp": 8,
-      "con": 2
+      "con": 2,
+      "pitCost": 2
     },
     "imageUrl": "images/set1/joshs_firehawk.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "d39ecb12-7977-4841-8613-fa07be759391",
@@ -140,12 +142,14 @@
     "notes": "WHILE IN THE RACE, INCREASE YOUR OPPONENTS PIT COST BY 1.",
     "createdAt": 1763874440337,
     "extra": {
-      "vehicleType": "Drag",
       "hp": 7,
-      "con": 3
+      "con": 3,
+      "pitCost": 2
     },
     "imageUrl": "images/set1/raquels_supersport.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-1764234922929-22832-0",
@@ -157,12 +161,14 @@
     "tags": [],
     "notes": "WHILE IN THE RACE, YOU CAN MAY DRAW AN EXTRA CARD.",
     "extra": {
-      "vehicleType": "Drift",
       "hp": 5,
-      "con": 5
+      "con": 5,
+      "pitCost": 2
     },
     "imageUrl": "images/set1/dannys_r-2-4.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-vm2p77gewgn",
@@ -174,12 +180,14 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 6,
-      "con": 4
+      "con": 4,
+      "pitCost": 1
     },
     "imageUrl": "images/set1/knox_lunar.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-i3ai0lxrcyq",
@@ -191,12 +199,14 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 7,
-      "con": 3
+      "con": 3,
+      "pitCost": 1
     },
-    "imageUrl": "images/set1/raquels_supersport.png",
-    "vehicleTypes": []
+    "imageUrl": "images/set1/knox_super_sport.png",
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-eyyf41qhcb",
@@ -208,12 +218,14 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRIFT",
       "hp": 5,
-      "con": 5
+      "con": 5,
+      "pitCost": 1
     },
     "imageUrl": "images/set1/nisoro_r-2-4.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-2p4ythuubos",
@@ -225,12 +237,14 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRIFT",
       "hp": 3,
-      "con": 7
+      "con": 7,
+      "pitCost": 1
     },
     "imageUrl": "images/set1/nisoro_zx1.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drift"
+    ]
   },
   {
     "id": "card-55dc245erda",
@@ -242,12 +256,14 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 8,
-      "con": 2
+      "con": 2,
+      "pitCost": 1
     },
     "imageUrl": "images/set1/rochester_firehawk.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drag"
+    ]
   },
   {
     "id": "card-7r1tasebfb",
@@ -259,11 +275,13 @@
     "notes": "-",
     "tags": [],
     "extra": {
-      "vehicleType": "DRAG",
       "hp": 2,
-      "con": 8
+      "con": 8,
+      "pitCost": 1
     },
     "imageUrl": "images/set1/rochester_fuego.png",
-    "vehicleTypes": []
+    "vehicleTypes": [
+      "Drag"
+    ]
   }
 ]
