@@ -1086,7 +1086,7 @@
     </section>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal (currently only for potential future debugging/info) -->
   <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -1983,6 +1983,7 @@
         Bulk.renderGrid();
       },
 
+      // Returns rows that are actually visible under current filters/search
       getFilteredRows() {
         const search = Dom.bulkSearchInput.value.toLowerCase().trim();
         const typeFilter = Dom.bulkTypeFilter.value;
@@ -2017,10 +2018,12 @@
           return;
         }
 
+        // Current filters in the UI
         const search = Dom.bulkSearchInput.value.toLowerCase().trim();
         const typeFilter = Dom.bulkTypeFilter.value;
         const setFilter = Dom.bulkSetFilter.value;
 
+        // Apply filters to figure out what's visible
         const rows = AppState.bulkRows.filter(r => {
           const c = r.card || {};
           if (typeFilter && c.type !== typeFilter) return false;
@@ -2032,12 +2035,17 @@
           return haystack.includes(search);
         });
 
+        // Build type/set lists based on ALL rows
         const types = new Set();
         const sets = new Set();
         AppState.bulkRows.forEach(r => {
           if (r.card.type) types.add(r.card.type);
           if (r.card.setName) sets.add(r.card.setName);
         });
+
+        // Preserve currently selected filters
+        const prevType = typeFilter;
+        const prevSet = setFilter;
 
         Dom.bulkTypeFilter.innerHTML = '<option value="">All Types</option>';
         Array.from(types)
@@ -2048,6 +2056,12 @@
             opt.textContent = t;
             Dom.bulkTypeFilter.appendChild(opt);
           });
+        if (
+          prevType &&
+          Array.from(Dom.bulkTypeFilter.options).some(o => o.value === prevType)
+        ) {
+          Dom.bulkTypeFilter.value = prevType;
+        }
 
         Dom.bulkSetFilter.innerHTML = '<option value="">All Sets</option>';
         Array.from(sets)
@@ -2058,8 +2072,15 @@
             opt.textContent = s;
             Dom.bulkSetFilter.appendChild(opt);
           });
+        if (
+          prevSet &&
+          Array.from(Dom.bulkSetFilter.options).some(o => o.value === prevSet)
+        ) {
+          Dom.bulkSetFilter.value = prevSet;
+        }
 
-        rows.forEach((rowObj, idx) => {
+        // Render only visible (filtered) rows
+        rows.forEach(rowObj => {
           const c = rowObj.card;
           const row = document.createElement("div");
           row.className = "bulk-row";
@@ -2092,8 +2113,16 @@
           row.appendChild(rarityCell);
           container.appendChild(row);
         });
+
+        if (!rows.length) {
+          const p = document.createElement("p");
+          p.className = "small-note";
+          p.textContent = "No rows matching that filter.";
+          container.appendChild(p);
+        }
       },
 
+      // Select / clear ONLY what is visible under current filters/search
       setSelectionForVisible(flag) {
         const rows = Bulk.getFilteredRows();
         rows.forEach(r => {
