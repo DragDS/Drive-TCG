@@ -892,6 +892,15 @@
           </p>
         </div>
       </div>
+
+      <!-- New summary box under the steps -->
+      <h3>Selected Cards Summary</h3>
+      <p class="small-note">
+        These are all rows currently checked in Step 2 (even if they’re hidden by filters).
+      </p>
+      <div id="bulkSelectedBox" class="bulk-grid">
+        <p class="small-note">No rows selected yet.</p>
+      </div>
     </section>
 
     <!-- PRECONSTRUCTED DECKS SECTION -->
@@ -1260,6 +1269,8 @@
       bulkUpdateModeSelect: document.getElementById("bulkUpdateModeSelect"),
       bulkApplyBtn: document.getElementById("bulkApplyBtn"),
       bulkStep3Status: document.getElementById("bulkStep3Status"),
+
+      bulkSelectedBox: document.getElementById("bulkSelectedBox"),
 
       downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn"),
       downloadCardsJsonBtn_bulk: document.getElementById("downloadCardsJsonBtn_bulk"),
@@ -1981,6 +1992,7 @@
         Dom.bulkStep2Status.className = "status small-note ok";
 
         Bulk.renderGrid();
+        Bulk.renderSelectedBox();
       },
 
       // Returns rows that are actually visible under current filters/search
@@ -2091,6 +2103,7 @@
           checkbox.checked = rowObj.selected;
           checkbox.addEventListener("change", () => {
             rowObj.selected = checkbox.checked;
+            Bulk.renderSelectedBox();
           });
           checkboxCell.appendChild(checkbox);
 
@@ -2122,6 +2135,64 @@
         }
       },
 
+      // New: render current selections overview
+      renderSelectedBox() {
+        const box = Dom.bulkSelectedBox;
+        if (!box) return;
+        box.innerHTML = "";
+
+        if (!AppState.bulkRows.length) {
+          const p = document.createElement("p");
+          p.className = "small-note";
+          p.textContent = "Parse a sheet first to see selected rows.";
+          box.appendChild(p);
+          return;
+        }
+
+        const selected = AppState.bulkRows.filter(r => r.selected);
+        if (!selected.length) {
+          const p = document.createElement("p");
+          p.className = "small-note";
+          p.textContent = "No rows selected.";
+          box.appendChild(p);
+          return;
+        }
+
+        const header = document.createElement("div");
+        header.className = "bulk-row bulk-row-header";
+        header.innerHTML =
+          "<div>#</div><div>Name</div><div>Type</div><div>Set</div><div>Rarity</div>";
+        box.appendChild(header);
+
+        selected.forEach((rowObj, idx) => {
+          const c = rowObj.card || {};
+          const row = document.createElement("div");
+          row.className = "bulk-row";
+
+          const idxCell = document.createElement("div");
+          idxCell.textContent = String(idx + 1);
+
+          const nameCell = document.createElement("div");
+          nameCell.textContent = c.name || "(No Name)";
+
+          const typeCell = document.createElement("div");
+          typeCell.textContent = c.type || "";
+
+          const setCell = document.createElement("div");
+          setCell.textContent = c.setName || "";
+
+          const rarityCell = document.createElement("div");
+          rarityCell.textContent = c.rarity || "";
+
+          row.appendChild(idxCell);
+          row.appendChild(nameCell);
+          row.appendChild(typeCell);
+          row.appendChild(setCell);
+          row.appendChild(rarityCell);
+          box.appendChild(row);
+        });
+      },
+
       // Select / clear ONLY what is visible under current filters/search
       setSelectionForVisible(flag) {
         const rows = Bulk.getFilteredRows();
@@ -2129,6 +2200,7 @@
           r.selected = flag;
         });
         Bulk.renderGrid();
+        Bulk.renderSelectedBox();
       },
 
       applyToLibrary() {
