@@ -532,6 +532,12 @@
       lastMode: "driveAdminMode_v1"
     };
 
+    // Default JSON paths (relative to /Drive-TCG/)
+    const DEFAULT_PATHS = {
+      library: "drive-card.json",
+      precons: "drive-precons.json"
+    };
+
     // Central mapping of your spreadsheet sheets/columns → library fields.
     const SHEET_CONFIG = {
       "Crew Cards": {
@@ -1042,6 +1048,30 @@
         } catch (e) {
           console.error(e);
           alert("Error reading JSON library.");
+        }
+      },
+
+      // NEW: auto-load library from default URL
+      async loadLibraryFromUrl(url = DEFAULT_PATHS.library) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+
+          AdminState.cards = Array.isArray(json) ? json : [];
+          AdminState.cards.forEach(c => {
+            if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
+            if (!c.extra) c.extra = {};
+            if (!Array.isArray(c.tags)) c.tags = [];
+          });
+          AdminState.selectedCardId = null;
+          CardLib.updateLibrarySummary();
+          CardLib.renderCardList();
+          CardLib.loadSelectedCardIntoForm();
+          console.log("Auto-loaded card library from", url);
+        } catch (e) {
+          console.warn("Unable to auto-load library JSON from", url, e);
+          // Silent fail; user can still use "Load Library JSON" button
         }
       },
 
@@ -1649,6 +1679,24 @@
         }
       },
 
+      // NEW: auto-load precons from default URL
+      async loadPreconsFromUrl(url = DEFAULT_PATHS.precons) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+
+          AdminState.precons = Array.isArray(json) ? json : [];
+          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
+          PreconAdmin.renderPreconList();
+          PreconAdmin.loadActivePreconIntoForm();
+          console.log("Auto-loaded precons from", url);
+        } catch (e) {
+          console.warn("Unable to auto-load precons JSON from", url, e);
+          // Silent fail; user can still use "Load Precons JSON" button
+        }
+      },
+
       savePreconsToFile() {
         const blob = new Blob([JSON.stringify(AdminState.precons, null, 2)], {
           type: "application/json"
@@ -1691,6 +1739,10 @@
         PreconAdmin.refreshPreconCardSelect();
       };
       PreconAdmin.refreshPreconCardSelect();
+
+      // Auto-load default JSON files (silent fail if missing)
+      CardLib.loadLibraryFromUrl();
+      PreconAdmin.loadPreconsFromUrl();
     })();
   </script>
 </body>
