@@ -114,7 +114,7 @@
   {
     "id": "fd8fca63-81e1-42d2-aebd-68d5ac7df947",
     "name": "Josh's Firehawk",
-    "type": "Vehicle",
+    "type": "Named Driver",
     "rarity": "Rare",
     "setName": "Set 1",
     "cardNumber": "01-090",
@@ -126,12 +126,13 @@
       "hp": 8,
       "con": 2
     },
-    "imageUrl": "images/set1/joshs_firehawk.png"
+    "imageUrl": "images/set1/joshs_firehawk.png",
+    "vehicleTypes": []
   },
   {
     "id": "d39ecb12-7977-4841-8613-fa07be759391",
     "name": "Raquel's Supersport",
-    "type": "Vehicle",
+    "type": "Named Vehicle",
     "rarity": "Rare",
     "setName": "Set 1",
     "cardNumber": "01-091",
@@ -143,14 +144,15 @@
       "hp": 7,
       "con": 3
     },
-    "imageUrl": "images/set1/raquels_supersport.png"
+    "imageUrl": "images/set1/raquels_supersport.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-1764234922929-22832-0",
     "name": "Danny's R-2-4",
     "type": "Named Vehicle",
     "setName": "SET 1",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "cardNumber": "01-089",
     "tags": [],
     "notes": "WHILE IN THE RACE, YOU CAN MAY DRAW AN EXTRA CARD.",
@@ -159,13 +161,14 @@
       "hp": 5,
       "con": 5
     },
-    "imageUrl": "images/set1/dannys_r-2-4.png"
+    "imageUrl": "images/set1/dannys_r-2-4.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-vm2p77gewgn",
     "name": "KNOX LUNAR",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-083",
     "notes": "-",
@@ -175,13 +178,14 @@
       "hp": 6,
       "con": 4
     },
-    "imageUrl": "images/set1/knox_lunar.png"
+    "imageUrl": "images/set1/knox_lunar.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-i3ai0lxrcyq",
     "name": "KNOX SUPER SPORT",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-084",
     "notes": "-",
@@ -191,13 +195,14 @@
       "hp": 7,
       "con": 3
     },
-    "imageUrl": "images/set1/raquels_supersport.png"
+    "imageUrl": "images/set1/raquels_supersport.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-eyyf41qhcb",
     "name": "NISORO R-2-4",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-085",
     "notes": "-",
@@ -207,13 +212,14 @@
       "hp": 5,
       "con": 5
     },
-    "imageUrl": "images/set1/nisoro_r-2-4.png"
+    "imageUrl": "images/set1/nisoro_r-2-4.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-2p4ythuubos",
     "name": "NISORO ZX1",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-086",
     "notes": "-",
@@ -223,13 +229,14 @@
       "hp": 3,
       "con": 7
     },
-    "imageUrl": "images/set1/nisoro_zx1.png"
+    "imageUrl": "images/set1/nisoro_zx1.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-55dc245erda",
     "name": "ROCHESTER FIREHAWK",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-087",
     "notes": "-",
@@ -239,13 +246,14 @@
       "hp": 8,
       "con": 2
     },
-    "imageUrl": "images/set1/rochester_firehawk.png"
+    "imageUrl": "images/set1/rochester_firehawk.png",
+    "vehicleTypes": []
   },
   {
     "id": "card-7r1tasebfb",
     "name": "ROCHESTER FUEGO",
     "type": "Vehicle",
-    "rarity": "RARE",
+    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-088",
     "notes": "-",
@@ -255,6 +263,7 @@
       "hp": 2,
       "con": 8
     },
-    "imageUrl": "images/set1/rochester_fuego.png"
+    "imageUrl": "images/set1/rochester_fuego.png",
+    "vehicleTypes": []
   }
 ]
