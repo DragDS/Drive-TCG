@@ -809,6 +809,7 @@
 
         <div>
           <h3>Step 2 – Filter &amp; select cards to include</h3>
+
           <div class="field">
             <input
               id="bulkSearchInput"
@@ -825,6 +826,15 @@
             <select id="bulkSetFilter">
               <option value="">All Sets</option>
             </select>
+          </div>
+
+          <div class="toolbar">
+            <button id="bulkSelectAllVisibleBtn" class="button secondary" type="button">
+              Select All Viewed
+            </button>
+            <button id="bulkClearAllVisibleBtn" class="button secondary" type="button">
+              Clear All Viewed
+            </button>
           </div>
 
           <div id="bulkGrid" class="bulk-grid">
@@ -1040,7 +1050,9 @@
           <strong>Parse Selected Sheet</strong>.
         </li>
         <li>
-          Filter by type / set, tick the rows you want, and choose your update
+          Filter by type / set, tick the rows you want (you can also use
+          <strong>Select All Viewed</strong> and <strong>Clear All Viewed</strong>),
+          and choose your update
           mode (update / create / update-only).
         </li>
         <li>Click <strong>Apply to in-memory Library</strong>.</li>
@@ -1241,6 +1253,9 @@
       bulkSetFilter: document.getElementById("bulkSetFilter"),
       bulkGrid: document.getElementById("bulkGrid"),
       bulkStep2Status: document.getElementById("bulkStep2Status"),
+
+      bulkSelectAllVisibleBtn: document.getElementById("bulkSelectAllVisibleBtn"),
+      bulkClearAllVisibleBtn: document.getElementById("bulkClearAllVisibleBtn"),
 
       bulkUpdateModeSelect: document.getElementById("bulkUpdateModeSelect"),
       bulkApplyBtn: document.getElementById("bulkApplyBtn"),
@@ -1968,6 +1983,23 @@
         Bulk.renderGrid();
       },
 
+      getFilteredRows() {
+        const search = Dom.bulkSearchInput.value.toLowerCase().trim();
+        const typeFilter = Dom.bulkTypeFilter.value;
+        const setFilter = Dom.bulkSetFilter.value;
+
+        return AppState.bulkRows.filter(r => {
+          const c = r.card || {};
+          if (typeFilter && c.type !== typeFilter) return false;
+          if (setFilter && c.setName !== setFilter) return false;
+          if (!search) return true;
+          const haystack = [c.name, c.type, c.setName, c.rarity]
+            .join(" ")
+            .toLowerCase();
+          return haystack.includes(search);
+        });
+      },
+
       renderGrid() {
         const container = Dom.bulkGrid;
         container.innerHTML = "";
@@ -2060,6 +2092,14 @@
           row.appendChild(rarityCell);
           container.appendChild(row);
         });
+      },
+
+      setSelectionForVisible(flag) {
+        const rows = Bulk.getFilteredRows();
+        rows.forEach(r => {
+          r.selected = flag;
+        });
+        Bulk.renderGrid();
       },
 
       applyToLibrary() {
@@ -2521,6 +2561,14 @@
       Dom.bulkSearchInput.addEventListener("input", () => Bulk.renderGrid());
       Dom.bulkTypeFilter.addEventListener("change", () => Bulk.renderGrid());
       Dom.bulkSetFilter.addEventListener("change", () => Bulk.renderGrid());
+
+      Dom.bulkSelectAllVisibleBtn.addEventListener("click", () => {
+        Bulk.setSelectionForVisible(true);
+      });
+      Dom.bulkClearAllVisibleBtn.addEventListener("click", () => {
+        Bulk.setSelectionForVisible(false);
+      });
+
       Dom.bulkApplyBtn.addEventListener("click", () => Bulk.applyToLibrary());
 
       Dom.preconNewBtn.addEventListener("click", handlePreconNew);
