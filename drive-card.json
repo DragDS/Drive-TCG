@@ -10,7 +10,7 @@
     "notes": "SELECT 1 OPPONENT, THAT PLAYER REMOVES A MOD FROM A VEHICLE THEY OWN.",
     "createdAt": 1763867641765,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/blown_head_gasket.png"
   },
   {
     "id": "76a4bf59-0bdf-441a-b5f4-2cc2f1b18c4b",
@@ -23,7 +23,7 @@
     "notes": "SEARCH YOUR JUNKYARD FOR 1 MOD, REVEAL IT, AND EQUIP IT TO YOUR VEHICLE IN THE RACE.",
     "createdAt": 1763872203579,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/drift_stitch.png"
   },
   {
     "id": "f820a9e5-9e71-4a47-aadc-18622a8284e2",
@@ -36,7 +36,7 @@
     "notes": "-1/-6",
     "createdAt": 1763872312027,
     "extra": {},
-    "imageUrl": ""
+    "imageUrl": "images/set1/heavy_rain.png"
   },
   {
     "id": "7c348147-66c5-4ec4-a362-108b6be913e3",
@@ -56,7 +56,7 @@
         "Rally"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/danny.png"
   },
   {
     "id": "1c1ba6f3-f5ad-4706-b9df-34cfb2e9fe65",
@@ -73,7 +73,7 @@
         "Drag"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/josh.png"
   },
   {
     "id": "9cd823cc-d472-444e-8ea3-f76503406c1b",
@@ -91,7 +91,7 @@
         "Drift"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/raquel.png"
   },
   {
     "id": "ae5735bd-9915-43a8-b1c8-9d6bc652113f",
@@ -109,7 +109,7 @@
         "Drift"
       ]
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/north_short.png"
   },
   {
     "id": "fd8fca63-81e1-42d2-aebd-68d5ac7df947",
@@ -126,7 +126,7 @@
       "hp": 8,
       "con": 2
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/joshs_firehawk.png"
   },
   {
     "id": "d39ecb12-7977-4841-8613-fa07be759391",
@@ -143,7 +143,7 @@
       "hp": 7,
       "con": 3
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/raquels_supersport.png"
   },
   {
     "id": "card-1764234922929-22832-0",
@@ -175,7 +175,7 @@
       "hp": 6,
       "con": 4
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/knox_lunar.png"
   },
   {
     "id": "card-i3ai0lxrcyq",
@@ -191,7 +191,7 @@
       "hp": 7,
       "con": 3
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/raquels_supersport.png"
   },
   {
     "id": "card-eyyf41qhcb",
@@ -207,7 +207,7 @@
       "hp": 5,
       "con": 5
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/nisoro_r-2-4.png"
   },
   {
     "id": "card-2p4ythuubos",
@@ -223,7 +223,7 @@
       "hp": 3,
       "con": 7
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/nisoro_zx1.png"
   },
   {
     "id": "card-55dc245erda",
@@ -239,7 +239,7 @@
       "hp": 8,
       "con": 2
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/rochester_firehawk.png"
   },
   {
     "id": "card-7r1tasebfb",
@@ -255,6 +255,6 @@
       "hp": 2,
       "con": 8
     },
-    "imageUrl": ""
+    "imageUrl": "images/set1/rochester_fuego.png"
   }
 ]
