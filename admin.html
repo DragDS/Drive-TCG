@@ -371,10 +371,14 @@
             <div>
               <div id="extraFieldsContainer"></div>
               <div class="form-group">
-                <label class="form-label">Card Image</label>
-                <input id="cardImageInput" type="file" accept="image/png,image/jpeg" />
+                <label class="form-label" for="cardImageUrlInput">Card Image URL / Path</label>
+                <input
+                  id="cardImageUrlInput"
+                  type="text"
+                  placeholder="e.g. images/set1/001.png"
+                />
                 <div class="image-preview" id="cardImagePreview">
-                  <span class="small-note">No image chosen.</span>
+                  <span class="small-note">No image preview.</span>
                 </div>
               </div>
             </div>
@@ -402,7 +406,8 @@
         <h2>Bulk Import from Excel</h2>
         <p class="small-note">
           Recommended flow: export from your master <strong>Drive Cards.xlsx</strong>, then use:
-          Step 1 (load workbook) → Step 2 (filter & select rows) → Step 3 (attach images & import).
+          Step 1 (load workbook) → Step 2 (filter & select rows) → Step 3 (import).
+          Images are <strong>not</strong> handled in bulk import—set them in the Card Editor using image paths.
         </p>
 
         <!-- STEP 1 -->
@@ -451,11 +456,11 @@
 
         <!-- STEP 3 -->
         <div id="bulkStep3" class="step-box" style="display:none;">
-          <div class="step-title">Step 3 – Attach images & import</div>
+          <div class="step-title">Step 3 – Import selected cards</div>
           <p class="small-note">
-            For each selected card, choose its image. You can reuse images that are already in the library by skipping upload – but for <strong>new</strong> cards you’ll generally want to attach an image.
+            This will add the selected rows as cards in the library (without images).
+            After importing, use the Card Editor to set each card’s image URL/path.
           </p>
-          <div id="bulkImageList" class="bulk-list"></div>
           <div style="margin-top:0.4rem; display:flex; justify-content:space-between; gap:0.4rem; flex-wrap:wrap;">
             <span class="small-note" id="bulkStep3Summary"></span>
             <button id="bulkImportFinishBtn" type="button">Finish Import (add to library)</button>
@@ -538,7 +543,7 @@
       precons: "drive-precons.json"
     };
 
-    // Central mapping of your spreadsheet sheets/columns → library fields.
+    // Mapping spreadsheet sheets/columns → library fields
     const SHEET_CONFIG = {
       "Crew Cards": {
         type: "Crew",
@@ -672,7 +677,7 @@
       cardTagsInput: document.getElementById("cardTagsInput"),
       cardNotesInput: document.getElementById("cardNotesInput"),
       extraFieldsContainer: document.getElementById("extraFieldsContainer"),
-      cardImageInput: document.getElementById("cardImageInput"),
+      cardImageUrlInput: document.getElementById("cardImageUrlInput"),
       cardImagePreview: document.getElementById("cardImagePreview"),
 
       saveCardBtn: document.getElementById("saveCardBtn"),
@@ -691,7 +696,6 @@
       bulkSelectShownBtn: document.getElementById("bulkSelectShownBtn"),
       bulkClearShownBtn: document.getElementById("bulkClearShownBtn"),
       bulkToStep3Btn: document.getElementById("bulkToStep3Btn"),
-      bulkImageList: document.getElementById("bulkImageList"),
       bulkStep3Summary: document.getElementById("bulkStep3Summary"),
       bulkImportFinishBtn: document.getElementById("bulkImportFinishBtn"),
 
@@ -772,7 +776,7 @@
           cardNumber: "",
           notes: "",
           tags: [],
-          imageData: "",
+          imageUrl: "",
           extra: {}
         };
       },
@@ -864,8 +868,9 @@
           Dom.cardNumberInput.value = "";
           Dom.cardTagsInput.value = "";
           Dom.cardNotesInput.value = "";
+          Dom.cardImageUrlInput.value = "";
           CardLib.renderExtraFields("");
-          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image chosen.</span>";
+          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image preview.</span>";
           return;
         }
 
@@ -876,15 +881,16 @@
         Dom.cardNumberInput.value = card.cardNumber || "";
         Dom.cardTagsInput.value = (card.tags || []).join(", ");
         Dom.cardNotesInput.value = card.notes || "";
+        Dom.cardImageUrlInput.value = card.imageUrl || "";
 
         CardLib.renderExtraFields(card.type || "", card.extra || {});
-        if (card.imageData) {
+        if (card.imageUrl) {
           Dom.cardImagePreview.innerHTML = "";
           const img = document.createElement("img");
-          img.src = card.imageData;
+          img.src = card.imageUrl;
           Dom.cardImagePreview.appendChild(img);
         } else {
-          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image chosen.</span>";
+          Dom.cardImagePreview.innerHTML = "<span class='small-note'>No image preview.</span>";
         }
       },
 
@@ -991,6 +997,7 @@
           .map(t => t.trim())
           .filter(t => t);
 
+        card.imageUrl = Dom.cardImageUrlInput.value.trim();
         card.extra = CardLib.readExtraFromForm(card.type);
 
         AdminState.cards = AdminState.cards.map(c => (c.id === card.id ? card : c));
@@ -1039,6 +1046,7 @@
             if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
             if (!c.extra) c.extra = {};
             if (!Array.isArray(c.tags)) c.tags = [];
+            if (typeof c.imageUrl !== "string") c.imageUrl = "";
           });
           AdminState.selectedCardId = null;
           CardLib.updateLibrarySummary();
@@ -1051,10 +1059,10 @@
         }
       },
 
-      // NEW: auto-load library from default URL
+      // Auto-load library from default URL, allowing normal caching
       async loadLibraryFromUrl(url = DEFAULT_PATHS.library) {
         try {
-          const res = await fetch(url, { cache: "no-store" });
+          const res = await fetch(url);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const json = await res.json();
 
@@ -1063,6 +1071,7 @@
             if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
             if (!c.extra) c.extra = {};
             if (!Array.isArray(c.tags)) c.tags = [];
+            if (typeof c.imageUrl !== "string") c.imageUrl = "";
           });
           AdminState.selectedCardId = null;
           CardLib.updateLibrarySummary();
@@ -1071,12 +1080,17 @@
           console.log("Auto-loaded card library from", url);
         } catch (e) {
           console.warn("Unable to auto-load library JSON from", url, e);
-          // Silent fail; user can still use "Load Library JSON" button
         }
       },
 
       saveLibraryToFile() {
-        const blob = new Blob([JSON.stringify(AdminState.cards, null, 2)], {
+        // Strip any legacy imageData field to keep JSON small
+        const cleaned = AdminState.cards.map(c => {
+          const { imageData, ...rest } = c;
+          return rest;
+        });
+
+        const blob = new Blob([JSON.stringify(cleaned, null, 2)], {
           type: "application/json"
         });
         const url = URL.createObjectURL(blob);
@@ -1090,26 +1104,6 @@
       init() {
         Dom.cardTypeInput.addEventListener("change", () => {
           CardLib.renderExtraFields(Dom.cardTypeInput.value || "", {});
-        });
-
-        Dom.cardImageInput.addEventListener("change", () => {
-          const file = Dom.cardImageInput.files[0];
-          if (!file) return;
-          const reader = new FileReader();
-          reader.onload = () => {
-            if (!AdminState.selectedCardId) {
-              const newCard = CardLib.createEmptyCard();
-              AdminState.cards.push(newCard);
-              AdminState.selectedCardId = newCard.id;
-            }
-            const card = CardLib.getCardById(AdminState.selectedCardId);
-            card.imageData = reader.result;
-            Dom.cardImagePreview.innerHTML = "";
-            const img = document.createElement("img");
-            img.src = reader.result;
-            Dom.cardImagePreview.appendChild(img);
-          };
-          reader.readAsDataURL(file);
         });
 
         Dom.cardListSearch.addEventListener("input", () => CardLib.renderCardList());
@@ -1236,7 +1230,6 @@
         Array.from(setSet).sort().forEach(s => {
           const opt = document.createElement("option");
           opt.value = s;
-          opt.textContent = s;
           Dom.bulkFilterSet.appendChild(opt);
         });
       },
@@ -1281,469 +1274,4 @@
           row.style.background =
             card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
 
-          const left = document.createElement("div");
-          left.style.display = "flex";
-          left.style.alignItems = "center";
-          left.style.gap = "0.4rem";
-          left.style.flex = "1";
-
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = !!card.selected;
-          checkbox.addEventListener("change", () => {
-            card.selected = checkbox.checked;
-          });
-
-          const label = document.createElement("div");
-          label.style.fontSize = "0.8rem";
-          label.innerHTML = `<strong>${card.name}</strong><br>
-            <span style="color:#9ca3af; font-size:0.75rem;">${card.type || ""} · ${card.setName || ""}</span>`;
-
-          left.appendChild(checkbox);
-          left.appendChild(label);
-
-          row.appendChild(left);
-          Dom.bulkSelectionList.appendChild(row);
-        });
-      },
-
-      goToStep3() {
-        const chosen = bulkCards.filter(c => c.selected);
-        if (!chosen.length) {
-          alert("No cards selected. Use the checkboxes in Step 2.");
-          return;
-        }
-        Dom.bulkStep3.style.display = "";
-        BulkImport.renderImageStep(chosen);
-      },
-
-      renderImageStep(selectedCards) {
-        Dom.bulkImageList.innerHTML = "";
-        Dom.bulkStep3Summary.textContent =
-          `${selectedCards.length} cards selected. Attach images as needed, then click “Finish Import”.`;
-
-        selectedCards.forEach(card => {
-          const row = document.createElement("div");
-          row.style.display = "grid";
-          row.style.gridTemplateColumns = "minmax(0,1.3fr) minmax(0,1.7fr)";
-          row.style.gap = "0.4rem";
-          row.style.padding = "0.3rem 0.35rem";
-          row.style.borderRadius = "0.5rem";
-          row.style.marginBottom = "0.35rem";
-          row.style.background =
-            card.index % 2 === 0 ? "rgba(15,23,42,0.7)" : "rgba(15,23,42,0.45)";
-
-          const left = document.createElement("div");
-          left.innerHTML = `<div style="font-size:0.85rem; font-weight:600;">${card.name}</div>
-            <div style="font-size:0.75rem; color:#9ca3af;">${card.type || ""} · ${card.setName || ""}</div>`;
-
-          const right = document.createElement("div");
-          const fileInput = document.createElement("input");
-          fileInput.type = "file";
-          fileInput.accept = "image/png,image/jpeg";
-
-          const preview = document.createElement("div");
-          preview.className = "image-preview";
-          preview.style.minHeight = "80px";
-          preview.innerHTML = "<span class='small-note'>No image chosen yet.</span>";
-
-          fileInput.addEventListener("change", () => {
-            const file = fileInput.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = () => {
-              card.imageData = reader.result;
-              preview.innerHTML = "";
-              const img = document.createElement("img");
-              img.src = reader.result;
-              preview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
-          });
-
-          right.appendChild(fileInput);
-          right.appendChild(preview);
-
-          row.appendChild(left);
-          row.appendChild(right);
-          Dom.bulkImageList.appendChild(row);
-        });
-      },
-
-      finishImport() {
-        const selected = bulkCards.filter(c => c.selected);
-        if (!selected.length) {
-          alert("No cards selected.");
-          return;
-        }
-
-        let countAdded = 0;
-
-        const parseTags = (val) =>
-          String(val || "")
-            .split(",")
-            .map(t => t.trim())
-            .filter(Boolean);
-
-        selected.forEach(bc => {
-          const row   = bc.raw || {};
-          const sheet = bc.sheetName || "";
-          const cfg   = SHEET_CONFIG[sheet] || {};
-
-          const card = CardLib.createEmptyCard();
-          card.name     = bc.name || readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
-          card.type     = cfg.type || bc.type || readCell(row, "Card Type", "Type");
-          card.setName  = bc.setName || readCell(row, cfg.setCol, "SET", "Set", "Set Name");
-          card.rarity   = bc.rarity || readCell(row, cfg.rarityCol, "RARITY", "Rarity");
-          card.cardNumber = readCell(row, "Card Number", "Number", "#");
-
-          card.tags   = parseTags(readCell(row, "Tags", "Tag"));
-          card.imageData = bc.imageData || "";
-          card.extra  = {};
-
-          if (cfg.notesCol) {
-            card.notes = readCell(row, cfg.notesCol, "Rules Text", "Text", "Rules");
-          } else {
-            card.notes = readCell(row, "Rules Text", "Text", "Rules");
-          }
-
-          if (typeof cfg.extra === "function") {
-            cfg.extra(row, card);
-          }
-
-          AdminState.cards.push(card);
-          countAdded++;
-        });
-
-        CardLib.updateLibrarySummary();
-        CardLib.renderCardList();
-        alert(`Imported ${countAdded} cards into the library. You can now download the updated JSON.`);
-      },
-
-      init() {
-        Dom.bulkFileInput.addEventListener("change", e => {
-          const file = e.target.files[0];
-          if (file) BulkImport.handleFileChange(file);
-        });
-        Dom.bulkParseSheetBtn.addEventListener("click", () => BulkImport.parseSheet());
-
-        Dom.bulkFilterText.addEventListener("input", () => {
-          bulkFilterState.text = Dom.bulkFilterText.value;
-          BulkImport.renderSelectionList();
-        });
-        Dom.bulkFilterType.addEventListener("change", () => {
-          bulkFilterState.type = Dom.bulkFilterType.value;
-          BulkImport.renderSelectionList();
-        });
-        Dom.bulkFilterSet.addEventListener("change", () => {
-          bulkFilterState.set = Dom.bulkFilterSet.value;
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkSelectShownBtn.addEventListener("click", () => {
-          const q  = bulkFilterState.text.trim().toLowerCase();
-          const tf = bulkFilterState.type;
-          const sf = bulkFilterState.set;
-
-          bulkCards.forEach(card => {
-            if (tf && card.type !== tf) return;
-            if (sf && card.setName !== sf) return;
-
-            if (q) {
-              const haystack = [
-                card.name || "",
-                card.type || "",
-                card.setName || "",
-                card.rarity || ""
-              ].join(" ").toLowerCase();
-              if (!haystack.includes(q)) return;
-            }
-            card.selected = true;
-          });
-
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkClearShownBtn.addEventListener("click", () => {
-          const q  = bulkFilterState.text.trim().toLowerCase();
-          const tf = bulkFilterState.type;
-          const sf = bulkFilterState.set;
-
-          bulkCards.forEach(card => {
-            if (tf && card.type !== tf) return;
-            if (sf && card.setName !== sf) return;
-
-            if (q) {
-              const haystack = [
-                card.name || "",
-                card.type || "",
-                card.setName || "",
-                card.rarity || ""
-              ].join(" ").toLowerCase();
-              if (!haystack.includes(q)) return;
-            }
-            card.selected = false;
-          });
-
-          BulkImport.renderSelectionList();
-        });
-
-        Dom.bulkToStep3Btn.addEventListener("click", () => BulkImport.goToStep3());
-        Dom.bulkImportFinishBtn.addEventListener("click", () => BulkImport.finishImport());
-      }
-    };
-
-    /*********************************
-     * Precon admin
-     *********************************/
-    const PreconAdmin = {
-      getActivePrecon() {
-        if (AdminState.selectedPreconIndex == null) return null;
-        return AdminState.precons[AdminState.selectedPreconIndex] || null;
-      },
-
-      totalCards(precon) {
-        return Object.values(precon.cards || {}).reduce((a,b) => a + Number(b || 0), 0);
-      },
-
-      renderPreconList() {
-        Dom.preconList.innerHTML = "";
-        if (!AdminState.precons.length) {
-          Dom.preconList.innerHTML =
-            "<div class='small-note'>No precons yet. Create one with “+ New Precon”.</div>";
-          return;
-        }
-        AdminState.precons.forEach((p, idx) => {
-          const div = document.createElement("div");
-          div.className = "precon-row" +
-            (idx === AdminState.selectedPreconIndex ? " selected" : "");
-          div.innerHTML = `<strong>${p.name || "(Untitled Precon)"}</strong><br>
-            <span style="font-size:0.75rem; color:#9ca3af;">Cards: ${PreconAdmin.totalCards(p)}</span>`;
-          div.addEventListener("click", () => {
-            AdminState.selectedPreconIndex = idx;
-            PreconAdmin.renderPreconList();
-            PreconAdmin.loadActivePreconIntoForm();
-          });
-          Dom.preconList.appendChild(div);
-        });
-      },
-
-      loadActivePreconIntoForm() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          Dom.preconNameInput.value = "";
-          Dom.preconNotesInput.value = "";
-          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
-          Dom.preconStatsInfo.textContent = "";
-          return;
-        }
-
-        Dom.preconNameInput.value = p.name || "";
-        Dom.preconNotesInput.value = p.notes || "";
-        PreconAdmin.renderPreconCardsList();
-      },
-
-      renderPreconCardsList() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          Dom.preconCardsList.innerHTML = "<div class='small-note'>No precon selected.</div>";
-          return;
-        }
-        const entries = Object.entries(p.cards || {});
-        Dom.preconCardsList.innerHTML = "";
-
-        if (!entries.length) {
-          Dom.preconCardsList.innerHTML =
-            "<div class='small-note'>No cards in this precon yet.</div>";
-          Dom.preconStatsInfo.textContent = "Cards: 0";
-          return;
-        }
-
-        entries
-          .slice()
-          .sort(([aId],[bId]) => {
-            const a = CardLib.getCardById(aId);
-            const b = CardLib.getCardById(bId);
-            if (!a || !b) return 0;
-            return (a.type || "").localeCompare(b.type || "") ||
-                   (a.name || "").localeCompare(b.name || "");
-          })
-          .forEach(([cardId, qty]) => {
-            const card = CardLib.getCardById(cardId);
-            const row = document.createElement("div");
-            row.className = "precon-card-row";
-
-            const info = document.createElement("div");
-            info.style.flex = "1";
-            info.style.minWidth = "0";
-            info.innerHTML = `<div class="card-row-main">${qty}x ${card ? card.name : "(Unknown card)"}</div>
-              <div class="card-row-sub">${card ? (card.type || "") : cardId}</div>`;
-
-            const btn = document.createElement("button");
-            btn.className = "secondary";
-            btn.type = "button";
-            btn.textContent = "Remove";
-            btn.addEventListener("click", () => {
-              delete p.cards[cardId];
-              PreconAdmin.renderPreconCardsList();
-            });
-
-            row.appendChild(info);
-            row.appendChild(btn);
-            Dom.preconCardsList.appendChild(row);
-          });
-
-        Dom.preconStatsInfo.textContent = `Cards: ${PreconAdmin.totalCards(p)}`;
-      },
-
-      refreshPreconCardSelect() {
-        Dom.preconCardSelect.innerHTML = "";
-        const optNone = document.createElement("option");
-        optNone.value = "";
-        optNone.textContent = "-- Select card --";
-        Dom.preconCardSelect.appendChild(optNone);
-
-        AdminState.cards
-          .slice()
-          .sort((a,b) => (a.name || "").localeCompare(b.name || ""))
-          .forEach(card => {
-            const opt = document.createElement("option");
-            opt.value = card.id;
-            opt.textContent = `${card.name} [${card.type || ""}]`;
-            Dom.preconCardSelect.appendChild(opt);
-          });
-      },
-
-      newPrecon() {
-        const p = { name: "New Precon", notes: "", cards: {} };
-        AdminState.precons.push(p);
-        AdminState.selectedPreconIndex = AdminState.precons.length - 1;
-        PreconAdmin.renderPreconList();
-        PreconAdmin.loadActivePreconIntoForm();
-      },
-
-      deletePrecon() {
-        if (AdminState.selectedPreconIndex == null) {
-          alert("No precon selected.");
-          return;
-        }
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) return;
-        if (!confirm(`Delete precon "${p.name}"?`)) return;
-        AdminState.precons.splice(AdminState.selectedPreconIndex, 1);
-        AdminState.selectedPreconIndex = null;
-        PreconAdmin.renderPreconList();
-        PreconAdmin.loadActivePreconIntoForm();
-      },
-
-      saveActivePrecon() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          alert("No precon selected.");
-          return;
-        }
-        p.name = Dom.preconNameInput.value.trim() || p.name || "Precon";
-        p.notes = Dom.preconNotesInput.value;
-        PreconAdmin.renderPreconList();
-        alert("Precon changes saved (in memory). Download JSON to persist.");
-      },
-
-      addCardToPrecon() {
-        const p = PreconAdmin.getActivePrecon();
-        if (!p) {
-          alert("No precon selected.");
-          return;
-        }
-        const cardId = Dom.preconCardSelect.value;
-        if (!cardId) {
-          alert("Select a card to add.");
-          return;
-        }
-        const qty = Number(Dom.preconCardQtyInput.value) || 1;
-        p.cards[cardId] = (p.cards[cardId] || 0) + qty;
-        PreconAdmin.renderPreconCardsList();
-      },
-
-      async loadPreconsFromFile(file) {
-        try {
-          const text = await file.text();
-          const json = JSON.parse(text);
-          AdminState.precons = Array.isArray(json) ? json : [];
-          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
-          PreconAdmin.renderPreconList();
-          PreconAdmin.loadActivePreconIntoForm();
-          alert("Precons loaded.");
-        } catch (e) {
-          console.error(e);
-          alert("Error reading precons JSON.");
-        }
-      },
-
-      // NEW: auto-load precons from default URL
-      async loadPreconsFromUrl(url = DEFAULT_PATHS.precons) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-
-          AdminState.precons = Array.isArray(json) ? json : [];
-          AdminState.selectedPreconIndex = AdminState.precons.length ? 0 : null;
-          PreconAdmin.renderPreconList();
-          PreconAdmin.loadActivePreconIntoForm();
-          console.log("Auto-loaded precons from", url);
-        } catch (e) {
-          console.warn("Unable to auto-load precons JSON from", url, e);
-          // Silent fail; user can still use "Load Precons JSON" button
-        }
-      },
-
-      savePreconsToFile() {
-        const blob = new Blob([JSON.stringify(AdminState.precons, null, 2)], {
-          type: "application/json"
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "drive-precons.json";
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-
-      init() {
-        Dom.newPreconBtn.addEventListener("click", () => PreconAdmin.newPrecon());
-        Dom.deletePreconBtn.addEventListener("click", () => PreconAdmin.deletePrecon());
-        Dom.preconAddCardBtn.addEventListener("click", () => PreconAdmin.addCardToPrecon());
-        Dom.preconSaveBtn.addEventListener("click", () => PreconAdmin.saveActivePrecon());
-
-        Dom.loadPreconsBtn.addEventListener("click", () => Dom.loadPreconsInput.click());
-        Dom.loadPreconsInput.addEventListener("change", e => {
-          const file = e.target.files[0];
-          if (file) PreconAdmin.loadPreconsFromFile(file);
-        });
-        Dom.savePreconsBtn.addEventListener("click", () => PreconAdmin.savePreconsToFile());
-      }
-    };
-
-    /*********************************
-     * Init
-     *********************************/
-    (function init() {
-      Mode.init();
-      CardLib.init();
-      BulkImport.init();
-      PreconAdmin.init();
-
-      const originalUpdateSummary = CardLib.updateLibrarySummary;
-      CardLib.updateLibrarySummary = function() {
-        originalUpdateSummary.call(CardLib);
-        PreconAdmin.refreshPreconCardSelect();
-      };
-      PreconAdmin.refreshPreconCardSelect();
-
-      // Auto-load default JSON files (silent fail if missing)
-      CardLib.loadLibraryFromUrl();
-      PreconAdmin.loadPreconsFromUrl();
-    })();
-  </script>
-</body>
-</html>
+          const left = document.createE
