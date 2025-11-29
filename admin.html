@@ -81,9 +81,10 @@
       margin: 0.5rem 0 0.4rem;
       font-size: 0.95rem;
     }
+
     .layout-two {
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
       gap: 0.75rem;
     }
     @media (max-width: 900px) {
@@ -106,6 +107,7 @@
         grid-template-columns: minmax(0, 1fr);
       }
     }
+
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -153,6 +155,7 @@
     .button.danger:hover {
       background: #7f1d1d;
     }
+
     .small-note {
       font-size: 0.78rem;
       color: #9ca3af;
@@ -432,6 +435,7 @@
       </p>
 
       <div class="layout-two">
+        <!-- Left: form -->
         <div>
           <h3>Card Fields</h3>
           <div class="field-grid">
@@ -531,6 +535,7 @@
           <div id="singleStatus" class="status small-note"></div>
         </div>
 
+        <!-- Right: preview + JSON + card library -->
         <div>
           <h3>Preview & JSON</h3>
           <div id="singlePreview" class="card-preview">
@@ -568,6 +573,21 @@
 
           <h3>Raw JSON for this Card</h3>
           <pre id="singleJsonView" class="json-view">{}</pre>
+
+          <h3>Card Library (in-memory)</h3>
+          <div class="field">
+            <input id="cardLibrarySearchInput" type="text"
+                   placeholder="Search by name / type / set…" />
+          </div>
+          <div id="cardLibraryList" class="library-list">
+            <p class="small-note">Library will appear here after loading drive-card.json.</p>
+          </div>
+          <p class="small-note">Click a card to load it into the editor.</p>
+
+          <h3>Save Updated Library</h3>
+          <button id="downloadCardsJsonBtn" class="button secondary" type="button">
+            Download drive-card.json
+          </button>
         </div>
       </div>
     </section>
@@ -643,7 +663,7 @@
           <p id="bulkStep3Status" class="status small-note"></p>
 
           <h3>Save Updated Library</h3>
-          <button id="downloadCardsJsonBtn" class="button secondary" type="button">
+          <button id="downloadCardsJsonBtn_bulk" class="button secondary" type="button">
             Download drive-card.json
           </button>
           <p class="small-note">
@@ -915,6 +935,9 @@
       singlePreview: document.getElementById("singlePreview"),
       singleJsonView: document.getElementById("singleJsonView"),
 
+      cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
+      cardLibraryList: document.getElementById("cardLibraryList"),
+
       bulkFileInput: document.getElementById("bulkFileInput"),
       bulkSheetSelect: document.getElementById("bulkSheetSelect"),
       bulkParseSheetBtn: document.getElementById("bulkParseSheetBtn"),
@@ -930,7 +953,8 @@
       bulkApplyBtn: document.getElementById("bulkApplyBtn"),
       bulkStep3Status: document.getElementById("bulkStep3Status"),
 
-      downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
+      downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn"),
+      downloadCardsJsonBtn_bulk: document.getElementById("downloadCardsJsonBtn_bulk"),
 
       preconNewBtn: document.getElementById("preconNewBtn"),
       preconDeleteBtn: document.getElementById("preconDeleteBtn"),
@@ -1060,7 +1084,7 @@
 
     // Tolerant cell reader: exact match first, then case/whitespace-insensitive
     function readCell(row, ...keys) {
-      // 1) Exact header match first
+      // 1) Exact header match
       for (const k of keys) {
         if (!k) continue;
         if (Object.prototype.hasOwnProperty.call(row, k)) {
@@ -1071,13 +1095,11 @@
         }
       }
 
-      // 2) Fuzzy fallback: case + whitespace insensitive
-      //    e.g. "SET", "Set", " set " are treated the same
+      // 2) Fuzzy: lowercase + no spaces
       const cols = Object.keys(row).map(col => ({
         name: col,
         norm: col.toLowerCase().replace(/\s+/g, "")
       }));
-
       for (const k of keys) {
         if (!k) continue;
         const target = String(k).toLowerCase().replace(/\s+/g, "");
@@ -1090,7 +1112,6 @@
           }
         }
       }
-
       return "";
     }
 
@@ -1306,10 +1327,82 @@
       }
     };
 
-    function renderLibraryList() {
-      const container = Dom.preconLibraryList; // reused only in precons; no separate library view for cards here
+    // ---------- CARD LIBRARY (right side of Single Card Editor) ----------
+    let cardLibrarySearch = "";
+
+    function renderCardLibraryList() {
+      const container = Dom.cardLibraryList;
+      container.innerHTML = "";
+
+      if (!AppState.cards.length) {
+        const p = document.createElement("p");
+        p.className = "small-note";
+        p.textContent = "No cards loaded yet. Once drive-card.json is loaded, they will appear here.";
+        container.appendChild(p);
+        return;
+      }
+
+      const q = cardLibrarySearch.trim().toLowerCase();
+
+      const rows = AppState.cards
+        .filter(card => {
+          if (!q) return true;
+          const hay = `${card.name || ""} ${card.type || ""} ${card.setName || ""} ${card.rarity || ""}`.toLowerCase();
+          return hay.includes(q);
+        })
+        .slice()
+        .sort((a, b) => {
+          const setA = (a.setName || "").localeCompare(b.setName || "");
+          if (setA !== 0) return setA;
+          const typeA = (a.type || "").localeCompare(b.type || "");
+          if (typeA !== 0) return typeA;
+          const numA = (a.cardNumber || "").localeCompare(b.cardNumber || "");
+          if (numA !== 0) return numA;
+          return (a.name || "").localeCompare(b.name || "");
+        });
+
+      rows.forEach((card, idx) => {
+        const row = document.createElement("div");
+        row.className = "library-row" + (card.id === AppState.selectedLibraryCardId ? " selected" : "");
+
+        const idxCell = document.createElement("div");
+        idxCell.textContent = String(idx + 1);
+
+        const nameCell = document.createElement("span");
+        nameCell.className = "truncate";
+        nameCell.textContent = card.name || "(Unnamed)";
+
+        const typeCell = document.createElement("span");
+        typeCell.className = "truncate";
+        typeCell.textContent = card.type || "";
+
+        const setCell = document.createElement("span");
+        setCell.className = "truncate";
+        setCell.textContent = card.setName || "";
+
+        const rarityCell = document.createElement("span");
+        rarityCell.className = "truncate";
+        rarityCell.textContent = card.rarity || "";
+
+        row.appendChild(idxCell);
+        row.appendChild(nameCell);
+        row.appendChild(typeCell);
+        row.appendChild(setCell);
+        row.appendChild(rarityCell);
+
+        row.addEventListener("click", () => {
+          AppState.selectedLibraryCardId = card.id;
+          fillSingleCardInputs(card);
+          Dom.singleStatus.textContent = `Loaded "${card.name}" from library.`;
+          Dom.singleStatus.className = "status small-note ok";
+          renderCardLibraryList();
+        });
+
+        container.appendChild(row);
+      });
     }
 
+    // ---------- BULK IMPORT ----------
     let bulkWorkbook = null;
     let bulkCards = [];
     let bulkFilterSearch = "";
@@ -1373,7 +1466,16 @@
           .map((row, idx) => {
             const name    = readCell(row, cfg.nameCol, "Card Name", "Name", "Card");
             const type    = cfg.type || readCell(row, "Card Type", "Type");
-            const setName = readCell(row, cfg.setCol, "SET", "Set", "Set Name", "Set 1", "SET 1", "Set Code");
+            const setName = readCell(
+              row,
+              cfg.setCol,
+              "SET",
+              "Set",
+              "Set Name",
+              "Set 1",
+              "SET 1",
+              "Set Code"
+            );
             const rarity  = readCell(row, cfg.rarityCol, "RARITY", "Rarity");
 
             return {
@@ -1566,7 +1668,16 @@
             if (parsed.con !== undefined) e.con = parsed.con;
           }
 
-          newCard.notes = readCell(raw, cfg.notesCol, "Crew Trait", "Driver Trait", "Condition Trait", "Track Trait", "TRAIT", "ABILITY");
+          newCard.notes = readCell(
+            raw,
+            cfg.notesCol,
+            "Crew Trait",
+            "Driver Trait",
+            "Condition Trait",
+            "Track Trait",
+            "TRAIT",
+            "ABILITY"
+          );
 
           if (matches.length) {
             if (mode === "createOnly") {
@@ -1595,9 +1706,13 @@
         Dom.bulkStep3Status.textContent =
           `Done. Created ${created}, updated ${updated}, skipped ${skipped}. Remember to download drive-card.json.`;
         Dom.bulkStep3Status.className = "status small-note ok";
+
+        // refresh card library list in Single Card Editor
+        renderCardLibraryList();
       }
     };
 
+    // ---------- PRECONS ----------
     function renderCardLibraryForPrecons() {
       const container = Dom.preconCardList;
       const selectedPrecon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
@@ -1610,7 +1725,11 @@
           return { cardId, card, qty: Number(qty) || 0 };
         })
         .filter(e => e.card && e.qty > 0)
-        .sort((a, b) => (a.card.type || "").localeCompare(b.card.type || "") || (a.card.name || "").localeCompare(b.card.name || ""));
+        .sort(
+          (a, b) =>
+            (a.card.type || "").localeCompare(b.card.type || "") ||
+            (a.card.name || "").localeCompare(b.card.name || "")
+        );
 
       if (!entries.length) {
         const p = document.createElement("p");
@@ -1649,7 +1768,10 @@
         row.appendChild(qtyCell);
 
         row.addEventListener("click", () => {
-          const newQtyStr = prompt(`Set quantity for "${entry.card.name}" (0 to remove):`, String(entry.qty));
+          const newQtyStr = prompt(
+            `Set quantity for "${entry.card.name}" (0 to remove):`,
+            String(entry.qty)
+          );
           if (newQtyStr === null) return;
           const newQty = Math.max(0, Number(newQtyStr) || 0);
           if (!selectedPrecon.cards) selectedPrecon.cards = {};
@@ -1676,7 +1798,8 @@
       } else {
         AppState.precons.forEach((precon, idx) => {
           const row = document.createElement("div");
-          row.className = "library-row" + (precon.id === AppState.selectedPreconId ? " selected" : "");
+          row.className =
+            "library-row" + (precon.id === AppState.selectedPreconId ? " selected" : "");
           const idxCell = document.createElement("div");
           idxCell.textContent = String(idx + 1);
           const nameCell = document.createElement("span");
@@ -1685,7 +1808,9 @@
           const idCell = document.createElement("span");
           idCell.className = "truncate";
           idCell.textContent = precon.id || "–";
-          const cardCount = precon.cards ? Object.values(precon.cards).reduce((sum, n) => sum + Number(n || 0), 0) : 0;
+          const cardCount = precon.cards
+            ? Object.values(precon.cards).reduce((sum, n) => sum + Number(n || 0), 0)
+            : 0;
           const cardsCell = document.createElement("span");
           cardsCell.textContent = `${cardCount} cards`;
 
@@ -1710,7 +1835,8 @@
       if (selectedPrecon) {
         renderCardLibraryForPrecons();
       } else {
-        Dom.preconCardList.innerHTML = "<p class='small-note'>Select a precon to view its cards.</p>";
+        Dom.preconCardList.innerHTML =
+          "<p class='small-note'>Select a precon to view its cards.</p>";
       }
     }
 
@@ -1777,12 +1903,14 @@
       }
       AppState.selectedPreconId = selectedPrecon.id;
       Dom.preconEditStatus.textContent =
-        `Updated "${card.name}" quantity to ${newQty} in "${selectedPrecon.name || selectedPrecon.id}".`;
+        `Updated "${card.name}" quantity to ${newQty} in "${selectedPrecon.name ||
+          selectedPrecon.id}".`;
       Dom.preconEditStatus.className = "status small-note ok";
       renderPreconList();
       Dom.preconCardSearchInput.value = "";
     }
 
+    // ---------- Single Card Editor handlers ----------
     function handleSingleSave() {
       const card = collectSingleCardFromInputs(false);
       if (!card.name || !card.type || !card.setName) {
@@ -1808,6 +1936,7 @@
         card.id = existing.id || card.id;
         AppState.cards[existingIndex] = card;
         AppState.cardsById[card.id] = card;
+        AppState.selectedLibraryCardId = card.id;
         Dom.singleStatus.textContent =
           "Updated existing card in library (match by Name+Type+Set).";
         Dom.singleStatus.className = "status small-note ok";
@@ -1817,10 +1946,12 @@
         }
         AppState.cards.push(card);
         AppState.cardsById[card.id] = card;
+        AppState.selectedLibraryCardId = card.id;
         Dom.singleStatus.textContent = "Added new card to library.";
         Dom.singleStatus.className = "status small-note ok";
       }
       renderSinglePreview();
+      renderCardLibraryList();
     }
 
     function handleSingleDelete() {
@@ -1839,8 +1970,12 @@
       if (!confirm("Delete this card from the in-memory library?")) return;
       AppState.cards.splice(idx, 1);
       delete AppState.cardsById[id];
+      if (AppState.selectedLibraryCardId === id) {
+        AppState.selectedLibraryCardId = null;
+      }
       Dom.singleStatus.textContent = "Card removed from in-memory library.";
       Dom.singleStatus.className = "status small-note ok";
+      renderCardLibraryList();
     }
 
     function handleSingleNew() {
@@ -1862,7 +1997,9 @@
       Dom.vehicleHpConInput.value = "";
       Dom.extraJsonInput.value = "";
       Dom.singleStatus.textContent = "";
+      AppState.selectedLibraryCardId = null;
       renderSinglePreview();
+      renderCardLibraryList();
     }
 
     function downloadJson(filename, data) {
@@ -1877,6 +2014,7 @@
       URL.revokeObjectURL(url);
     }
 
+    // ---------- Init ----------
     function initNav() {
       Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
       Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
@@ -1911,6 +2049,15 @@
       Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
       Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
       Dom.singleNewBtn.addEventListener("click", handleSingleNew);
+
+      Dom.cardLibrarySearchInput.addEventListener("input", () => {
+        cardLibrarySearch = Dom.cardLibrarySearchInput.value;
+        renderCardLibraryList();
+      });
+
+      Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
+        downloadJson("drive-card.json", AppState.cards.map(cardToJson));
+      });
     }
 
     function initBulk() {
@@ -1929,7 +2076,7 @@
         Bulk.renderGrid();
       });
       Dom.bulkApplyBtn.addEventListener("click", () => Bulk.applyToLibrary());
-      Dom.downloadCardsJsonBtn.addEventListener("click", () => {
+      Dom.downloadCardsJsonBtn_bulk.addEventListener("click", () => {
         downloadJson("drive-card.json", AppState.cards.map(cardToJson));
       });
     }
@@ -1952,7 +2099,9 @@
           return;
         }
         if (!confirm("Delete this precon from the in-memory list?")) return;
-        AppState.precons = AppState.precons.filter(p => p.id !== AppState.selectedPreconId);
+        AppState.precons = AppState.precons.filter(
+          p => p.id !== AppState.selectedPreconId
+        );
         AppState.selectedPreconId = null;
         Dom.preconIdInput.value = "";
         Dom.preconNameInput.value = "";
@@ -1970,7 +2119,8 @@
         const precon = collectPreconFromInputs();
         AppState.selectedPreconId = precon.id;
         renderPreconList();
-        Dom.preconEditStatus.textContent = "Precon saved in memory. Remember to download drive-precons.json.";
+        Dom.preconEditStatus.textContent =
+          "Precon saved in memory. Remember to download drive-precons.json.";
         Dom.preconEditStatus.className = "status small-note ok";
       });
 
@@ -2004,6 +2154,7 @@
 
       await loadCards();
       renderSinglePreview();
+      renderCardLibraryList();
       await loadPrecons();
 
       showSection("single");
