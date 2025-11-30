@@ -5,8 +5,7 @@ import { downloadJson, loadCards } from "./state.js";
 import { Dom } from "./dom.js";
 import { initSingle, refreshSingleUi, getCardsForExport } from "./single.js";
 import { initBulk } from "./bulk.js";
-// IMPORTANT: namespace import so missing named exports can't break loading
-import * as Precons from "./precons.js";
+import { initPrecons, loadPrecons } from "./precons.js";
 import { initHelp } from "./help.js";
 
 /************************************************************
@@ -62,9 +61,7 @@ function initExportButtons() {
   initNav();
   initSingle();
   initBulk();
-  if (typeof Precons.initPrecons === "function") {
-    Precons.initPrecons();
-  }
+  initPrecons();
   initHelp();
   initModal();
   initExportButtons();
@@ -73,10 +70,8 @@ function initExportButtons() {
   await loadCards();
   refreshSingleUi();
 
-  // Load precons if the module provides a loader
-  if (typeof Precons.loadPrecons === "function") {
-    await Precons.loadPrecons();
-  }
+  // Load precons
+  await loadPrecons();
 
   showSection("single");
 })();
