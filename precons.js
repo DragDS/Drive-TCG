@@ -65,7 +65,6 @@ function renderPrecons() {
 
 /************************************************************
  * Load precons from JSON / localStorage
- *  (this is what app.js imports as `loadPrecons`)
  ************************************************************/
 export async function loadPrecons() {
   const localBackup = loadFromLocalStorage(STORAGE_KEYS.PRECONS, null);
@@ -93,7 +92,6 @@ export async function loadPrecons() {
 
 /************************************************************
  * Init: wire up the download button
- *  (this is what app.js imports as `initPrecons`)
  ************************************************************/
 export function initPrecons() {
   Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
