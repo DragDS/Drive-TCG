@@ -1969,7 +1969,7 @@
       URL.revokeObjectURL(url);
     }
 
-    async async function loadCards() {
+    async function loadCards() {
       // Try remote drive-card.json first
       const localBackup = loadFromLocalStorage(STORAGE_KEYS.CARDS, null);
       try {
@@ -1991,7 +1991,7 @@
       }
     }
 
-    async async function loadPrecons() {
+    async function loadPrecons() {
       const localBackup = loadFromLocalStorage(STORAGE_KEYS.PRECONS, null);
       try {
         const res = await fetch("drive-precons.json", { cache: "no-store" });
