@@ -492,5 +492,214 @@
         "cardNumber": "01-060"
       }
     ]
+  },
+  {
+    "id": null,
+    "name": "ABANDONDED",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-064",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "MODS WITH BASE PART: TIRE ARE 0/0.",
+    "imageUrl": "images/set1/abandoned.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-064"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "HARD TURN",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-067",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "AT THE START OF A PLAYERS TURN, THAT PLAYER REMOVES A MOD THEY OWN.",
+    "imageUrl": "images/set1/hard_turn.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-067"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "HEAVY FOG",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-068",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "DRIVER TRAITS DO NOT AFFECT HP/CON.",
+    "imageUrl": "images/set1/heavy_fog.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-068"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "MIDNIGHT RUN",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-070",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "-3/-3 IF A PLAYER DOES NOT PLAY A CREW DURING THEIR TURN.",
+    "imageUrl": "images/set1/midnight_run.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-070"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "SUDDEN TURN",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-072",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "-6/-1",
+    "imageUrl": "images/set1/sudden_turn.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-072"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "CRUISE",
+    "type": "Condition",
+    "setName": "SET 1 & 4",
+    "cardNumber": "01-065",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "-3/-3 EXCEPT TO NAMED VEHICLES.",
+    "imageUrl": "images/set1/cruise.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1 & 4",
+        "cardNumber": "01-065"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "ROLLING START",
+    "type": "Condition",
+    "setName": "SET 1 & 4",
+    "cardNumber": "01-071",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
+    "imageUrl": "images/set1/rolling_start.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1 & 4",
+        "cardNumber": "01-071"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "DOWN HILL",
+    "type": "Condition",
+    "setName": "SET 1 & 5",
+    "cardNumber": "01-066",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "VEHICLE'S BASE CON IS ZERO.",
+    "imageUrl": "images/set1/down_hill.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1 & 5",
+        "cardNumber": "01-066"
+      }
+    ]
+  },
+  {
+    "id": null,
+    "name": "UP HILL",
+    "type": "Condition",
+    "setName": "SET 1 & 5",
+    "cardNumber": "01-073",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "VEHICLE'S BASE HP IS ZERO.",
+    "imageUrl": "images/set1/up_hill.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1 & 5",
+        "cardNumber": "01-073"
+      }
+    ]
+  },
+  {
+    "id": "card-5zrlzno3ouy",
+    "name": "ROLLING START",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-071",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
+    "imageUrl": "images/set1/rolling_start.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-071"
+      }
+    ]
+  },
+  {
+    "id": "card-zanhid13vf7",
+    "name": "UP HILL",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-073",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "VEHICLE'S BASE HP IS ZERO.",
+    "imageUrl": "images/set1/up_hill.png",
+    "extra": {},
+    "vehicleTypes": [],
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-073"
+      }
+    ]
   }
 ]
