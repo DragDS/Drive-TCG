@@ -168,8 +168,21 @@
       outline: none;
     }
     .field textarea {
+      border-radius: 0.4rem;
+      border: 1px solid #1f2937;
+      background: rgba(15,23,42,0.95);
+      color: #e5e7eb;
+      padding: 0.25rem 0.4rem;
+      font-size: 0.8rem;
+      min-height: 1.9rem;
+      outline: none;
+    }
+    .field textarea {
       resize: vertical;
       min-height: 4rem;
+    }
+    .hidden-set-basic {
+      display: none;
     }
     .field input:focus,
     .field select:focus,
@@ -512,11 +525,11 @@
                 <option value="Misc">Misc</option>
               </select>
             </div>
-            <div class="field">
+            <div class="field hidden-set-basic">
               <label for="cardSetNameInput">Set Name (display / primary print)</label>
               <input id="cardSetNameInput" type="text" placeholder="SET 1" />
             </div>
-            <div class="field">
+            <div class="field hidden-set-basic">
               <label for="cardNumberInput">Card Number (primary print)</label>
               <input id="cardNumberInput" type="text" placeholder="01-001" />
             </div>
@@ -537,6 +550,9 @@
               <input id="cardImageUrlInput" type="text" placeholder="images/Set1/DANNYS_GTS-4.png" />
             </div>
           </div>
+          <p class="small-note">
+            Set &amp; card number are managed below under <strong>Prints (Sets / Card Numbers)</strong>.
+          </p>
 
           <h3>Prints (Sets / Card Numbers)</h3>
           <div class="field-grid">
@@ -695,86 +711,90 @@
 
     <!-- BULK IMPORT -->
     <section id="bulkSection" class="panel" style="display:none;">
-      <h2>Bulk Import / Update</h2>
+      <h2>Bulk Import</h2>
       <p class="small-note">
-        Import CSV / TSV / XLSX exports and apply them to the in-memory card library.
+        Import cards from Excel/CSV, map columns, and apply changes to the in-memory library.
       </p>
 
       <div class="bulk-flex">
-        <!-- LEFT: Steps 1 & 3 -->
         <div>
-          <h3>Step 1 – Load Spreadsheet File</h3>
+          <h3>Step 1 – Upload Spreadsheet</h3>
           <div class="field">
-            <input id="bulkFileInput" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" />
+            <label for="bulkFileInput">Spreadsheet File (.xlsx, .xls, or .csv)</label>
+            <input id="bulkFileInput" type="file" accept=".xlsx,.xls,.csv" />
           </div>
-          <p id="bulkStep1Status" class="status small-note"></p>
+          <p id="bulkStep1Status" class="small-note status"></p>
 
-          <h3>Step 3 – Apply to drive-card.json</h3>
-          <p class="small-note">
-            Selected rows will either create new card entries, or update existing ones that match by
-            <strong>Name + Type + Set</strong>.
-          </p>
-          <div class="field">
-            <label>When matching existing cards…</label>
-            <select id="bulkUpdateModeSelect">
-              <option value="update">Update existing card &amp; create new if missing</option>
-              <option value="createOnly">Only create new cards (do not update existing)</option>
-              <option value="updateOnly">Only update existing (ignore new names)</option>
-            </select>
-          </div>
-          <button id="bulkApplyBtn" class="button" type="button">Apply to in-memory Library</button>
-          <p id="bulkStep3Status" class="status small-note"></p>
-
-          <h3>Save Updated Library</h3>
-          <button id="downloadCardsJsonBtn_bulk" class="button secondary" type="button">
-            Download drive-card.json
-          </button>
-          <p class="small-note">
-            After download, upload <span class="inline-code">drive-card.json</span> to your GitHub repo root (same folder as
-            <span class="inline-code">index.html</span> and <span class="inline-code">admin.html</span>).
-          </p>
-        </div>
-
-        <!-- RIGHT: Step 2 – Preview rows -->
-        <div>
-          <h3>Step 2 – Map & Select Rows</h3>
-          <p class="small-note">
-            Filter and select only the rows you want to apply. “Viewed” refers to rows that match your filters.
-          </p>
-
+          <h3>Step 2 – Filter &amp; Select Rows</h3>
           <div class="field-grid">
             <div class="field">
-              <label for="bulkSetFilterInput">Filter by Set (contains)</label>
-              <input id="bulkSetFilterInput" type="text" placeholder="Set 1" />
+              <label for="bulkSetFilterInput">Filter by Set</label>
+              <input id="bulkSetFilterInput" type="text" placeholder="SET 1" />
             </div>
             <div class="field">
-              <label for="bulkTypeFilterInput">Filter by Type (contains)</label>
-              <input id="bulkTypeFilterInput" type="text" placeholder="Vehicle / Mod / Crew…" />
+              <label for="bulkTypeFilterInput">Filter by Type</label>
+              <input id="bulkTypeFilterInput" type="text" placeholder="Vehicle / Mod / Driver…" />
             </div>
             <div class="field">
-              <label for="bulkNameFilterInput">Filter by Name (contains)</label>
-              <input id="bulkNameFilterInput" type="text" placeholder="Danny / Junkyard…" />
+              <label for="bulkNameFilterInput">Filter by Name</label>
+              <input id="bulkNameFilterInput" type="text" placeholder="Danny, Junkyard Dog…" />
             </div>
           </div>
-
           <div class="button-row">
             <button id="bulkSelectViewedBtn" class="button small" type="button">
-              Select All Viewed
+              Select Viewed Rows
             </button>
             <button id="bulkClearViewedBtn" class="button secondary small" type="button">
-              Clear All Viewed
+              Clear Viewed Rows
             </button>
             <button id="bulkClearAllBtn" class="button secondary small" type="button">
               Clear All Selections
             </button>
           </div>
-          <p id="bulkStep2Status" class="status small-note"></p>
+          <p id="bulkStep2Status" class="small-note status"></p>
 
           <div id="bulkTable" class="bulk-table"></div>
+        </div>
 
-          <h3>Currently Selected Rows</h3>
-          <div id="bulkSelectionSummary" class="bulk-summary-box">
-            <span class="small-note">No rows selected.</span>
+        <div>
+          <h3>Step 3 – Apply to Library</h3>
+          <div class="field">
+            <label for="bulkUpdateModeSelect">Update Mode</label>
+            <select id="bulkUpdateModeSelect">
+              <option value="upsert-name-type-set">
+                Upsert by Name + Type + Set (recommended)
+              </option>
+              <option value="insert-only">
+                Insert new cards only (skip matches)
+              </option>
+              <option value="replace-all">
+                Replace entire library with imported cards
+              </option>
+            </select>
+          </div>
+          <div class="bulk-summary-box">
+            <strong class="small-note">Summary</strong>
+            <div id="bulkSelectionSummary" class="small-note">
+              No rows selected.
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button id="bulkApplyBtn" class="button" type="button">
+              Apply to Library
+            </button>
+          </div>
+          <p id="bulkStep3Status" class="small-note status"></p>
+
+          <h3>Download Updated drive-card.json</h3>
+          <p class="small-note">
+            After applying changes, download the updated
+            <span class="inline-code">drive-card.json</span> and replace it in your project.
+          </p>
+          <div class="button-row">
+            <button id="downloadCardsJsonBtn_bulk" class="button secondary small" type="button">
+              Download drive-card.json
+            </button>
           </div>
         </div>
       </div>
@@ -784,112 +804,140 @@
     <section id="preconsSection" class="panel" style="display:none;">
       <h2>Preconstructed Decks</h2>
       <p class="small-note">
-        Manage precon decks saved in <span class="inline-code">drive-precons.json</span>. Each entry references cards by
-        <strong>card id</strong> and a count.
+        Create and manage preconstructed decks that reference cards by id. These can be exported
+        as <span class="inline-code">drive-precons.json</span> for use on the site or tools.
       </p>
 
-      <div class="layout-main">
+      <div class="bulk-flex">
         <div>
-          <h3>Saved Precons</h3>
+          <h3>Existing Precons</h3>
           <div id="preconList" class="precon-list"></div>
+          <p id="preconListStatus" class="small-note status"></p>
           <div class="button-row">
-            <button id="preconNewBtn" class="button secondary small" type="button">
+            <button id="preconNewBtn" class="button small" type="button">
               New Precon
             </button>
             <button id="preconDeleteBtn" class="button danger small" type="button">
-              Delete Selected
+              Delete Precon
             </button>
           </div>
-          <p id="preconListStatus" class="status small-note"></p>
+
+          <h3>Import drive-precons.json</h3>
+          <div class="field">
+            <label for="preconFileInput">Precons JSON File</label>
+            <input id="preconFileInput" type="file" accept=".json" />
+          </div>
+          <div class="button-row">
+            <button id="downloadPreconsJsonBtn" class="button secondary small" type="button">
+              Download drive-precons.json
+            </button>
+          </div>
         </div>
 
         <div>
           <h3>Precon Details</h3>
           <div class="field-grid">
             <div class="field">
-              <label for="preconIdInput">ID</label>
-              <input id="preconIdInput" type="text" placeholder="internal-precon-id" />
+              <label for="preconIdInput">Precon ID (read-only)</label>
+              <input id="preconIdInput" type="text" readonly placeholder="Generated automatically" />
             </div>
             <div class="field">
               <label for="preconNameInput">Name</label>
-              <input id="preconNameInput" type="text" placeholder="Starter Deck – Danny vs Ray" />
-            </div>
-            <div class="field">
-              <label for="preconDescriptionInput">Description</label>
-              <input id="preconDescriptionInput" type="text" placeholder="Short description or notes" />
+              <input id="preconNameInput" type="text" placeholder="Danny's Junkyard Starter" />
             </div>
           </div>
+          <div class="field">
+            <label for="preconDescriptionInput">Description</label>
+            <textarea id="preconDescriptionInput" placeholder="Short description shown to users."></textarea>
+          </div>
 
-          <h3>Cards in Deck</h3>
-          <p class="small-note">
-            Use the modal to search the library by name, type, or set and add cards to this precon.
-          </p>
-          <div id="preconCardsList" class="precon-list"></div>
+          <h3>Cards in This Precon</h3>
+          <div id="preconCardsList" class="bulk-summary-box small-note">
+            No precon selected.
+          </div>
           <div class="button-row">
             <button id="preconAddCardBtn" class="button small" type="button">
-              Add Card…
+              Add Card from Library
             </button>
-            <button id="preconSaveBtn" class="button" type="button">
-              Save Precon (in-memory)
-            </button>
-          </div>
-          <p id="preconStatus" class="status small-note"></p>
-        </div>
-
-        <div>
-          <h3>Save / Load precons</h3>
-          <p class="small-note">
-            Load from and save to <span class="inline-code">drive-precons.json</span>.
-          </p>
-          <div class="field">
-            <label for="preconFileInput">Load precons file</label>
-            <input id="preconFileInput" type="file" accept=".json" />
           </div>
           <div class="button-row">
-            <button id="downloadPreconsJsonBtn" class="button secondary" type="button">
-              Download drive-precons.json
+            <button id="preconSaveBtn" class="button" type="button">
+              Save Changes
             </button>
+            <span id="preconStatus" class="status small-note"></span>
           </div>
-          <p class="small-note">
-            Upload the downloaded <span class="inline-code">drive-precons.json</span> to your GitHub repo next to
-            <span class="inline-code">drive-card.json</span>.
-          </p>
         </div>
       </div>
     </section>
 
-    <!-- HELP SECTION -->
+    <!-- HELP / WORKFLOW -->
     <section id="helpSection" class="panel" style="display:none;">
-      <h2>Admin Workflow & Tips</h2>
+      <h2>Workflow Help</h2>
       <p class="small-note">
-        This page never writes directly to GitHub. It only loads and saves JSON in your browser.
-        You always manually upload the resulting <span class="inline-code">drive-card.json</span> and
-        <span class="inline-code">drive-precons.json</span> to your GitHub repo.
+        This tool is designed to keep all card and precon data in a small set of JSON files that
+        you can version-control (e.g., GitHub) and deploy with the site.
       </p>
 
-      <h3>Folder / Repo Structure</h3>
+      <h3>Core Files</h3>
       <ul class="small-note">
-        <li><span class="inline-code">index.html</span> – public card viewer</li>
-        <li><span class="inline-code">admin.html</span> – this admin tool (private)</li>
-        <li><span class="inline-code">drive-card.json</span> – main card database</li>
-        <li><span class="inline-code">drive-precons.json</span> – optional precon decks</li>
-        <li><span class="inline-code">images/SetX/…</span> – card images referenced by imageUrl</li>
+        <li>
+          <span class="inline-code">drive-card.json</span> – all cards: types, sets, stats, text.
+        </li>
+        <li>
+          <span class="inline-code">drive-precons.json</span> – preconstructed decks, referencing cards by id.
+        </li>
       </ul>
 
       <h3>Recommended Workflow</h3>
       <ol class="small-note">
-        <li>Load the latest <span class="inline-code">drive-card.json</span> via the file picker (or let the tool fetch it).</li>
-        <li>Use <strong>Bulk Import</strong> to bring in large changes from your master spreadsheet.</li>
-        <li>Use <strong>Single Card</strong> to clean up or tweak individual entries.</li>
-        <li>Download the updated <span class="inline-code">drive-card.json</span> and upload to GitHub.</li>
-        <li>Optionally, use <strong>Precons</strong> to define and export preconstructed decks.</li>
+        <li>
+          Start with <strong>Bulk Import</strong> for large spreadsheet-based data entry (e.g., Set 1).
+        </li>
+        <li>
+          Use the <strong>Single Card Editor</strong> to refine individual cards, add images, clarify rules text,
+          and manage prints/sets.
+        </li>
+        <li>
+          Use the <strong>Precons</strong> tab to build starter decks and special theme decks.
+        </li>
+        <li>
+          Download <span class="inline-code">drive-card.json</span> and
+          <span class="inline-code">drive-precons.json</span> and commit them to your repo.
+        </li>
       </ol>
+
+      <h3>About Sets &amp; Prints</h3>
+      <p class="small-note">
+        Each card has a <em>primary</em> set and card number, plus an optional list of prints:
+      </p>
+      <ul class="small-note">
+        <li>
+          The primary <strong>Set Name</strong> and <strong>Card Number</strong> are stored in
+          <span class="inline-code">setName</span> and <span class="inline-code">cardNumber</span>.
+        </li>
+        <li>
+          Additional reprints are stored in <span class="inline-code">prints</span>, each with
+          <span class="inline-code">setId</span> and <span class="inline-code">cardNumber</span>.
+        </li>
+        <li>
+          In the Single Card editor, use <strong>Prints (Sets / Card Numbers)</strong> to manage these.
+          The first entry is treated as the primary print.
+        </li>
+      </ul>
 
       <h3>Troubleshooting</h3>
       <ul class="small-note">
-        <li>If something looks wrong, reload the page and re-load your original JSON.</li>
-        <li>Always keep a backup of <span class="inline-code">drive-card.json</span> before overwriting.</li>
-        <li>Use descriptive card ids if you want easier precon editing (e.g., <span class="inline-code">danny-gts4</span>).</li>
+        <li>
+          If card changes don’t appear on the site, double-check that you deployed the latest
+          <span class="inline-code">drive-card.json</span>.
+        </li>
+        <li>
+          If a precon is missing cards, ensure those cards exist in
+          <span class="inline-code">drive-card.json</span> and have stable <span class="inline-code">id</span> values.
+        </li>
+        <li>
+          Keep backup copies of your JSON files before large bulk imports.
+        </li>
       </ul>
     </section>
   </div>
@@ -1062,7 +1110,12 @@
     function normalizeNameTypeSet(card) {
       const name = (card.name || "").trim().toLowerCase();
       const type = (card.type || "").trim().toLowerCase();
-      const setName = (card.setName || "").trim().toLowerCase();
+      const setNameSource =
+        card.setName ||
+        (Array.isArray(card.prints) && card.prints.length
+          ? (card.prints[0].setId || "")
+          : "");
+      const setName = setNameSource.trim().toLowerCase();
       return `${name}__${type}__${setName}`;
     }
 
@@ -1242,7 +1295,7 @@
         extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
       }
 
-      // Build prints from currentSinglePrints + primary fields
+      // Build prints from currentSinglePrints
       let prints = Array.isArray(AppState.currentSinglePrints)
         ? AppState.currentSinglePrints.map(p => ({
             setId: (p.setId || "").trim(),
@@ -1250,23 +1303,15 @@
           }))
         : [];
 
-      const primarySetId = setName;
-      const primaryCardNumber = cardNumber;
-
-      if (primarySetId || primaryCardNumber) {
-        if (!prints.length) {
-          prints.push({ setId: primarySetId, cardNumber: primaryCardNumber });
-        } else {
-          prints[0] = { setId: primarySetId, cardNumber: primaryCardNumber };
-        }
-      }
+      const primarySetId = prints.length ? prints[0].setId : "";
+      const primaryCardNumber = prints.length ? prints[0].cardNumber : "";
 
       const card = {
         id: id || (requireId ? "" : "card-" + Math.random().toString(36).slice(2)),
         name,
         type,
-        setName,
-        cardNumber,
+        setName: primarySetId || setName,
+        cardNumber: primaryCardNumber || cardNumber,
         rarity,
         tags,
         notes,
@@ -1346,7 +1391,13 @@
         btn.textContent = "Remove";
         btn.addEventListener("click", () => {
           AppState.currentSinglePrints.splice(idx, 1);
+          // keep primary fields in sync with new first print (if any)
+          const first = AppState.currentSinglePrints[0] || { setId: "", cardNumber: "" };
+          Dom.cardSetNameInput.value = first.setId || "";
+          Dom.cardNumberInput.value = first.cardNumber || "";
+
           renderSinglePrints();
+          renderSinglePreview();
         });
 
         li.appendChild(span);
@@ -1355,6 +1406,11 @@
       });
 
       listEl.appendChild(ul);
+
+      // sync hidden primary fields with first print
+      const first = prints[0] || { setId: "", cardNumber: "" };
+      Dom.cardSetNameInput.value = first.setId || "";
+      Dom.cardNumberInput.value = first.cardNumber || "";
     }
 
     function resolvePrintSetId() {
@@ -1401,8 +1457,13 @@
     function handleClearAllPrints() {
       if (!AppState.currentSinglePrints.length) return;
       if (!confirm("Clear all prints for this card?")) return;
+
       AppState.currentSinglePrints = [];
+      Dom.cardSetNameInput.value = "";
+      Dom.cardNumberInput.value = "";
+
       renderSinglePrints();
+      renderSinglePreview();
     }
 
     async function loadCards() {
@@ -1533,7 +1594,7 @@
 
       if (!card.name || !card.type || !card.setName) {
         Dom.singleStatus.textContent =
-          "Name, Type, and Set Name are required to save.";
+          "Name, Type, and at least one Set/Print are required (use Set + Set Print).";
         Dom.singleStatus.className = "status small-note err";
         return;
       }
@@ -1665,162 +1726,157 @@
     }
 
     function normalizeCell(v) {
-      if (v == null) return "";
-      if (typeof v === "number") return String(v);
+      if (v === null || v === undefined) return "";
+      if (typeof v === "string") return v.trim();
       return String(v).trim();
     }
 
     function parseWorkbookToRows(workbook) {
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (!json.length) return [];
+
+      const headerRow = json[0].map(normalizeCell);
       const rows = [];
-      workbook.SheetNames.forEach(sheetName => {
-        const sheet = workbook.Sheets[sheetName];
-        if (!sheet) return;
-        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        if (!json || !json.length) return;
-        const headerRow = json[0].map(normalizeCell);
-        for (let i = 1; i < json.length; i++) {
-          const rowArr = json[i];
-          const rowObj = {};
-          headerRow.forEach((colName, colIdx) => {
-            if (!colName) return;
-            rowObj[colName] = normalizeCell(rowArr[colIdx]);
-          });
-          rowObj._sheet = sheetName;
-          rowObj._rowIndex = i + 1;
-          rows.push(rowObj);
+      for (let i = 1; i < json.length; i++) {
+        const rowArr = json[i];
+        if (!rowArr.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== "")) {
+          continue;
         }
-      });
+        const obj = {};
+        headerRow.forEach((h, idx) => {
+          if (!h) return;
+          obj[h] = normalizeCell(rowArr[idx]);
+        });
+        obj._rowIndex = i + 1;
+        obj._rowId = "row-" + i;
+        rows.push(obj);
+      }
       return rows;
     }
 
     function mapRowToCard(row) {
-      const name = row["Name"] || row["Card Name"] || "";
-      const type = row["Type"] || "";
-      const setName = row["Set"] || row["Set Name"] || "";
-      const cardNumber = row["Card #"] || row["Card Number"] || "";
-      const rarity = row["Rarity"] || "";
-      const vehicleTypesStr =
-        row["Vehicle Types"] || row["Vehicle Type"] || row["VehicleType"] || "";
-      const tagsStr = row["Tags"] || "";
-      const imageUrl = row["Image URL"] || row["Image"] || "";
+      const name = row.Name || row.CardName || "";
+      const type = row.Type || "";
+      const setName = row.Set || row.SetName || "";
+      const cardNumber = row.CardNumber || row.No || "";
+      const rarity = row.Rarity || "";
+      const imageUrl = row.ImageUrl || row.Image || "";
+      const notes = row.Notes || row.Rules || "";
+      const tagsStr = row.Tags || "";
+      const vehicleTypesStr = row.VehicleTypes || "";
+      const vehStatsStr = row.VehicleStats || "";
+      const modBasePart = row.ModBasePart || row.BasePart || "";
+      const modL1 = row.ModL1 || "";
+      const modL2 = row.ModL2 || "";
+      const modL3 = row.ModL3 || "";
+      const modL4 = row.ModL4 || "";
 
-      const notes =
-        row["Rules"] ||
-        row["Rules Text"] ||
-        row["Text"] ||
-        row["Effect"] ||
-        "";
-
-      const vehTypes = parseVehicleTypes(vehicleTypesStr);
       const tags = parseTags(tagsStr);
+      const vehicleTypes = parseVehicleTypes(vehicleTypesStr);
 
-      const modBase = row["Mod Base"] || row["Base Part"] || "";
-      const modL1 = row["L1"] || row["Level 1"] || "";
-      const modL2 = row["L2"] || row["Level 2"] || "";
-      const modL3 = row["L3"] || row["Level 3"] || "";
-      const modL4 = row["L4"] || row["Level 4"] || "";
-
-      const hpConStr =
-        row["HP/CON"] ||
-        row["HP_CON"] ||
-        row["HP-CON"] ||
-        row["HP CON"] ||
-        "";
-      const hpCon = parseHpCon(hpConStr);
+      const vehStats = parseHpCon(vehStatsStr);
 
       let extra = {};
-
       if (type === "Mod") {
-        extra.modBasePart = modBase || undefined;
+        extra.modBasePart = modBasePart || undefined;
         extra.modLevel1 = modL1 || undefined;
         extra.modLevel2 = modL2 || undefined;
         extra.modLevel3 = modL3 || undefined;
         extra.modLevel4 = modL4 || undefined;
       }
-
       if (type === "Vehicle" || type === "Named Vehicle") {
-        extra.hp = hpCon.hp !== undefined ? hpCon.hp : extra.hp;
-        extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
+        extra.hp = vehStats.hp !== undefined ? vehStats.hp : extra.hp;
+        extra.con = vehStats.con !== undefined ? vehStats.con : extra.con;
       }
 
       const prints = [];
       if (setName || cardNumber) {
-        prints.push({ setId: setName, cardNumber });
+        prints.push({
+          setId: setName,
+          cardNumber
+        });
       }
 
-      return {
-        id: "tmp-" + Math.random().toString(36).slice(2),
+      const card = {
+        id: "",
         name,
         type,
         setName,
         cardNumber,
         rarity,
-        vehicleTypes: vehTypes,
         tags,
-        imageUrl,
         notes,
+        imageUrl,
         extra,
+        vehicleTypes,
         prints
       };
+
+      card._bulkSource = row;
+      return card;
     }
 
     function renderBulkTable() {
-      const tableEl = Dom.bulkTable;
-      tableEl.innerHTML = "";
+      const container = Dom.bulkTable;
+      container.innerHTML = "";
 
-      const rows = AppState.bulkRows;
-      if (!rows.length) {
-        tableEl.innerHTML = "<div class='small-note' style='padding:0.35rem;'>No rows loaded yet.</div>";
-        Dom.bulkStep2Status.textContent = "";
+      if (!AppState.bulkRows.length) {
+        container.innerHTML = "<div class='small-note' style='padding:0.35rem;'>No spreadsheet loaded.</div>";
         return;
       }
 
-      const fName = (Dom.bulkNameFilterInput.value || "").toLowerCase();
-      const fType = (Dom.bulkTypeFilterInput.value || "").toLowerCase();
-      const fSet = (Dom.bulkSetFilterInput.value || "").toLowerCase();
+      const nameFilter = (Dom.bulkNameFilterInput.value || "").trim().toLowerCase();
+      const typeFilter = (Dom.bulkTypeFilterInput.value || "").trim().toLowerCase();
+      const setFilter = (Dom.bulkSetFilterInput.value || "").trim().toLowerCase();
 
-      const visible = [];
+      let rows = AppState.bulkRows.slice();
+      if (nameFilter) {
+        rows = rows.filter(r =>
+          String(r.Name || r.CardName || "")
+            .toLowerCase()
+            .includes(nameFilter)
+        );
+      }
+      if (typeFilter) {
+        rows = rows.filter(r =>
+          String(r.Type || "")
+            .toLowerCase()
+            .includes(typeFilter)
+        );
+      }
+      if (setFilter) {
+        rows = rows.filter(r =>
+          String(r.Set || r.SetName || "")
+            .toLowerCase()
+            .includes(setFilter)
+        );
+      }
+
+      if (!rows.length) {
+        container.innerHTML = "<div class='small-note' style='padding:0.35rem;'>No rows match current filters.</div>";
+        return;
+      }
+
       rows.forEach(row => {
-        const name = (row.Name || row["Card Name"] || "").toLowerCase();
-        const type = (row.Type || "").toLowerCase();
-        const setName = (row.Set || row["Set Name"] || "").toLowerCase();
-
-        if (fName && !name.includes(fName)) return;
-        if (fType && !type.includes(fType)) return;
-        if (fSet && !setName.includes(fSet)) return;
-
-        visible.push(row);
-      });
-
-      const header = document.createElement("div");
-      header.className = "bulk-row";
-      header.innerHTML = `
-        <span></span>
-        <span><strong>Name</strong></span>
-        <span><strong>Type</strong></span>
-        <span><strong>Set</strong></span>
-        <span><strong>Card #</strong></span>
-      `;
-      tableEl.appendChild(header);
-
-      visible.forEach((row, idx) => {
-        const id = row._id;
-        const selected = AppState.bulkSelectedRowIds.has(id);
         const rowEl = document.createElement("div");
         rowEl.className = "bulk-row";
-        if (selected) rowEl.classList.add("selected");
 
-        const name = row.Name || row["Card Name"] || "";
+        const rowId = row._rowId;
+        const isSelected = AppState.bulkSelectedRowIds.has(rowId);
+        if (isSelected) rowEl.classList.add("selected");
+
+        const name = row.Name || row.CardName || "";
         const type = row.Type || "";
-        const setName = row.Set || row["Set Name"] || "";
-        const cardNumber = row["Card #"] || row["Card Number"] || "";
+        const setName = row.Set || row.SetName || "";
+        const cardNumber = row.CardNumber || row.No || "";
 
-        const colSel = document.createElement("span");
-        colSel.innerHTML = selected ? "✅" : "⬜";
+        const colCheck = document.createElement("span");
+        colCheck.textContent = isSelected ? "✓" : "";
 
         const colName = document.createElement("span");
         colName.className = "truncate";
-        colName.textContent = name || "(No Name)";
+        colName.textContent = name || "(no name)";
 
         const colType = document.createElement("span");
         colType.className = "truncate";
@@ -1830,241 +1886,268 @@
         colSet.className = "truncate";
         colSet.textContent = setName;
 
-        const colNum = document.createElement("span");
-        colNum.className = "truncate";
-        colNum.textContent = cardNumber;
+        const colNo = document.createElement("span");
+        colNo.className = "truncate";
+        colNo.textContent = cardNumber;
 
-        rowEl.appendChild(colSel);
+        rowEl.appendChild(colCheck);
         rowEl.appendChild(colName);
         rowEl.appendChild(colType);
         rowEl.appendChild(colSet);
-        rowEl.appendChild(colNum);
+        rowEl.appendChild(colNo);
 
         rowEl.addEventListener("click", () => {
-          if (AppState.bulkSelectedRowIds.has(id)) {
-            AppState.bulkSelectedRowIds.delete(id);
+          if (AppState.bulkSelectedRowIds.has(rowId)) {
+            AppState.bulkSelectedRowIds.delete(rowId);
           } else {
-            AppState.bulkSelectedRowIds.add(id);
+            AppState.bulkSelectedRowIds.add(rowId);
           }
           renderBulkTable();
           renderBulkSelectionSummary();
         });
 
-        tableEl.appendChild(rowEl);
+        container.appendChild(rowEl);
       });
-
-      Dom.bulkStep2Status.textContent =
-        `Viewing ${visible.length} of ${rows.length} rows. Selected: ${AppState.bulkSelectedRowIds.size}.`;
-
-      renderBulkSelectionSummary();
     }
 
     function renderBulkSelectionSummary() {
-      const box = Dom.bulkSelectionSummary;
-      box.innerHTML = "";
+      const el = Dom.bulkSelectionSummary;
+      const total = AppState.bulkRows.length;
+      const selected = AppState.bulkSelectedRowIds.size;
+      el.textContent = `${selected} of ${total} row(s) selected.`;
+    }
 
-      if (!AppState.bulkSelectedRowIds.size) {
-        box.innerHTML = "<span class='small-note'>No rows selected.</span>";
-        return;
-      }
+    function handleBulkFileChange(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
 
-      const selectedRows = AppState.bulkRows.filter(r =>
-        AppState.bulkSelectedRowIds.has(r._id)
-      );
+      Dom.bulkStep1Status.textContent = "Reading file…";
+      Dom.bulkStep1Status.className = "small-note status";
 
-      const list = document.createElement("ul");
-      list.className = "small-note";
-
-      selectedRows.slice(0, 40).forEach(row => {
-        const li = document.createElement("li");
-        const name = row.Name || row["Card Name"] || "";
-        const type = row.Type || "";
-        const setName = row.Set || row["Set Name"] || "";
-        const cardNumber = row["Card #"] || row["Card Number"] || "";
-        li.textContent = `${name} [${type}] – ${setName} (${cardNumber || "no #"}), sheet ${row._sheet}, row ${row._rowIndex}`;
-        list.appendChild(li);
-      });
-
-      box.appendChild(list);
-
-      if (selectedRows.length > 40) {
-        const more = document.createElement("div");
-        more.className = "small-note";
-        more.textContent = `…and ${selectedRows.length - 40} more selected rows.`;
-        box.appendChild(more);
-      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: "array" });
+          const rows = parseWorkbookToRows(workbook);
+          AppState.bulkRows = rows;
+          AppState.bulkSelectedRowIds.clear();
+          Dom.bulkStep1Status.textContent = `Loaded ${rows.length} row(s) from ${file.name}.`;
+          Dom.bulkStep1Status.className = "small-note status ok";
+          renderBulkTable();
+          renderBulkSelectionSummary();
+        } catch (err) {
+          console.error(err);
+          Dom.bulkStep1Status.textContent = "Failed to parse spreadsheet.";
+          Dom.bulkStep1Status.className = "small-note status err";
+        }
+      };
+      reader.onerror = () => {
+        Dom.bulkStep1Status.textContent = "Failed to read file.";
+        Dom.bulkStep1Status.className = "small-note status err";
+      };
+      reader.readAsArrayBuffer(file);
     }
 
     function handleBulkSelectViewed() {
-      const fName = (Dom.bulkNameFilterInput.value || "").toLowerCase();
-      const fType = (Dom.bulkTypeFilterInput.value || "").toLowerCase();
-      const fSet = (Dom.bulkSetFilterInput.value || "").toLowerCase();
+      const nameFilter = (Dom.bulkNameFilterInput.value || "").trim().toLowerCase();
+      const typeFilter = (Dom.bulkTypeFilterInput.value || "").trim().toLowerCase();
+      const setFilter = (Dom.bulkSetFilterInput.value || "").trim().toLowerCase();
 
-      AppState.bulkRows.forEach(row => {
-        const name = (row.Name || row["Card Name"] || "").toLowerCase();
-        const type = (row.Type || "").toLowerCase();
-        const setName = (row.Set || row["Set Name"] || "").toLowerCase();
+      let rows = AppState.bulkRows.slice();
+      if (nameFilter) {
+        rows = rows.filter(r =>
+          String(r.Name || r.CardName || "")
+            .toLowerCase()
+            .includes(nameFilter)
+        );
+      }
+      if (typeFilter) {
+        rows = rows.filter(r =>
+          String(r.Type || "")
+            .toLowerCase()
+            .includes(typeFilter)
+        );
+      }
+      if (setFilter) {
+        rows = rows.filter(r =>
+          String(r.Set || r.SetName || "")
+            .toLowerCase()
+            .includes(setFilter)
+        );
+      }
 
-        if (fName && !name.includes(fName)) return;
-        if (fType && !type.includes(fType)) return;
-        if (fSet && !setName.includes(fSet)) return;
-
-        AppState.bulkSelectedRowIds.add(row._id);
-      });
-
+      rows.forEach(r => AppState.bulkSelectedRowIds.add(r._rowId));
       renderBulkTable();
+      renderBulkSelectionSummary();
     }
 
     function handleBulkClearViewed() {
-      const fName = (Dom.bulkNameFilterInput.value || "").toLowerCase();
-      const fType = (Dom.bulkTypeFilterInput.value || "").toLowerCase();
-      const fSet = (Dom.bulkSetFilterInput.value || "").toLowerCase();
+      const nameFilter = (Dom.bulkNameFilterInput.value || "").trim().toLowerCase();
+      const typeFilter = (Dom.bulkTypeFilterInput.value || "").trim().toLowerCase();
+      const setFilter = (Dom.bulkSetFilterInput.value || "").trim().toLowerCase();
 
-      AppState.bulkRows.forEach(row => {
-        const name = (row.Name || row["Card Name"] || "").toLowerCase();
-        const type = (row.Type || "").toLowerCase();
-        const setName = (row.Set || row["Set Name"] || "").toLowerCase();
+      let rows = AppState.bulkRows.slice();
+      if (nameFilter) {
+        rows = rows.filter(r =>
+          String(r.Name || r.CardName || "")
+            .toLowerCase()
+            .includes(nameFilter)
+        );
+      }
+      if (typeFilter) {
+        rows = rows.filter(r =>
+          String(r.Type || "")
+            .toLowerCase()
+            .includes(typeFilter)
+        );
+      }
+      if (setFilter) {
+        rows = rows.filter(r =>
+          String(r.Set || r.SetName || "")
+            .toLowerCase()
+            .includes(setFilter)
+        );
+      }
 
-        if (fName && !name.includes(fName)) return;
-        if (fType && !type.includes(fType)) return;
-        if (fSet && !setName.includes(fSet)) return;
-
-        AppState.bulkSelectedRowIds.delete(row._id);
-      });
-
+      rows.forEach(r => AppState.bulkSelectedRowIds.delete(r._rowId));
       renderBulkTable();
+      renderBulkSelectionSummary();
     }
 
     function handleBulkClearAll() {
       AppState.bulkSelectedRowIds.clear();
       renderBulkTable();
+      renderBulkSelectionSummary();
     }
 
-    function handleBulkApply() {
-      const mode = Dom.bulkUpdateModeSelect.value || "update";
-      const selectedRows = AppState.bulkRows.filter(r =>
-        AppState.bulkSelectedRowIds.has(r._id)
-      );
-      if (!selectedRows.length) {
+    function applyBulkToLibrary() {
+      const selectedRowIds = Array.from(AppState.bulkSelectedRowIds);
+      if (!selectedRowIds.length) {
         Dom.bulkStep3Status.textContent = "No rows selected.";
-        Dom.bulkStep3Status.className = "status small-note err";
+        Dom.bulkStep3Status.className = "small-note status err";
         return;
       }
 
-      let updates = 0;
-      let creates = 0;
-      let skipped = 0;
+      const mode = Dom.bulkUpdateModeSelect.value;
 
-      selectedRows.forEach(row => {
-        const newCard = mapRowToCard(row);
-        const key = normalizeNameTypeSet(newCard);
+      const selectedRows = AppState.bulkRows.filter(r => selectedRowIds.includes(r._rowId));
+      const cardsFromRows = selectedRows.map(mapRowToCard);
 
-        let existingIndex = -1;
-        for (let i = 0; i < AppState.cards.length; i++) {
-          const c = AppState.cards[i];
-          if (normalizeNameTypeSet(c) === key) {
-            existingIndex = i;
-            break;
+      if (mode === "replace-all") {
+        if (!confirm("Replace entire in-memory library with selected rows?")) return;
+        AppState.cards = cardsFromRows.map(c => {
+          c.id = c.id || "card-" + Math.random().toString(36).slice(2);
+          return c;
+        });
+        AppState.cardsById = {};
+        AppState.cards.forEach(c => {
+          AppState.cardsById[c.id] = c;
+        });
+        Dom.bulkStep3Status.textContent = `Replaced library with ${AppState.cards.length} card(s).`;
+        Dom.bulkStep3Status.className = "small-note status ok";
+        renderCardLibraryList();
+        return;
+      }
+
+      if (mode === "insert-only") {
+        let inserted = 0;
+        cardsFromRows.forEach(c => {
+          const key = normalizeNameTypeSet(c);
+          const existingIndex = AppState.cards.findIndex(ex => normalizeNameTypeSet(ex) === key);
+          if (existingIndex === -1) {
+            c.id = "card-" + Math.random().toString(36).slice(2);
+            AppState.cards.push(c);
+            AppState.cardsById[c.id] = c;
+            inserted++;
           }
-        }
+        });
+        Dom.bulkStep3Status.textContent = `Inserted ${inserted} new card(s). Skipped duplicates.`;
+        Dom.bulkStep3Status.className = "small-note status ok";
+        renderCardLibraryList();
+        return;
+      }
 
-        const hasExisting = existingIndex !== -1;
-        if (mode === "updateOnly" && !hasExisting) {
-          skipped++;
-          return;
-        }
-        if (mode === "createOnly" && hasExisting) {
-          skipped++;
-          return;
-        }
-
-        if (hasExisting) {
-          const existing = AppState.cards[existingIndex];
-          newCard.id = existing.id || newCard.id;
-          AppState.cards[existingIndex] = newCard;
-          AppState.cardsById[newCard.id] = newCard;
-          updates++;
+      let upserts = 0;
+      cardsFromRows.forEach(c => {
+        const key = normalizeNameTypeSet(c);
+        const idx = AppState.cards.findIndex(ex => normalizeNameTypeSet(ex) === key);
+        if (idx === -1) {
+          c.id = "card-" + Math.random().toString(36).slice(2);
+          AppState.cards.push(c);
+          AppState.cardsById[c.id] = c;
         } else {
-          AppState.cards.push(newCard);
-          AppState.cardsById[newCard.id] = newCard;
-          creates++;
+          c.id = AppState.cards[idx].id || "card-" + Math.random().toString(36).slice(2);
+          AppState.cards[idx] = c;
+          AppState.cardsById[c.id] = c;
         }
+        upserts++;
       });
-
-      Dom.bulkStep3Status.textContent =
-        `Applied ${selectedRows.length} rows → ${updates} updated, ${creates} created, ${skipped} skipped.`;
-      Dom.bulkStep3Status.className = "status small-note ok";
+      Dom.bulkStep3Status.textContent = `Applied ${upserts} upsert(s) to library.`;
+      Dom.bulkStep3Status.className = "small-note status ok";
       renderCardLibraryList();
     }
 
     function initBulk() {
-      Dom.bulkFileInput.addEventListener("change", async evt => {
-        const file = evt.target.files && evt.target.files[0];
-        if (!file) return;
-        Dom.bulkStep1Status.textContent = "Reading file…";
-        Dom.bulkStep1Status.className = "status small-note";
-
-        try {
-          const data = await file.arrayBuffer();
-          const wb = XLSX.read(data, { type: "array" });
-          const rows = parseWorkbookToRows(wb);
-          rows.forEach((row, idx) => {
-            row._id = "row-" + idx + "-" + Math.random().toString(36).slice(2);
-          });
-          AppState.bulkRows = rows;
-          AppState.bulkSelectedRowIds.clear();
-          Dom.bulkStep1Status.textContent = `Loaded ${rows.length} rows from workbook(s).`;
-          Dom.bulkStep1Status.className = "status small-note ok";
-
-          renderBulkTable();
-        } catch (e) {
-          console.error(e);
-          Dom.bulkStep1Status.textContent = "Failed to load file.";
-          Dom.bulkStep1Status.className = "status small-note err";
-        }
-      });
+      Dom.bulkFileInput.addEventListener("change", handleBulkFileChange);
 
       [
-        Dom.bulkNameFilterInput,
+        Dom.bulkSetFilterInput,
         Dom.bulkTypeFilterInput,
-        Dom.bulkSetFilterInput
-      ].forEach(el => {
-        el.addEventListener("input", renderBulkTable);
+        Dom.bulkNameFilterInput
+      ].forEach(input => {
+        input.addEventListener("input", () => {
+          renderBulkTable();
+          renderBulkSelectionSummary();
+        });
       });
 
       Dom.bulkSelectViewedBtn.addEventListener("click", handleBulkSelectViewed);
       Dom.bulkClearViewedBtn.addEventListener("click", handleBulkClearViewed);
       Dom.bulkClearAllBtn.addEventListener("click", handleBulkClearAll);
-      Dom.bulkApplyBtn.addEventListener("click", handleBulkApply);
+      Dom.bulkApplyBtn.addEventListener("click", applyBulkToLibrary);
 
       Dom.downloadCardsJsonBtn_bulk.addEventListener("click", () => {
         downloadJson("drive-card.json", AppState.cards.map(cardToJson));
       });
     }
 
+    function downloadJson(filename, data) {
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
     function renderPreconList() {
       const listEl = Dom.preconList;
       listEl.innerHTML = "";
 
-      const precons = AppState.precons.slice().sort((a, b) =>
-        (a.name || "").localeCompare(b.name || "")
-      );
+      if (!AppState.precons.length) {
+        listEl.innerHTML = "<div class='small-note' style='padding:0.35rem;'>No precons loaded.</div>";
+        return;
+      }
 
-      precons.forEach(precon => {
+      AppState.precons.forEach(precon => {
         const row = document.createElement("div");
         row.className = "precon-row";
         if (precon.id === AppState.selectedPreconId) row.classList.add("selected");
 
-        const nameEl = document.createElement("span");
-        nameEl.className = "precon-row-title";
-        nameEl.textContent = precon.name || "(Unnamed precon)";
+        const title = document.createElement("span");
+        title.className = "precon-row-title";
+        title.textContent = precon.name || "(Untitled)";
 
-        const countEl = document.createElement("span");
-        const total = (precon.cards || []).reduce((sum, c) => sum + (c.count || 0), 0);
-        countEl.textContent = `${total} cards`;
+        const count = document.createElement("span");
+        count.textContent = `${(precon.cards || []).length} cards`;
 
-        row.appendChild(nameEl);
-        row.appendChild(countEl);
+        row.appendChild(title);
+        row.appendChild(count);
 
         row.addEventListener("click", () => {
           AppState.selectedPreconId = precon.id;
@@ -2075,176 +2158,105 @@
         listEl.appendChild(row);
       });
 
-      Dom.preconListStatus.textContent =
-        `Total precons: ${precons.length}`;
+      Dom.preconListStatus.textContent = `${AppState.precons.length} precon(s) loaded.`;
+      Dom.preconListStatus.className = "small-note status";
     }
 
     function fillPreconDetails(precon) {
-      Dom.preconIdInput.value = precon.id || "";
-      Dom.preconNameInput.value = precon.name || "";
-      Dom.preconDescriptionInput.value = precon.description || "";
-      renderPreconCards(precon.cards || []);
-    }
-
-    function collectPreconFromInputs() {
-      const id = Dom.preconIdInput.value.trim() || ("precon-" + Math.random().toString(36).slice(2));
-      const name = Dom.preconNameInput.value.trim() || "(Unnamed precon)";
-      const description = Dom.preconDescriptionInput.value.trim();
-
-      let cards = [];
-      const rows = Dom.preconCardsList.querySelectorAll("[data-card-id]");
-      rows.forEach(row => {
-        const cardId = row.getAttribute("data-card-id");
-        const countInput = row.querySelector("input[type='number']");
-        const count = Number(countInput.value) || 0;
-        if (cardId && count > 0) {
-          cards.push({ cardId, count });
-        }
-      });
-
-      return { id, name, description, cards };
-    }
-
-    function renderPreconCards(cards) {
-      const listEl = Dom.preconCardsList;
-      listEl.innerHTML = "";
-
-      if (!cards.length) {
-        listEl.innerHTML = "<div class='small-note' style='padding:0.3rem;'>No cards in this precon yet.</div>";
+      if (!precon) {
+        Dom.preconIdInput.value = "";
+        Dom.preconNameInput.value = "";
+        Dom.preconDescriptionInput.value = "";
+        Dom.preconCardsList.innerHTML = "No precon selected.";
         return;
       }
 
-      cards.forEach(entry => {
-        const card = AppState.cardsById[entry.cardId];
-        const row = document.createElement("div");
-        row.className = "precon-row";
-        row.setAttribute("data-card-id", entry.cardId);
+      Dom.preconIdInput.value = precon.id || "";
+      Dom.preconNameInput.value = precon.name || "";
+      Dom.preconDescriptionInput.value = precon.description || "";
 
-        const left = document.createElement("span");
-        left.className = "precon-row-title";
-        left.textContent = card ? card.name : `(Unknown id: ${entry.cardId})`;
-
-        const right = document.createElement("span");
-        const input = document.createElement("input");
-        input.type = "number";
-        input.min = "0";
-        input.value = entry.count || 0;
-        input.style.width = "3rem";
-        input.addEventListener("change", () => {
-          entry.count = Number(input.value) || 0;
-        });
-        right.appendChild(input);
-
-        row.appendChild(left);
-        row.appendChild(right);
-
-        listEl.appendChild(row);
-      });
-    }
-
-    async function loadPrecons() {
-      try {
-        const res = await fetch("drive-precons.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("drive-precons.json is not an array.");
-        AppState.precons = data.map(p => ({
-          id: p.id || ("precon-" + Math.random().toString(36).slice(2)),
-          name: p.name || "",
-          description: p.description || "",
-          cards: Array.isArray(p.cards) ? p.cards.map(c => ({ cardId: c.cardId, count: c.count || 0 })) : []
-        }));
-      } catch (e) {
-        console.warn("Could not fetch drive-precons.json, starting empty:", e);
-        AppState.precons = [];
+      const cards = precon.cards || [];
+      if (!cards.length) {
+        Dom.preconCardsList.innerHTML = "No cards in this precon.";
+        return;
       }
-      renderPreconList();
+
+      const ul = document.createElement("ul");
+      ul.className = "small-note";
+      cards.forEach((pc, idx) => {
+        const li = document.createElement("li");
+        const card = AppState.cardsById[pc.cardId];
+        const label = card
+          ? `${card.name} (${card.setName || ""} ${card.cardNumber || ""}) – x${pc.count}`
+          : `Unknown card id ${pc.cardId} – x${pc.count}`;
+        li.textContent = label;
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "button secondary small";
+        removeBtn.style.marginLeft = "0.4rem";
+        removeBtn.textContent = "Remove";
+        removeBtn.addEventListener("click", () => {
+          precon.cards.splice(idx, 1);
+          fillPreconDetails(precon);
+        });
+        li.appendChild(removeBtn);
+        ul.appendChild(li);
+      });
+      Dom.preconCardsList.innerHTML = "";
+      Dom.preconCardsList.appendChild(ul);
     }
 
     function handlePreconNew() {
+      const id = "precon-" + Math.random().toString(36).slice(2);
       const precon = {
-        id: "precon-" + Math.random().toString(36).slice(2),
-        name: "",
+        id,
+        name: "New Precon",
         description: "",
         cards: []
       };
       AppState.precons.push(precon);
-      AppState.selectedPreconId = precon.id;
+      AppState.selectedPreconId = id;
       fillPreconDetails(precon);
       renderPreconList();
-      Dom.preconStatus.textContent = "New precon created in-memory.";
-      Dom.preconStatus.className = "status small-note ok";
+      Dom.preconStatus.textContent = "Created new precon.";
+      Dom.preconStatus.className = "small-note status ok";
     }
 
     function handlePreconDelete() {
-      const id = AppState.selectedPreconId;
-      if (!id) {
+      if (!AppState.selectedPreconId) {
         Dom.preconStatus.textContent = "No precon selected.";
-        Dom.preconStatus.className = "status small-note err";
+        Dom.preconStatus.className = "small-note status err";
         return;
       }
-      if (!confirm("Delete this precon from in-memory list?")) return;
-      AppState.precons = AppState.precons.filter(p => p.id !== id);
+      if (!confirm("Delete this precon?")) return;
+      AppState.precons = AppState.precons.filter(p => p.id !== AppState.selectedPreconId);
       AppState.selectedPreconId = null;
-      Dom.preconIdInput.value = "";
-      Dom.preconNameInput.value = "";
-      Dom.preconDescriptionInput.value = "";
-      Dom.preconCardsList.innerHTML = "";
+      fillPreconDetails(null);
       renderPreconList();
-      Dom.preconStatus.textContent = "Precon deleted from in-memory list.";
-      Dom.preconStatus.className = "status small-note ok";
+      Dom.preconStatus.textContent = "Precon deleted.";
+      Dom.preconStatus.className = "small-note status ok";
     }
 
     function handlePreconSave() {
-      const precon = collectPreconFromInputs();
-      const idx = AppState.precons.findIndex(p => p.id === precon.id);
-      if (idx === -1) {
-        AppState.precons.push(precon);
-      } else {
-        AppState.precons[idx] = precon;
+      const id = Dom.preconIdInput.value.trim();
+      if (!id) {
+        Dom.preconStatus.textContent = "No precon id to save.";
+        Dom.preconStatus.className = "small-note status err";
+        return;
       }
-      AppState.selectedPreconId = precon.id;
+      const precon = AppState.precons.find(p => p.id === id);
+      if (!precon) {
+        Dom.preconStatus.textContent = "Precon not found in memory.";
+        Dom.preconStatus.className = "small-note status err";
+        return;
+      }
+
+      precon.name = Dom.preconNameInput.value.trim();
+      precon.description = Dom.preconDescriptionInput.value.trim();
+
       renderPreconList();
-      Dom.preconStatus.textContent = "Precon saved in-memory.";
-      Dom.preconStatus.className = "status small-note ok";
-    }
-
-    function handlePreconFileLoad(evt) {
-      const file = evt.target.files && evt.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!Array.isArray(data)) throw new Error("JSON is not an array.");
-          AppState.precons = data.map(p => ({
-            id: p.id || ("precon-" + Math.random().toString(36).slice(2)),
-            name: p.name || "",
-            description: p.description || "",
-            cards: Array.isArray(p.cards) ? p.cards.map(c => ({ cardId: c.cardId, count: c.count || 0 })) : []
-          }));
-          renderPreconList();
-          Dom.preconStatus.textContent = "Loaded precons from file into memory.";
-          Dom.preconStatus.className = "status small-note ok";
-        } catch (err) {
-          console.error(err);
-          Dom.preconStatus.textContent = "Failed to parse precons file.";
-          Dom.preconStatus.className = "status small-note err";
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    function downloadJson(filename, data) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      Dom.preconStatus.textContent = "Precon updated.";
+      Dom.preconStatus.className = "small-note status ok";
     }
 
     function openModal() {
@@ -2263,89 +2275,132 @@
       listEl.innerHTML = "";
 
       const q = (Dom.modalSearchInput.value || "").trim().toLowerCase();
-      const cards = AppState.cards.slice().filter(c => {
-        if (!q) return true;
-        const text = [
-          c.name,
-          c.type,
-          c.setName,
-          c.rarity,
-          (c.tags || []).join(",")
-        ]
-          .join(" | ")
-          .toLowerCase();
-        return text.includes(q);
-      });
+      let cards = AppState.cards.slice();
+      if (q) {
+        cards = cards.filter(c => {
+          const text = [
+            c.name,
+            c.type,
+            c.setName,
+            c.cardNumber
+          ]
+            .join(" | ")
+            .toLowerCase();
+          return text.includes(q);
+        });
+      }
 
-      cards.sort((a, b) =>
-        (a.name || "").localeCompare(b.name || "")
-      );
+      if (!cards.length) {
+        listEl.innerHTML = "<div class='small-note' style='padding:0.35rem;'>No cards match.</div>";
+        return;
+      }
 
       cards.forEach(card => {
         const row = document.createElement("div");
         row.className = "precon-row";
-        row.setAttribute("data-card-id", card.id);
 
-        const nameEl = document.createElement("span");
-        nameEl.className = "precon-row-title";
-        nameEl.textContent = `${card.name} [${card.type}] – ${card.setName}`;
+        const title = document.createElement("span");
+        title.className = "precon-row-title";
+        title.textContent = card.name || "(No Name)";
 
-        const rarityEl = document.createElement("span");
-        rarityEl.textContent = card.rarity || "";
+        const meta = document.createElement("span");
+        meta.textContent = `${card.type || ""} – ${card.setName || ""} ${card.cardNumber || ""}`;
 
-        row.appendChild(nameEl);
-        row.appendChild(rarityEl);
+        row.appendChild(title);
+        row.appendChild(meta);
 
         row.addEventListener("click", () => {
-          const current = collectPreconFromInputs();
-          const existing = current.cards.find(c => c.cardId === card.id);
-          if (existing) {
-            existing.count = (existing.count || 0) + 1;
-          } else {
-            current.cards.push({ cardId: card.id, count: 1 });
-          }
-          fillPreconDetails(current);
+          addCardToCurrentPrecon(card);
+          closeModal();
         });
 
         listEl.appendChild(row);
       });
     }
 
+    function addCardToCurrentPrecon(card) {
+      if (!AppState.selectedPreconId) {
+        Dom.preconStatus.textContent = "No precon selected.";
+        Dom.preconStatus.className = "small-note status err";
+        return;
+      }
+      const precon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
+      if (!precon) {
+        Dom.preconStatus.textContent = "Precon not found.";
+        Dom.preconStatus.className = "small-note status err";
+        return;
+      }
+
+      const existing = precon.cards.find(pc => pc.cardId === card.id);
+      if (existing) {
+        existing.count = (existing.count || 1) + 1;
+      } else {
+        precon.cards.push({
+          cardId: card.id,
+          count: 1
+        });
+      }
+      fillPreconDetails(precon);
+      Dom.preconStatus.textContent = "Added card to precon.";
+      Dom.preconStatus.className = "small-note status ok";
+    }
+
+    function handlePreconFileChange(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const json = JSON.parse(e.target.result);
+          if (!Array.isArray(json)) throw new Error("Expected an array.");
+          AppState.precons = json;
+          AppState.selectedPreconId = null;
+          fillPreconDetails(null);
+          renderPreconList();
+          Dom.preconListStatus.textContent = `Loaded ${json.length} precon(s) from file.`;
+          Dom.preconListStatus.className = "small-note status ok";
+        } catch (err) {
+          console.error(err);
+          Dom.preconListStatus.textContent = "Failed to parse precons JSON.";
+          Dom.preconListStatus.className = "small-note status err";
+        }
+      };
+      reader.onerror = () => {
+        Dom.preconListStatus.textContent = "Failed to read precons file.";
+        Dom.preconListStatus.className = "small-note status err";
+      };
+      reader.readAsText(file);
+    }
+
     function initPrecons() {
       Dom.preconNewBtn.addEventListener("click", handlePreconNew);
       Dom.preconDeleteBtn.addEventListener("click", handlePreconDelete);
       Dom.preconSaveBtn.addEventListener("click", handlePreconSave);
-      Dom.preconFileInput.addEventListener("change", handlePreconFileLoad);
+      Dom.preconAddCardBtn.addEventListener("click", openModal);
+      Dom.preconFileInput.addEventListener("change", handlePreconFileChange);
+
       Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
         downloadJson("drive-precons.json", AppState.precons);
       });
-      Dom.preconAddCardBtn.addEventListener("click", openModal);
+
+      Dom.modalCloseBtn.addEventListener("click", closeModal);
+      Dom.modalBackdrop.addEventListener("click", evt => {
+        if (evt.target === Dom.modalBackdrop) closeModal();
+      });
       Dom.modalSearchInput.addEventListener("input", renderModalCardList);
     }
 
-    function initModal() {
-      Dom.modalCloseBtn.addEventListener("click", closeModal);
-      Dom.modalBackdrop.addEventListener("click", e => {
-        if (e.target === Dom.modalBackdrop) {
-          closeModal();
-        }
-      });
-    }
-
-    (async function init() {
+    document.addEventListener("DOMContentLoaded", () => {
       initNav();
       initSingleEditor();
       initBulk();
       initPrecons();
-      initModal();
-
-      await loadCards();
+      loadCards();
       renderSinglePreview();
-      renderCardLibraryList();
-      await loadPrecons();
-
-      showSection("single");
-    })();
+      renderSinglePrints();
+      renderPreconList();
+    });
   </script>
 </body>
 </html>
