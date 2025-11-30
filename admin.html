@@ -539,4 +539,1505 @@
               </div>
               <div class="field hidden-set-basic">
                 <label for="cardNumberInput">Card Number (primary print)</label>
-                <input i
+                <input id="cardNumberInput" type="text" placeholder="01-001" />
+              </div>
+              <div class="field">
+                <label for="cardRarityInput">Rarity</label>
+                <input id="cardRarityInput" type="text" placeholder="Common / Rare / Promo…" />
+              </div>
+              <div class="field" data-for-types="Track,Vehicle,Named Vehicle">
+                <label for="cardVehicleTypesInput">Vehicle Types (comma separated)</label>
+                <input id="cardVehicleTypesInput" type="text" placeholder="Drag, Drift…" />
+              </div>
+              <div class="field">
+                <label for="cardTagsInput">Tags (comma separated)</label>
+                <input id="cardTagsInput" type="text" placeholder="Junkyard, Starter Deck…" />
+              </div>
+              <div class="field">
+                <label for="cardImageUrlInput">Image URL</label>
+                <input id="cardImageUrlInput" type="text" placeholder="images/Set1/DANNYS_GTS-4.png" />
+              </div>
+            </div>
+
+            <h3>Prints (Sets / Card Numbers)</h3>
+            <div class="field-grid">
+              <div class="field">
+                <label for="printSetSelect">Set</label>
+                <select id="printSetSelect">
+                  <option value="">– Select –</option>
+                  <option value="SET 1">SET 1</option>
+                  <option value="SET 2">SET 2</option>
+                  <option value="SET 3">SET 3</option>
+                  <option value="SET 4">SET 4</option>
+                  <option value="SET 5">SET 5</option>
+                  <option value="CUSTOM">Custom…</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="printCustomSetInput">Custom Set Name (if 'Custom')</label>
+                <input id="printCustomSetInput" type="text" placeholder="Father's Day Mini, Promo, etc." />
+              </div>
+              <div class="field">
+                <label for="printCardNumberInput">Card Number</label>
+                <input id="printCardNumberInput" type="text" placeholder="01-001" />
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button id="printSetPrimaryBtn" class="btn small secondary" type="button">
+                  <span class="icon">➕</span> Add / Update Print
+                </button>
+              </div>
+            </div>
+
+            <div class="panel" style="margin-top:0.5rem;padding:0.4rem 0.5rem;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+                <div style="font-size:0.75rem;opacity:0.85;">
+                  <strong>Print History for this Card</strong>
+                  <div style="opacity:0.8;">Control which Sets & serials this card appears in.</div>
+                </div>
+                <button id="printClearAllBtn" class="btn small danger" type="button">
+                  <span class="icon">🧹</span> Clear All Prints
+                </button>
+              </div>
+              <div id="printsList" style="margin-top:0.4rem;font-size:0.75rem;border-radius:0.5rem;border:1px solid #111827;background:rgba(15,23,42,0.85);max-height:140px;overflow:auto;padding:0.25rem 0.35rem;"></div>
+            </div>
+
+            <h3>Type-Specific Fields</h3>
+            <div class="field-grid">
+              <!-- Mods -->
+              <div class="field" data-for-types="Mod">
+                <label for="modBasePartInput">Mod – Base Part</label>
+                <input id="modBasePartInput" type="text" placeholder="Engine / Tires / Suspension…" />
+              </div>
+              <div class="field" data-for-types="Mod">
+                <label for="modL1Input">Mod – Level 1</label>
+                <input id="modL1Input" type="text" placeholder="1/2 etc" />
+              </div>
+              <div class="field" data-for-types="Mod">
+                <label for="modL2Input">Mod – Level 2</label>
+                <input id="modL2Input" type="text" placeholder="2/2 etc" />
+              </div>
+              <div class="field" data-for-types="Mod">
+                <label for="modL3Input">Mod – Level 3</label>
+                <input id="modL3Input" type="text" placeholder="3/3 etc" />
+              </div>
+              <div class="field" data-for-types="Mod">
+                <label for="modL4Input">Mod – Level 4</label>
+                <input id="modL4Input" type="text" placeholder="5/3 etc" />
+              </div>
+
+              <!-- Vehicles -->
+              <div class="field" data-for-types="Vehicle,Named Vehicle">
+                <label for="vehicleHpConInput">Vehicle – HP/CON</label>
+                <input id="vehicleHpConInput" type="text" placeholder="10/4 etc" />
+              </div>
+              <div class="field" data-for-types="Vehicle,Named Vehicle">
+                <label for="vehiclePitCostInput">Vehicle – Pit Cost</label>
+                <input id="vehiclePitCostInput" type="text" placeholder="3 etc" />
+              </div>
+            </div>
+
+            <h3>Card Rules / Trait Text</h3>
+            <div class="field">
+              <label for="cardNotesInput">Rules / Trait / Reminder Text</label>
+              <textarea id="cardNotesInput" placeholder="Card ability text, Crew Trait, Vehicle Trait, etc."></textarea>
+            </div>
+
+            <div class="btn-row">
+              <button id="singleSaveBtn" class="btn primary" type="button">
+                <span class="icon">💾</span> Save / Update in Library
+              </button>
+              <button id="singleNewBtn" class="btn secondary" type="button">
+                <span class="icon">✨</span> New Card
+              </button>
+              <button id="singleDeleteBtn" class="btn danger" type="button">
+                <span class="icon">🗑️</span> Delete Card
+              </button>
+              <button id="downloadCardsJsonBtn_single" class="btn small secondary" type="button">
+                <span class="icon">⬇️</span> Download drive-card.json
+              </button>
+            </div>
+            <div id="singleStatus" class="status-line"></div>
+          </div>
+
+          <div class="panel">
+            <h2><span class="icon">👁️</span> Live Card Preview</h2>
+            <div class="preview-card" id="singlePreview"></div>
+
+            <div class="library-panel">
+              <div class="library-header">
+                <span style="opacity:0.9;">Card Library</span>
+                <input id="cardLibrarySearchInput" type="text" placeholder="Search by name, type, set, tags…" />
+              </div>
+              <div id="cardLibraryList" class="library-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BULK IMPORT SECTION -->
+      <section id="bulkSection">
+        <div class="panel">
+          <h2><span class="icon">📥</span> Bulk Import from Excel / CSV</h2>
+          <p style="font-size:0.8rem;opacity:0.9;">
+            Paste rows from your Excel sheet (Crew, Mods, Drivers, Vehicles, Tracks, Conditions, Misc).
+            The tool will try to map columns based on header names (e.g., “Crew Name”, “Vehicle Type”, “Mod Name”, etc.).
+          </p>
+
+          <div class="bulk-layout">
+            <div>
+              <label class="section-title" for="bulkInput">
+                <span class="icon">🧾</span> Raw Spreadsheet Data
+              </label>
+              <textarea id="bulkInput" class="bulk-textarea" placeholder="Paste from Excel here…"></textarea>
+
+              <div class="field-grid" style="margin-top:0.5rem;">
+                <div class="field">
+                  <label for="bulkDelimiterSelect">Delimiter</label>
+                  <select id="bulkDelimiterSelect">
+                    <option value="tab">Tab (Excel/TSV)</option>
+                    <option value="comma">Comma (CSV)</option>
+                    <option value="semicolon">Semicolon</option>
+                    <option value="pipe">Pipe |</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="bulkHasHeaderCheckbox">
+                    <input id="bulkHasHeaderCheckbox" type="checkbox" checked /> First row is header
+                  </label>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button id="bulkParseBtn" class="btn secondary" type="button">
+                  <span class="icon">🔍</span> Parse Preview
+                </button>
+                <button id="bulkImportBtn" class="btn primary" type="button">
+                  <span class="icon">📤</span> Import into Library
+                </button>
+              </div>
+              <div id="bulkStatus" class="status-line"></div>
+            </div>
+
+            <div class="panel" style="margin:0;">
+              <h3 class="section-title"><span class="icon">👓</span> Parsed Preview</h3>
+              <div id="bulkPreview" style="max-height:320px;overflow:auto;font-size:0.75rem;border-radius:0.6rem;border:1px solid #111827;background:rgba(15,23,42,0.8);padding:0.35rem;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRECONS SECTION -->
+      <section id="preconsSection">
+        <div class="panel">
+          <h2><span class="icon">🧩</span> Preconstructed Decks</h2>
+          <p style="font-size:0.8rem;opacity:0.9;">
+            Define and export preconstructed decks using cards from the library. This reads from
+            <code>drive-precons.json</code> and lets you export updates.
+          </p>
+
+          <div class="precon-grid" id="preconGrid"></div>
+
+          <div class="btn-row">
+            <button id="downloadPreconsJsonBtn" class="btn small secondary" type="button">
+              <span class="icon">⬇️</span> Download drive-precons.json
+            </button>
+          </div>
+          <div id="preconsStatus" class="status-line"></div>
+        </div>
+      </section>
+
+      <!-- HELP / WORKFLOW SECTION -->
+      <section id="helpSection">
+        <div class="panel">
+          <h2><span class="icon">❓</span> Help & Workflow Notes</h2>
+
+          <h3 class="section-title"><span class="icon">1️⃣</span> Recommended Workflow</h3>
+          <ol class="help-list">
+            <li><strong>Build the master list of cards in Excel</strong> using the provided columns (Crew, Mods, Drivers, Tracks, Vehicles, Conditions, Misc).</li>
+            <li><strong>Use Bulk Import</strong> to paste ranges from each sheet. The admin will map columns like <em>Crew Name</em>, <em>Vehicle Type</em>, <em>Mod Name</em>, etc.</li>
+            <li><strong>Refine individual cards</strong> in the Single Card Editor (fix text, tags, images, cross-set prints).</li>
+            <li><strong>Download drive-card.json</strong> and drop it into the DRIVE app / GitHub viewer.</li>
+            <li><strong>Use Precons</strong> to define starter decks / junkyard precons, then export <code>drive-precons.json</code>.</li>
+          </ol>
+
+          <h3 class="section-title"><span class="icon">2️⃣</span> Column Mapping Tips</h3>
+          <ul class="help-list">
+            <li><strong>Crew / Driver / Named Driver / Condition:</strong> use columns like <em>Crew Name</em>, <em>Driver Name</em>, <em>Condition Name</em> plus a Trait/Effect column.</li>
+            <li><strong>Mods:</strong> <em>Mod Name</em>, <em>Mod TYPE</em>, <em>Base Part</em>, <em>Mod Ability</em>, and Lvl columns (1–4).</li>
+            <li><strong>Vehicles / Named Vehicles:</strong> <em>VEHICLE name</em>, <em>VEHICLE HP/CON</em>, <em>Vehicle Type</em>, <em>PIT COST</em>, and <em>TRAIT</em>.</li>
+            <li><strong>Tracks:</strong> <em>Track Name</em>, <em>Track Trait</em>, and <em>Vehicle Type</em>.</li>
+          </ul>
+
+          <h3 class="section-title"><span class="icon">3️⃣</span> Set & Print Logic</h3>
+          <ul class="help-list">
+            <li>The <strong>Prints</strong> block lets you define multiple Set / Card Number pairs for a single logical card.</li>
+            <li>Use <strong>SET 1–5</strong> from the dropdown for main sets, or choose <strong>Custom…</strong> for things like promos or mini-sets.</li>
+            <li>The hidden <em>Set Name</em> and <em>Card Number</em> fields in basics mirror the <em>primary</em> print and are kept for backward compatibility.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Simple modal for confirmations -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h3 id="modalTitle">Confirm</h3>
+      <div id="modalBody">Are you sure?</div>
+      <div class="modal-footer">
+        <button id="modalCancelBtn" class="btn small secondary" type="button">Cancel</button>
+        <button id="modalConfirmBtn" class="btn small primary" type="button">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /************************************************************
+     * Local backup keys (used as fallback if JSON files not found)
+     ************************************************************/
+    const STORAGE_KEYS = {
+      CARDS: "drive_admin_cards_json",
+      PRECONS: "drive_admin_precons_json"
+    };
+
+    function loadFromLocalStorage(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+      } catch (e) {
+        console.warn("Failed to parse localStorage for", key, e);
+        return fallback;
+      }
+    }
+
+    function saveToLocalStorage(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value, null, 2));
+      } catch (e) {
+        console.warn("Failed to save localStorage for", key, e);
+      }
+    }
+
+    /************************************************************
+     * Card / Precon Data Structures
+     ************************************************************/
+    const AppState = {
+      cards: [],
+      selectedCardId: null,
+      currentSinglePrints: [],
+      precons: []
+    };
+
+    const Dom = {
+      navSingleBtn: document.getElementById("navSingleBtn"),
+      navBulkBtn: document.getElementById("navBulkBtn"),
+      navPreconsBtn: document.getElementById("navPreconsBtn"),
+      navHelpBtn: document.getElementById("navHelpBtn"),
+
+      singleSection: document.getElementById("singleSection"),
+      bulkSection: document.getElementById("bulkSection"),
+      preconsSection: document.getElementById("preconsSection"),
+      helpSection: document.getElementById("helpSection"),
+
+      cardIdInput: document.getElementById("cardIdInput"),
+      cardNameInput: document.getElementById("cardNameInput"),
+      cardTypeInput: document.getElementById("cardTypeInput"),
+      cardSetNameInput: document.getElementById("cardSetNameInput"),
+      cardNumberInput: document.getElementById("cardNumberInput"),
+      cardRarityInput: document.getElementById("cardRarityInput"),
+      cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
+      cardTagsInput: document.getElementById("cardTagsInput"),
+      cardImageUrlInput: document.getElementById("cardImageUrlInput"),
+      modBasePartInput: document.getElementById("modBasePartInput"),
+      modL1Input: document.getElementById("modL1Input"),
+      modL2Input: document.getElementById("modL2Input"),
+      modL3Input: document.getElementById("modL3Input"),
+      modL4Input: document.getElementById("modL4Input"),
+      vehicleHpConInput: document.getElementById("vehicleHpConInput"),
+      vehiclePitCostInput: document.getElementById("vehiclePitCostInput"),
+      cardNotesInput: document.getElementById("cardNotesInput"),
+
+      printSetSelect: document.getElementById("printSetSelect"),
+      printCustomSetInput: document.getElementById("printCustomSetInput"),
+      printCardNumberInput: document.getElementById("printCardNumberInput"),
+      printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
+      printClearAllBtn: document.getElementById("printClearAllBtn"),
+      printsList: document.getElementById("printsList"),
+
+      singleSaveBtn: document.getElementById("singleSaveBtn"),
+      singleNewBtn: document.getElementById("singleNewBtn"),
+      singleDeleteBtn: document.getElementById("singleDeleteBtn"),
+      singleStatus: document.getElementById("singleStatus"),
+
+      singlePreview: document.getElementById("singlePreview"),
+      cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
+      cardLibraryList: document.getElementById("cardLibraryList"),
+      libraryCount: document.getElementById("libraryCount"),
+
+      bulkInput: document.getElementById("bulkInput"),
+      bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
+      bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
+      bulkParseBtn: document.getElementById("bulkParseBtn"),
+      bulkImportBtn: document.getElementById("bulkImportBtn"),
+      bulkPreview: document.getElementById("bulkPreview"),
+      bulkStatus: document.getElementById("bulkStatus"),
+
+      preconGrid: document.getElementById("preconGrid"),
+      preconsStatus: document.getElementById("preconsStatus"),
+
+      downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
+      downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
+      downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
+
+      modalBackdrop: document.getElementById("modalBackdrop"),
+      modalTitle: document.getElementById("modalTitle"),
+      modalBody: document.getElementById("modalBody"),
+      modalCancelBtn: document.getElementById("modalCancelBtn"),
+      modalConfirmBtn: document.getElementById("modalConfirmBtn")
+    };
+
+    /************************************************************
+     * Utilities
+     ************************************************************/
+    function generateId() {
+      return "card_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function parseVehicleTypes(str) {
+      if (!str) return [];
+      return str
+        .split(/[;,]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function parseTags(str) {
+      if (!str) return [];
+      return str
+        .split(/[;,]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function parseHpCon(str) {
+      if (!str) return {};
+      const parts = str.split("/");
+      const hp = parts[0] !== undefined && parts[0] !== "" ? Number(parts[0]) : undefined;
+      const con = parts[1] !== undefined && parts[1] !== "" ? Number(parts[1]) : undefined;
+      return { hp, con };
+    }
+
+    function formatHpCon(extra) {
+      if (!extra) return "";
+      const hp = extra.hp;
+      const con = extra.con;
+      if (hp === undefined && con === undefined) return "";
+      return `${hp ?? "?"}/${con ?? "?"}`;
+    }
+
+    function formatExtraForSummary(card) {
+      const e = card.extra || {};
+      if (card.type === "Mod") {
+        const levels = [e.modLevel1, e.modLevel2, e.modLevel3, e.modLevel4]
+          .filter(Boolean)
+          .join(" / ");
+        return `Base: ${e.modBasePart || "?"}${levels ? " | Lvls: " + levels : ""}`;
+      }
+      if (card.type === "Vehicle" || card.type === "Named Vehicle") {
+        const parts = [];
+        if (e.hp !== undefined || e.con !== undefined) {
+          parts.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
+        }
+        if (e.pitCost !== undefined) {
+          parts.push(`PIT: ${e.pitCost}`);
+        }
+        return parts.join(" | ");
+      }
+      return "";
+    }
+
+    /**
+     * Normalize a raw card object from JSON or bulk import into the internal shape.
+     * - Accepts old prints: [{ setId, cardNumber }]
+     * - Accepts new prints: [{ setName, cardNumber }]
+     * - If no prints array but setName/cardNumber fields exist, synthesizes one.
+     * - Ensures card.setName/cardNumber are aligned with the first print.
+     */
+    function normalizeCardShape(raw) {
+      const base = raw || {};
+
+      // Vehicle types & tags
+      const vehicleTypes = Array.isArray(base.vehicleTypes)
+        ? base.vehicleTypes
+        : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
+
+      const tags = Array.isArray(base.tags)
+        ? base.tags
+        : (base.tags ? [].concat(base.tags) : []);
+
+      const extra = (base.extra && typeof base.extra === "object")
+        ? { ...base.extra }
+        : {};
+
+      // Normalize prints
+      const printsRaw = Array.isArray(base.prints) ? base.prints : [];
+
+      let prints = printsRaw
+        .map(p => ({
+          setName: (p.setName || p.setId || "").trim(),
+          cardNumber: (p.cardNumber || "").trim()
+        }))
+        .filter(p => p.setName || p.cardNumber);
+
+      // Try to infer from root fields if needed
+      let setName = (base.setName || base.setId || "").trim();
+      let cardNumber = (base.cardNumber || base.cardNo || "").trim();
+
+      if (!prints.length && (setName || cardNumber)) {
+        prints = [{ setName, cardNumber }];
+      }
+
+      // If root fields are empty but we have prints, sync them from the first print
+      if (!setName && prints[0]) setName = prints[0].setName || "";
+      if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
+
+      return {
+        id: base.id || generateId(),
+        name: base.name || "",
+        type: base.type || "",
+        setName,
+        cardNumber,
+        rarity: base.rarity || "",
+        vehicleTypes,
+        tags,
+        imageUrl: base.imageUrl || "",
+        notes: base.notes || "",
+        extra,
+        prints
+      };
+    }
+
+    // When exporting to drive-card.json, convert prints back to { setId, cardNumber }
+    function serializeCardForExport(card) {
+      const clean = JSON.parse(JSON.stringify(card));
+      if (Array.isArray(clean.prints)) {
+        clean.prints = clean.prints.map(p => ({
+          setId: p.setId || p.setName || "",
+          cardNumber: p.cardNumber || ""
+        }));
+      }
+      return clean;
+    }
+
+    function getCardsForExport() {
+      return AppState.cards.map(serializeCardForExport);
+    }
+
+    function updateTypeFieldVisibility() {
+      const type = Dom.cardTypeInput.value || "";
+      const fields = document.querySelectorAll('.field-grid .field[data-for-types]');
+      fields.forEach(field => {
+        const typesAttr = field.dataset.forTypes || "";
+        const allowed = typesAttr.split(",").map(t => t.trim()).filter(Boolean);
+        if (!allowed.length || allowed.includes(type)) {
+          field.style.display = "";
+        } else {
+          field.style.display = "none";
+        }
+      });
+    }
+
+    function renderSinglePreview() {
+      const previewEl = Dom.singlePreview;
+      previewEl.innerHTML = "";
+
+      const card = collectSingleCardFromInputs(false);
+
+      const imgWrap = document.createElement("div");
+      imgWrap.className = "card-preview-img";
+      if (card.imageUrl) {
+        const img = document.createElement("img");
+        img.src = card.imageUrl;
+        img.alt = card.name || "Card image";
+        imgWrap.appendChild(img);
+      } else {
+        const span = document.createElement("span");
+        span.textContent = "No image URL set. This area will show your card art.";
+        imgWrap.appendChild(span);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "card-preview-meta";
+
+      const titleRow = document.createElement("div");
+      titleRow.className = "meta-row";
+      const title = document.createElement("h3");
+      title.textContent = card.name || "Untitled Card";
+      titleRow.appendChild(title);
+
+      if (card.type) {
+        const typeChip = document.createElement("span");
+        typeChip.className = "chip key";
+        typeChip.textContent = card.type;
+        titleRow.appendChild(typeChip);
+      }
+      if (card.rarity) {
+        const rarChip = document.createElement("span");
+        rarChip.className = "chip";
+        rarChip.textContent = card.rarity;
+        titleRow.appendChild(rarChip);
+      }
+
+      const primaryPrint = card.prints && card.prints.length
+        ? card.prints.find(p => p.setName === card.setName && p.cardNumber === card.cardNumber) || card.prints[0]
+        : (card.setName || card.cardNumber
+            ? { setName: card.setName, cardNumber: card.cardNumber }
+            : null);
+
+      if (primaryPrint && (primaryPrint.setName || primaryPrint.cardNumber)) {
+        const printChip = document.createElement("span");
+        printChip.className = "chip";
+        printChip.textContent = `${primaryPrint.setName || "SET ?"} ${primaryPrint.cardNumber || ""}`.trim();
+        titleRow.appendChild(printChip);
+      }
+
+      meta.appendChild(titleRow);
+
+      if (card.vehicleTypes && card.vehicleTypes.length) {
+        const row = document.createElement("div");
+        row.className = "meta-row";
+        card.vehicleTypes.forEach(vt => {
+          const chip = document.createElement("span");
+          chip.className = "chip veh-type";
+          chip.textContent = vt;
+          row.appendChild(chip);
+        });
+        meta.appendChild(row);
+      }
+
+      if (card.tags && card.tags.length) {
+        const row = document.createElement("div");
+        row.className = "meta-row";
+        card.tags.forEach(t => {
+          const chip = document.createElement("span");
+          chip.className = "chip tag";
+          chip.textContent = t;
+          row.appendChild(chip);
+        });
+        meta.appendChild(row);
+      }
+
+      const extraSummary = formatExtraForSummary(card);
+      if (extraSummary) {
+        const row = document.createElement("div");
+        row.className = "meta-row";
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = extraSummary;
+        row.appendChild(chip);
+        meta.appendChild(row);
+      }
+
+      const notesBlock = document.createElement("div");
+      notesBlock.className = "notes-block";
+      notesBlock.textContent = card.notes || "Rules text / trait text will appear here.";
+      meta.appendChild(notesBlock);
+
+      const container = document.createElement("div");
+      container.className = "preview-card";
+      container.appendChild(imgWrap);
+      container.appendChild(meta);
+
+      previewEl.innerHTML = "";
+      previewEl.appendChild(container);
+    }
+
+    function renderCardLibraryList() {
+      const listEl = Dom.cardLibraryList;
+      const q = (Dom.cardLibrarySearchInput.value || "").toLowerCase();
+
+      const cards = AppState.cards.slice().sort((a, b) => {
+        const an = (a.name || "").toLowerCase();
+        const bn = (b.name || "").toLowerCase();
+        return an.localeCompare(bn);
+      });
+
+      const filtered = cards.filter(card => {
+        if (!q) return true;
+        const haystack = [
+          card.name,
+          card.type,
+          card.setName,
+          card.cardNumber,
+          card.rarity,
+          (card.vehicleTypes || []).join(" "),
+          (card.tags || []).join(" "),
+          card.notes
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(q);
+      });
+
+      listEl.innerHTML = "";
+
+      filtered.forEach(card => {
+        const item = document.createElement("div");
+        item.className = "library-item";
+        if (card.id === AppState.selectedCardId) {
+          item.classList.add("active");
+        }
+
+        const main = document.createElement("div");
+        main.className = "library-item-main";
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "name";
+        nameSpan.textContent = card.name || "(Untitled)";
+        const metaSpan = document.createElement("span");
+        metaSpan.className = "meta";
+
+        const parts = [];
+        if (card.type) parts.push(card.type);
+        if (card.setName || card.cardNumber) {
+          parts.push(`${card.setName || "SET ?"} ${card.cardNumber || ""}`.trim());
+        }
+        if (card.rarity) parts.push(card.rarity);
+        metaSpan.textContent = parts.join(" • ");
+
+        main.appendChild(nameSpan);
+        main.appendChild(metaSpan);
+
+        const right = document.createElement("div");
+        right.className = "library-item-tags";
+
+        if (card.vehicleTypes && card.vehicleTypes.length) {
+          const vtSpan = document.createElement("span");
+          vtSpan.className = "meta";
+          vtSpan.textContent = `VT: ${card.vehicleTypes.join(", ")}`;
+          right.appendChild(vtSpan);
+        }
+
+        if (card.tags && card.tags.length) {
+          const tagSpan = document.createElement("span");
+          tagSpan.className = "meta";
+          tagSpan.textContent = `Tags: ${card.tags.join(", ")}`;
+          right.appendChild(tagSpan);
+        }
+
+        item.appendChild(main);
+        item.appendChild(right);
+
+        item.addEventListener("click", () => {
+          AppState.selectedCardId = card.id;
+          fillSingleCardInputs(card);
+          AppState.currentSinglePrints = (card.prints || []).slice();
+          renderSinglePreview();
+          renderPrintsList();
+          renderCardLibraryList();
+          Dom.singleStatus.textContent = `Loaded ${card.name || "card"} (${card.id})`;
+        });
+
+        listEl.appendChild(item);
+      });
+
+      Dom.libraryCount.textContent = `${AppState.cards.length} cards`;
+    }
+
+    function renderPrintsList() {
+      const listEl = Dom.printsList;
+      const prints = AppState.currentSinglePrints || [];
+
+      if (!prints.length) {
+        listEl.innerHTML = `<div style="opacity:0.7;">No prints defined yet. Add a Set + Card Number above.</div>`;
+        return;
+      }
+
+      const table = document.createElement("table");
+      table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+
+      prints.forEach((p, idx) => {
+        const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid rgba(15,23,42,0.9)";
+
+        const tdLeft = document.createElement("td");
+        tdLeft.style.padding = "0.15rem 0.3rem";
+        tdLeft.style.fontSize = "0.75rem";
+        tdLeft.textContent = `${p.setName || "SET ?"} ${p.cardNumber || ""}`.trim();
+
+        const tdRight = document.createElement("td");
+        tdRight.style.padding = "0.15rem 0.3rem";
+        tdRight.style.textAlign = "right";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn small secondary";
+        btn.textContent = "Remove";
+        btn.addEventListener("click", () => {
+          AppState.currentSinglePrints.splice(idx, 1);
+          renderPrintsList();
+        });
+
+        tdRight.appendChild(btn);
+        tr.appendChild(tdLeft);
+        tr.appendChild(tdRight);
+        table.appendChild(tr);
+      });
+
+      listEl.innerHTML = "";
+      listEl.appendChild(table);
+    }
+
+    /************************************************************
+     * Single Card Editor – Collect / Fill
+     ************************************************************/
+    function collectSingleCardFromInputs(requireId) {
+      const id = Dom.cardIdInput.value.trim();
+      const name = Dom.cardNameInput.value.trim();
+      const type = Dom.cardTypeInput.value;
+      const setName = Dom.cardSetNameInput.value.trim();
+      const cardNumber = Dom.cardNumberInput.value.trim();
+      const rarity = Dom.cardRarityInput.value.trim();
+      const vehTypesStr = Dom.cardVehicleTypesInput.value.trim();
+      const tagsStr = Dom.cardTagsInput.value.trim();
+      const imageUrl = Dom.cardImageUrlInput.value.trim();
+      const notes = Dom.cardNotesInput.value;
+
+      const vehTypes = parseVehicleTypes(vehTypesStr);
+      const tags = parseTags(tagsStr);
+
+      const modBase = Dom.modBasePartInput.value.trim();
+      const modL1 = Dom.modL1Input.value.trim();
+      const modL2 = Dom.modL2Input.value.trim();
+      const modL3 = Dom.modL3Input.value.trim();
+      const modL4 = Dom.modL4Input.value.trim();
+
+      const hpConStr = Dom.vehicleHpConInput.value.trim();
+      const hpCon = parseHpCon(hpConStr);
+      const pitCostStr = Dom.vehiclePitCostInput.value.trim();
+      const pitCost = pitCostStr ? Number(pitCostStr) : undefined;
+
+      let extra = {};
+
+      if (type === "Mod") {
+        extra.modBasePart = modBase || undefined;
+        extra.modLevel1 = modL1 || undefined;
+        extra.modLevel2 = modL2 || undefined;
+        extra.modLevel3 = modL3 || undefined;
+        extra.modLevel4 = modL4 || undefined;
+      }
+
+      if (type === "Vehicle" || type === "Named Vehicle") {
+        extra.hp = hpCon.hp !== undefined ? hpCon.hp : extra.hp;
+        extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
+        if (pitCost !== undefined && !Number.isNaN(pitCost)) {
+          extra.pitCost = pitCost;
+        }
+      }
+
+      let prints = Array.isArray(AppState.currentSinglePrints)
+        ? AppState.currentSinglePrints.slice()
+        : [];
+
+      if (setName || cardNumber) {
+        const primaryExists = prints.some(
+          p => (p.setName || "").trim() === setName && (p.cardNumber || "").trim() === cardNumber
+        );
+        if (!primaryExists) {
+          prints.unshift({ setName, cardNumber });
+        }
+      }
+
+      const card = normalizeCardShape({
+        id: requireId ? (id || generateId()) : (id || generateId()),
+        name,
+        type,
+        setName,
+        cardNumber,
+        rarity,
+        vehicleTypes: vehTypes,
+        tags,
+        imageUrl,
+        notes,
+        extra,
+        prints
+      });
+
+      Dom.cardIdInput.value = card.id;
+      return card;
+    }
+
+    function fillSingleCardInputs(card) {
+      Dom.cardIdInput.value = card.id || "";
+      Dom.cardNameInput.value = card.name || "";
+      Dom.cardTypeInput.value = card.type || "";
+      updateTypeFieldVisibility();
+      Dom.cardSetNameInput.value = card.setName || "";
+      Dom.cardNumberInput.value = card.cardNumber || "";
+      Dom.cardRarityInput.value = card.rarity || "";
+      Dom.cardVehicleTypesInput.value = (card.vehicleTypes || []).join(", ");
+      Dom.cardTagsInput.value = (card.tags || []).join(", ");
+      Dom.cardImageUrlInput.value = card.imageUrl || "";
+      Dom.cardNotesInput.value = card.notes || "";
+
+      const e = card.extra || {};
+      Dom.modBasePartInput.value = e.modBasePart || "";
+      Dom.modL1Input.value = e.modLevel1 || "";
+      Dom.modL2Input.value = e.modLevel2 || "";
+      Dom.modL3Input.value = e.modLevel3 || "";
+      Dom.modL4Input.value = e.modLevel4 || "";
+
+      const hpConStr =
+        e.hp !== undefined || e.con !== undefined ? `${e.hp || ""}/${e.con || ""}` : "";
+      Dom.vehicleHpConInput.value = hpConStr;
+      Dom.vehiclePitCostInput.value = e.pitCost !== undefined ? String(e.pitCost) : "";
+
+      let prints = Array.isArray(card.prints) ? card.prints.slice() : [];
+      if (!prints.length && (card.setName || card.cardNumber)) {
+        prints.push({ setName: card.setName || "", cardNumber: card.cardNumber || "" });
+      }
+      AppState.currentSinglePrints = prints;
+      renderPrintsList();
+    }
+
+    /************************************************************
+     * Card CRUD
+     ************************************************************/
+    function upsertCard(card) {
+      const idx = AppState.cards.findIndex(c => c.id === card.id);
+      if (idx === -1) {
+        AppState.cards.push(card);
+      } else {
+        AppState.cards[idx] = card;
+      }
+      saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
+    }
+
+    async function handleSingleSave() {
+      const card = collectSingleCardFromInputs(true);
+      upsertCard(card);
+      AppState.selectedCardId = card.id;
+      Dom.singleStatus.textContent = `Saved card "${card.name || card.id}"`;
+      renderCardLibraryList();
+      renderSinglePreview();
+    }
+
+    function handleSingleNew() {
+      Dom.cardIdInput.value = "";
+      Dom.cardNameInput.value = "";
+      Dom.cardTypeInput.value = "";
+      Dom.cardSetNameInput.value = "";
+      Dom.cardNumberInput.value = "";
+      Dom.cardRarityInput.value = "";
+      Dom.cardVehicleTypesInput.value = "";
+      Dom.cardTagsInput.value = "";
+      Dom.cardImageUrlInput.value = "";
+      Dom.cardNotesInput.value = "";
+      Dom.modBasePartInput.value = "";
+      Dom.modL1Input.value = "";
+      Dom.modL2Input.value = "";
+      Dom.modL3Input.value = "";
+      Dom.modL4Input.value = "";
+      Dom.vehicleHpConInput.value = "";
+      Dom.vehiclePitCostInput.value = "";
+      updateTypeFieldVisibility();
+      Dom.printSetSelect.value = "";
+      Dom.printCustomSetInput.value = "";
+      Dom.printCardNumberInput.value = "";
+      Dom.singleStatus.textContent = "";
+      AppState.selectedCardId = null;
+      AppState.currentSinglePrints = [];
+      renderPrintsList();
+      renderSinglePreview();
+    }
+
+    function confirmAction(title, body) {
+      return new Promise(resolve => {
+        Dom.modalTitle.textContent = title;
+        Dom.modalBody.textContent = body;
+        Dom.modalBackdrop.classList.add("active");
+
+        function cleanup(result) {
+          Dom.modalBackdrop.classList.remove("active");
+          Dom.modalCancelBtn.removeEventListener("click", onCancel);
+          Dom.modalConfirmBtn.removeEventListener("click", onConfirm);
+          resolve(result);
+        }
+
+        function onCancel() { cleanup(false); }
+        function onConfirm() { cleanup(true); }
+
+        Dom.modalCancelBtn.addEventListener("click", onCancel);
+        Dom.modalConfirmBtn.addEventListener("click", onConfirm);
+      });
+    }
+
+    async function handleSingleDelete() {
+      const id = Dom.cardIdInput.value.trim();
+      if (!id) {
+        Dom.singleStatus.textContent = "No card selected to delete.";
+        return;
+      }
+      const card = AppState.cards.find(c => c.id === id);
+      const name = card ? card.name : id;
+
+      const ok = await confirmAction(
+        "Delete Card",
+        `Are you sure you want to delete "${name}" from the library?`
+      );
+      if (!ok) return;
+
+      AppState.cards = AppState.cards.filter(c => c.id !== id);
+      saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
+
+      Dom.singleStatus.textContent = `Deleted card "${name}".`;
+      handleSingleNew();
+      renderCardLibraryList();
+    }
+
+    /************************************************************
+     * Prints Handlers
+     ************************************************************/
+    function handleSetPrintPrimary() {
+      const setValue = Dom.printSetSelect.value;
+      let setName = "";
+      if (!setValue) {
+        Dom.singleStatus.textContent = "Select a Set (or Custom) before adding a print.";
+        return;
+      }
+      if (setValue === "CUSTOM") {
+        setName = Dom.printCustomSetInput.value.trim();
+        if (!setName) {
+          Dom.singleStatus.textContent = "Enter a custom set name.";
+          return;
+        }
+      } else {
+        setName = setValue;
+      }
+
+      const num = Dom.printCardNumberInput.value.trim();
+      if (!num) {
+        Dom.singleStatus.textContent = "Enter a card number.";
+        return;
+      }
+
+      if (!AppState.currentSinglePrints) AppState.currentSinglePrints = [];
+
+      const existingIndex = AppState.currentSinglePrints.findIndex(
+        p => (p.setName || "").trim() === setName && (p.cardNumber || "").trim() === num
+      );
+      if (existingIndex >= 0) {
+        AppState.currentSinglePrints[existingIndex] = { setName, cardNumber: num };
+      } else {
+        AppState.currentSinglePrints.push({ setName, cardNumber: num });
+      }
+
+      if (!Dom.cardSetNameInput.value) Dom.cardSetNameInput.value = setName;
+      if (!Dom.cardNumberInput.value) Dom.cardNumberInput.value = num;
+
+      renderPrintsList();
+      renderSinglePreview();
+      Dom.singleStatus.textContent = `Print set: ${setName} ${num}`;
+    }
+
+    function handleClearAllPrints() {
+      AppState.currentSinglePrints = [];
+      renderPrintsList();
+      renderSinglePreview();
+      Dom.singleStatus.textContent = "Cleared all prints for this card.";
+    }
+
+    /************************************************************
+     * Bulk Import
+     ************************************************************/
+    function detectDelimiter(value) {
+      const counts = {
+        tab: (value.match(/\t/g) || []).length,
+        comma: (value.match(/,/g) || []).length,
+        semicolon: (value.match(/;/g) || []).length,
+        pipe: (value.match(/\|/g) || []).length
+      };
+      let best = "tab";
+      let bestCount = counts.tab;
+      for (const [key, val] of Object.entries(counts)) {
+        if (val > bestCount) {
+          best = key;
+          bestCount = val;
+        }
+      }
+      return best;
+    }
+
+    function splitLine(line, delimiter) {
+      if (delimiter === "tab") return line.split("\t");
+      if (delimiter === "comma") return line.split(",");
+      if (delimiter === "semicolon") return line.split(";");
+      if (delimiter === "pipe") return line.split("|");
+      return [line];
+    }
+
+    function normalizeHeader(str) {
+      return (str || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_]+/g, " ");
+    }
+
+    function mapRowToCard(rowObj) {
+      const row = {};
+      for (const [k, v] of Object.entries(rowObj)) {
+        row[k.trim()] = v;
+      }
+
+      const norm = {};
+      for (const [k, v] of Object.entries(row)) {
+        norm[normalizeHeader(k)] = v;
+      }
+
+      const get = (...keys) => {
+        for (const key of keys) {
+          const nk = normalizeHeader(key);
+          if (nk in norm) return norm[nk];
+        }
+        return "";
+      };
+
+      const hasAny = (...keys) => {
+        return keys.some(k => {
+          const nk = normalizeHeader(k);
+          return nk in norm && norm[nk] !== "";
+        });
+      };
+
+      const isCrew = hasAny("crew name");
+      const isDriver = hasAny("driver name") && !hasAny("named vehicle name");
+      const isNamedDriver =
+        hasAny("named driver name") ||
+        (hasAny("driver name") && get("set").toString().toLowerCase().includes("named"));
+      const isMod = hasAny("mod name");
+      const isVehicle = hasAny("vehicle name", "vehicle name ", "vehicle name  ");
+      const isNamedVehicle = hasAny("named vehicle name");
+      const isCondition = hasAny("condition name");
+      const isTrack = hasAny("track name");
+      const isMisc = hasAny("tokens/counters");
+
+      let type = "";
+      if (isCrew) type = "Crew";
+      else if (isNamedDriver) type = "Named Driver";
+      else if (isDriver) type = "Driver";
+      else if (isMod) type = "Mod";
+      else if (isNamedVehicle) type = "Named Vehicle";
+      else if (isVehicle) type = "Vehicle";
+      else if (isTrack) type = "Track";
+      else if (isCondition) type = "Condition";
+      else if (isMisc) type = "Misc";
+      else type = "Misc";
+
+      let name = "";
+      let notes = "";
+      let rarity = get("rarity");
+      let setName = get("set");
+      let cardNumber = get("card number", "card #");
+      let vehicleTypesStr = "";
+      let tagsStr = "";
+
+      const extra = {};
+
+      if (type === "Crew") {
+        name = get("crew name");
+        notes = get("crew trait", "ability", "text");
+      } else if (type === "Driver" || type === "Named Driver") {
+        name = get("driver name");
+        notes = get("driver trait", "ability", "text");
+      } else if (type === "Mod") {
+        name = get("mod name");
+        extra.modBasePart = get("base part");
+        extra.modLevel1 = get("mod lvl 1", "l1", "level 1");
+        extra.modLevel2 = get("mod lvl 2", "l2", "level 2");
+        extra.modLevel3 = get("mod lvl 3", "l3", "level 3");
+        extra.modLevel4 = get("mod lvl 4", "l4", "level 4");
+        notes = get("mod ability", "ability", "text");
+        vehicleTypesStr = get("mod type", "type");
+      } else if (type === "Vehicle" || type === "Named Vehicle") {
+        name = get("vehicle name", "named vehicle name", "vehicle name ", "vehicle name  ");
+        const hpConStr = get("vehicle hp/con", "hp/con", "hp con", "hp_con", "hp-con");
+        const hpCon = parseHpCon(hpConStr);
+        if (hpCon.hp !== undefined) extra.hp = hpCon.hp;
+        if (hpCon.con !== undefined) extra.con = hpCon.con;
+        const pitCost = Number(get("pit cost"));
+        if (!Number.isNaN(pitCost) && get("pit cost") !== "") {
+          extra.pitCost = pitCost;
+        }
+        vehicleTypesStr = get("vehicle type");
+        notes = get("vehicle trait", "trait", "ability", "text");
+      } else if (type === "Track") {
+        name = get("track name");
+        notes = get("track trait", "ability", "text");
+        vehicleTypesStr = get("vehicle type");
+      } else if (type === "Condition") {
+        name = get("condition name");
+        notes = get("condition trait", "ability", "text");
+      } else if (type === "Misc") {
+        name = get("tokens/counters", "name");
+        notes = get("ability", "text");
+      }
+
+      const vehicleTypes = parseVehicleTypes(vehicleTypesStr);
+      const tags = parseTags(tagsStr);
+
+      const card = normalizeCardShape({
+        id: generateId(),
+        name: name || "(Untitled)",
+        type,
+        setName,
+        cardNumber,
+        rarity,
+        vehicleTypes,
+        tags,
+        imageUrl: "",
+        notes,
+        extra,
+        prints: setName || cardNumber ? [{ setName, cardNumber }] : []
+      });
+
+      return card;
+    }
+
+    function parseBulkInput() {
+      const raw = Dom.bulkInput.value || "";
+      if (!raw.trim()) {
+        Dom.bulkStatus.textContent = "Paste some rows from Excel first.";
+        Dom.bulkPreview.innerHTML = "";
+        return [];
+      }
+
+      let delim = Dom.bulkDelimiterSelect.value;
+      if (!delim || delim === "auto") {
+        delim = detectDelimiter(raw);
+        Dom.bulkDelimiterSelect.value = delim;
+      }
+
+      const lines = raw.split(/\r?\n/).filter(line => line.trim().length > 0);
+      if (!lines.length) {
+        Dom.bulkStatus.textContent = "No non-empty lines detected.";
+        Dom.bulkPreview.innerHTML = "";
+        return [];
+      }
+
+      const rows = lines.map(line => splitLine(line, delim));
+      let header = [];
+      let dataRows = rows;
+
+      if (Dom.bulkHasHeaderCheckbox.checked) {
+        header = rows[0];
+        dataRows = rows.slice(1);
+      } else {
+        const maxLen = rows.reduce((m, r) => Math.max(m, r.length), 0);
+        header = Array.from({ length: maxLen }, (_, i) => `Col${i + 1}`);
+      }
+
+      const previewTable = document.createElement("table");
+      previewTable.style.width = "100%";
+      previewTable.style.borderCollapse = "collapse";
+
+      const headerTr = document.createElement("tr");
+      header.forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        th.style.borderBottom = "1px solid rgba(31,41,55,0.9)";
+        th.style.padding = "0.15rem 0.3rem";
+        th.style.fontSize = "0.7rem";
+        th.style.textAlign = "left";
+        previewTable.appendChild(headerTr);
+        headerTr.appendChild(th);
+      });
+
+      let cards = [];
+      dataRows.forEach((rowArr, rowIndex) => {
+        const rowObj = {};
+        header.forEach((col, colIndex) => {
+          rowObj[col] = rowArr[colIndex] ?? "";
+        });
+
+        const tr = document.createElement("tr");
+        rowArr.forEach(cell => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          td.style.padding = "0.15rem 0.3rem";
+          td.style.borderBottom = "1px solid rgba(15,23,42,0.6)";
+          td.style.fontSize = "0.7rem";
+          tr.appendChild(td);
+        });
+        previewTable.appendChild(tr);
+
+        const card = mapRowToCard(rowObj);
+        cards.push(card);
+      });
+
+      Dom.bulkPreview.innerHTML = "";
+      Dom.bulkPreview.appendChild(previewTable);
+      Dom.bulkStatus.textContent = `Parsed ${dataRows.length} rows into ${cards.length} tentative cards.`;
+
+      return cards;
+    }
+
+    function handleBulkParse() {
+      parseBulkInput();
+    }
+
+    function handleBulkImport() {
+      const cards = parseBulkInput();
+      if (!cards.length) {
+        Dom.bulkStatus.textContent = "Nothing to import.";
+        return;
+      }
+
+      cards.forEach(card => {
+        upsertCard(card);
+      });
+
+      Dom.bulkStatus.textContent = `Imported/updated ${cards.length} cards into the library.`;
+      renderCardLibraryList();
+      renderSinglePreview();
+    }
+
+    /************************************************************
+     * Precons (simple view)
+     ************************************************************/
+    function renderPrecons() {
+      const grid = Dom.preconGrid;
+      grid.innerHTML = "";
+
+      if (!AppState.precons.length) {
+        // default placeholders if no JSON present
+        AppState.precons = [
+          {
+            id: "precon_junkyard_starter",
+            name: "Junkyard Starter",
+            description: "Ray's junkyard-themed starter deck with mixed vehicle types.",
+            cards: []
+          },
+          {
+            id: "precon_set1_demo",
+            name: "Set 1 Demo Deck",
+            description: "Mixed DRIVE demo deck focusing on Set 1 commons.",
+            cards: []
+          }
+        ];
+      }
+
+      AppState.precons.forEach(precon => {
+        const card = document.createElement("div");
+        card.className = "precon-card";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = precon.name;
+        const pill = document.createElement("span");
+        pill.className = "pill";
+        pill.textContent = `${precon.cards ? precon.cards.length : 0} cards`;
+        h3.appendChild(pill);
+
+        const desc = document.createElement("p");
+        desc.style.margin = "0.15rem 0 0.4rem";
+        desc.style.opacity = "0.85";
+        desc.textContent = precon.description || "";
+
+        const list = document.createElement("ul");
+        if (!precon.cards || !precon.cards.length) {
+          const li = document.createElement("li");
+          li.textContent = "No cards yet – edit this precon in JSON.";
+          list.appendChild(li);
+        } else {
+          precon.cards.forEach(entry => {
+            const li = document.createElement("li");
+            const cardObj = AppState.cards.find(c => c.id === entry.cardId);
+            const name = cardObj ? cardObj.name : entry.cardId;
+            li.textContent = `${entry.count || 0}x ${name}`;
+            list.appendChild(li);
+          });
+        }
+
+        card.appendChild(h3);
+        card.appendChild(desc);
+        card.appendChild(list);
+
+        grid.appendChild(card);
+      });
+    }
+
+    /************************************************************
+     * Navigation & Initialization
+     ************************************************************/
+    function showSection(which) {
+      Dom.singleSection.classList.toggle("active", which === "single");
+      Dom.bulkSection.classList.toggle("active", which === "bulk");
+      Dom.preconsSection.classList.toggle("active", which === "precons");
+      Dom.helpSection.classList.toggle("active", which === "help");
+
+      Dom.navSingleBtn.classList.toggle("active", which === "single");
+      Dom.navBulkBtn.classList.toggle("active", which === "bulk");
+      Dom.navPreconsBtn.classList.toggle("active", which === "precons");
+      Dom.navHelpBtn.classList.toggle("active", which === "help");
+    }
+
+    function initNav() {
+      Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
+      Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
+      Dom.navPreconsBtn.addEventListener("click", () => showSection("precons"));
+      Dom.navHelpBtn.addEventListener("click", () => showSection("help"));
+    }
+
+    function initSingleEditor() {
+      Dom.cardLibrarySearchInput.addEventListener("input", renderCardLibraryList);
+
+      [
+        Dom.cardNameInput,
+        Dom.cardTypeInput,
+        Dom.cardSetNameInput,
+        Dom.cardNumberInput,
+        Dom.cardRarityInput,
+        Dom.cardVehicleTypesInput,
+        Dom.cardTagsInput,
+        Dom.cardImageUrlInput,
+        Dom.cardNotesInput,
+        Dom.modBasePartInput,
+        Dom.vehiclePitCostInput,
+        Dom.modL1Input,
+        Dom.modL2Input,
+        Dom.modL3Input,
+        Dom.modL4Input,
+        Dom.vehicleHpConInput
+      ].forEach(el => {
+        el.addEventListener("input", renderSinglePreview);
+        el.addEventListener("change", renderSinglePreview);
+      });
+
+      Dom.cardTypeInput.addEventListener("change", () => {
+        updateTypeFieldVisibility();
+        renderSinglePreview();
+      });
+
+      Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
+      Dom.singleNewBtn.addEventListener("click", handleSingleNew);
+      Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
+
+      Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
+      Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
+      Dom.printSetSelect.addEventListener("change", () => {
+        if (Dom.printSetSelect.value === "CUSTOM") {
+          Dom.printCustomSetInput.focus();
+        }
+      });
+
+      updateTypeFieldVisibility();
+
+      Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
+        downloadJson(getCardsForExport(), "drive-card.json");
+      });
+    }
+
+    function initBulk() {
+      Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
+      Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+    }
+
+    function initPrecons() {
+      Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
+        downloadJson(AppState.precons, "drive-precons.json");
+      });
+    }
+
+    function initModal() {
+      Dom.modalBackdrop.addEventListener("click", (e) => {
+        if (e.target === Dom.modalBackdrop) {
+          Dom.modalBackdrop.classList.remove("active");
+        }
+      });
+    }
+
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadCards() {
+      // Try remote drive-card.json first
+      const localBackup = loadFromLocalStorage(STORAGE_KEYS.CARDS, null);
+      try {
+        const res = await fetch("drive-card.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch drive-card.json");
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("drive-card.json is not an array.");
+        AppState.cards = data.map(normalizeCardShape);
+        saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
+        return;
+      } catch (e) {
+        console.warn("Could not fetch drive-card.json, falling back to localStorage:", e);
+      }
+
+      if (localBackup && Array.isArray(localBackup)) {
+        AppState.cards = localBackup.map(normalizeCardShape);
+      } else {
+        AppState.cards = [];
+      }
+    }
+
+    async function loadPrecons() {
+      const localBackup = loadFromLocalStorage(STORAGE_KEYS.PRECONS, null);
+      try {
+        const res = await fetch("drive-precons.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("drive-precons.json is not an array.");
+        AppState.precons = data;
+        saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
+        renderPrecons();
+        return;
+      } catch (e) {
+        console.warn("Could not fetch drive-precons.json, falling back to localStorage:", e);
+      }
+
+      if (localBackup && Array.isArray(localBackup)) {
+        AppState.precons = localBackup;
+      } else {
+        AppState.precons = [];
+      }
+      renderPrecons();
+    }
+
+    /************************************************************
+     * Global Download Button
+     ************************************************************/
+    Dom.downloadCardsJsonBtn.addEventListener("click", () => {
+      downloadJson(getCardsForExport(), "drive-card.json");
+    });
+
+    /************************************************************
+     * Kick everything off
+     ************************************************************/
+    (async function init() {
+      initNav();
+      initSingleEditor();
+      initBulk();
+      initPrecons();
+      initModal();
+
+      await loadCards();
+      renderSinglePreview();
+      renderCardLibraryList();
+      await loadPrecons();
+
+      showSection("single");
+    })();
+  </script>
+</body>
+</html>
