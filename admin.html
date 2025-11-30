@@ -166,6 +166,12 @@
       background: radial-gradient(circle at top left, #b91c1c, #111827);
     }
 
+    .button.small {
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      box-shadow: none;
+    }
+
     .button:hover {
       transform: translateY(-1px);
       box-shadow: 0 8px 16px rgba(37, 99, 235, 0.5);
@@ -495,6 +501,44 @@
     .modal-close:hover {
       background: #111827;
     }
+
+    /* Printings (Sets & Card Numbers) rows */
+    .printings-container {
+      border-radius: 0.65rem;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 0.4rem 0.5rem;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .printing-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .printing-row select,
+    .printing-row input[type="text"] {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .printing-row-remove {
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 720px) {
+      .printing-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .printing-row-remove {
+        align-self: flex-end;
+      }
+    }
   </style>
 </head>
 <body>
@@ -572,24 +616,25 @@
               </select>
             </div>
             <div class="field">
-              <label for="cardSetNameInput">Set Name</label>
-              <input
-                id="cardSetNameInput"
-                type="text"
-                placeholder="1…2…3…RACE!, Junkyard, etc."
-              />
-            </div>
-            <div class="field">
-              <label for="cardNumberInput">Card Number</label>
-              <input id="cardNumberInput" type="text" placeholder="01, 02A…" />
-            </div>
-            <div class="field">
               <label for="cardRarityInput">Rarity</label>
               <input id="cardRarityInput" type="text" placeholder="Common, Rare…" />
             </div>
           </div>
 
-          <h3>Traits & Tags</h3>
+          <h3>Printings (Sets &amp; Card Numbers)</h3>
+          <div id="printingsContainer" class="printings-container">
+            <!-- printing rows injected here -->
+          </div>
+          <div style="margin-top:0.35rem; display:flex; gap:0.4rem; flex-wrap:wrap;">
+            <button id="addPrintingBtn" type="button" class="button secondary small">
+              + Add Printing
+            </button>
+            <p class="small-note">
+              Each row is one set/version of this card. The first row is treated as the primary set.
+            </p>
+          </div>
+
+          <h3>Traits &amp; Tags</h3>
           <div class="field-grid">
             <div class="field" data-show-for="Track,Vehicle,Named Vehicle">
               <label>Vehicle Types</label>
@@ -625,9 +670,9 @@
             </div>
           </div>
 
-          <h3>Art, Mods & HP/CON</h3>
+          <h3>Art, Mods &amp; HP/CON</h3>
           <div class="field-grid">
-            <!-- Image URL: shown for all types -->
+            <!-- Image URL -->
             <div class="field">
               <label for="cardImageUrlInput">Image URL</label>
               <input
@@ -893,7 +938,7 @@
         </div>
       </div>
 
-      <!-- New summary box under the steps -->
+      <!-- Selected summary box -->
       <h3>Selected Cards Summary</h3>
       <p class="small-note">
         These are all rows currently checked in Step 2 (even if they’re hidden by filters).
@@ -1030,7 +1075,7 @@
           load an existing card, or click <strong>New Card</strong> to start
           from scratch.
         </li>
-        <li>Fill in Name, Type, Set, Rarity, and rules text.</li>
+        <li>Fill in Name, Type, Rarity, sets &amp; card numbers, and rules text.</li>
         <li>
           For Mods, fill Mod Type, Base Part, and Level stats. For Vehicles /
           Named Vehicles, fill HP/CON and Pit Cost. For Vehicles/Tracks, tick
@@ -1095,7 +1140,7 @@
     </section>
   </div>
 
-  <!-- Modal (currently only for potential future debugging/info) -->
+  <!-- Modal (placeholder for future debug/info) -->
   <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
@@ -1119,7 +1164,6 @@
       bulkRows: []
     };
 
-    // SHEET_CONFIG matches your Drive Cards.xlsx columns
     const SHEET_CONFIG = {
       "Crew Cards": {
         type: "Crew",
@@ -1208,8 +1252,9 @@
       }
     };
 
+    const KNOWN_SETS = ["SET 1", "SET 2", "SET 3", "SET 4", "SET 5"];
+
     const Dom = {
-      // nav
       navSingleBtn: document.getElementById("navSingleBtn"),
       navBulkBtn: document.getElementById("navBulkBtn"),
       navPreconsBtn: document.getElementById("navPreconsBtn"),
@@ -1220,12 +1265,9 @@
       preconsSection: document.getElementById("preconsSection"),
       helpSection: document.getElementById("helpSection"),
 
-      // single card inputs
       cardIdInput: document.getElementById("cardIdInput"),
       cardNameInput: document.getElementById("cardNameInput"),
       cardTypeInput: document.getElementById("cardTypeInput"),
-      cardSetNameInput: document.getElementById("cardSetNameInput"),
-      cardNumberInput: document.getElementById("cardNumberInput"),
       cardRarityInput: document.getElementById("cardRarityInput"),
       cardTagsInput: document.getElementById("cardTagsInput"),
       cardImageUrlInput: document.getElementById("cardImageUrlInput"),
@@ -1241,6 +1283,9 @@
       pitCostInput: document.getElementById("pitCostInput"),
       cardNotesInput: document.getElementById("cardNotesInput"),
 
+      printingsContainer: document.getElementById("printingsContainer"),
+      addPrintingBtn: document.getElementById("addPrintingBtn"),
+
       singleNewBtn: document.getElementById("singleNewBtn"),
       singleSaveBtn: document.getElementById("singleSaveBtn"),
       singleDeleteBtn: document.getElementById("singleDeleteBtn"),
@@ -1251,7 +1296,6 @@
       cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
       cardLibraryList: document.getElementById("cardLibraryList"),
 
-      // bulk
       bulkFileInput: document.getElementById("bulkFileInput"),
       bulkSheetSelect: document.getElementById("bulkSheetSelect"),
       bulkParseSheetBtn: document.getElementById("bulkParseSheetBtn"),
@@ -1275,7 +1319,6 @@
       downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn"),
       downloadCardsJsonBtn_bulk: document.getElementById("downloadCardsJsonBtn_bulk"),
 
-      // precons
       preconNewBtn: document.getElementById("preconNewBtn"),
       preconDeleteBtn: document.getElementById("preconDeleteBtn"),
       preconReloadBtn: document.getElementById("preconReloadBtn"),
@@ -1291,7 +1334,6 @@
       preconEditStatus: document.getElementById("preconEditStatus"),
       downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
 
-      // modal
       modalBackdrop: document.getElementById("modalBackdrop"),
       modalBody: document.getElementById("modalBody"),
       modalCloseBtn: document.getElementById("modalCloseBtn")
@@ -1429,22 +1471,148 @@
       }
     };
 
-    // Show/hide type-specific fields based on data-show-for attribute
-    function updateFieldVisibility() {
-      const type = Dom.cardTypeInput.value || "";
-      const nodes = document.querySelectorAll("[data-show-for]");
-      nodes.forEach(el => {
-        const spec = (el.getAttribute("data-show-for") || "")
-          .split(",")
-          .map(s => s.trim())
-          .filter(Boolean);
-        const show =
-          !spec.length || spec.includes("*") || spec.includes(type);
-        el.style.display = show ? "" : "none";
+    // --- Printings helpers ---
+
+    function normalizePrints(card) {
+      if (!card) return;
+      if (!Array.isArray(card.prints)) {
+        card.prints = [];
+      }
+      if (!card.prints.length && (card.setName || card.cardNumber)) {
+        card.prints.push({
+          setId: card.setName || "",
+          cardNumber: card.cardNumber || ""
+        });
+      }
+      const primary = card.prints[0];
+      if (primary) {
+        card.setName = primary.setId || card.setName || "";
+        card.cardNumber = primary.cardNumber || card.cardNumber || "";
+      } else {
+        card.setName = card.setName || "";
+        card.cardNumber = card.cardNumber || "";
+      }
+    }
+
+    function createPrintingRow(print = {}) {
+      const row = document.createElement("div");
+      row.className = "printing-row";
+
+      const setSelect = document.createElement("select");
+      setSelect.className = "printing-set-select";
+      const optEmpty = document.createElement("option");
+      optEmpty.value = "";
+      optEmpty.textContent = "– Choose Set –";
+      setSelect.appendChild(optEmpty);
+
+      KNOWN_SETS.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        setSelect.appendChild(opt);
+      });
+
+      const optCustom = document.createElement("option");
+      optCustom.value = "__CUSTOM__";
+      optCustom.textContent = "Custom…";
+      setSelect.appendChild(optCustom);
+
+      const customInput = document.createElement("input");
+      customInput.type = "text";
+      customInput.placeholder = "Custom set name";
+      customInput.className = "printing-set-custom";
+      customInput.style.display = "none";
+
+      const cardNumInput = document.createElement("input");
+      cardNumInput.type = "text";
+      cardNumInput.placeholder = "Card Number (e.g. S1-001)";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "button secondary small printing-row-remove";
+      removeBtn.textContent = "Remove";
+
+      // Initial values
+      const setId = print.setId || "";
+      const isKnown = KNOWN_SETS.includes(setId);
+      if (isKnown) {
+        setSelect.value = setId;
+        customInput.value = "";
+        customInput.style.display = "none";
+      } else if (setId) {
+        setSelect.value = "__CUSTOM__";
+        customInput.value = setId;
+        customInput.style.display = "";
+      } else {
+        setSelect.value = "";
+        customInput.value = "";
+        customInput.style.display = "none";
+      }
+      cardNumInput.value = print.cardNumber || "";
+
+      setSelect.addEventListener("change", () => {
+        if (setSelect.value === "__CUSTOM__") {
+          customInput.style.display = "";
+        } else {
+          customInput.style.display = "none";
+        }
+      });
+
+      removeBtn.addEventListener("click", () => {
+        const container = Dom.printingsContainer;
+        if (container.children.length > 1) {
+          container.removeChild(row);
+        } else {
+          // if it's the only row, just clear it
+          setSelect.value = "";
+          customInput.value = "";
+          customInput.style.display = "none";
+          cardNumInput.value = "";
+        }
+      });
+
+      row.appendChild(setSelect);
+      row.appendChild(customInput);
+      row.appendChild(cardNumInput);
+      row.appendChild(removeBtn);
+
+      return row;
+    }
+
+    function renderPrintingsUI(prints) {
+      Dom.printingsContainer.innerHTML = "";
+      let list = Array.isArray(prints) ? prints.slice() : [];
+      if (!list.length) {
+        list.push({ setId: "", cardNumber: "" });
+      }
+      list.forEach(p => {
+        Dom.printingsContainer.appendChild(createPrintingRow(p));
       });
     }
 
-    // Vehicle types checkboxes helpers
+    function collectPrintingsFromUI() {
+      const rows = Array.from(
+        Dom.printingsContainer.querySelectorAll(".printing-row")
+      );
+      const prints = [];
+      rows.forEach(row => {
+        const sel = row.querySelector(".printing-set-select");
+        const custom = row.querySelector(".printing-set-custom");
+        const num = row.querySelector("input[type='text']:not(.printing-set-custom)");
+        let setId = "";
+        if (sel.value === "__CUSTOM__") {
+          setId = (custom.value || "").trim();
+        } else {
+          setId = (sel.value || "").trim();
+        }
+        const cardNumber = (num.value || "").trim();
+        if (setId || cardNumber) {
+          prints.push({ setId, cardNumber });
+        }
+      });
+      return prints;
+    }
+
     function getVehicleTypeCheckboxes() {
       return Array.from(
         document.querySelectorAll(".vehicleTypeCheckbox")
@@ -1467,6 +1635,20 @@
     function clearVehicleTypeCheckboxes() {
       getVehicleTypeCheckboxes().forEach(cb => {
         cb.checked = false;
+      });
+    }
+
+    function updateFieldVisibility() {
+      const type = Dom.cardTypeInput.value || "";
+      const nodes = document.querySelectorAll("[data-show-for]");
+      nodes.forEach(el => {
+        const spec = (el.getAttribute("data-show-for") || "")
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean);
+        const show =
+          !spec.length || spec.includes("*") || spec.includes(type);
+        el.style.display = show ? "" : "none";
       });
     }
 
@@ -1505,9 +1687,13 @@
 
       const rowSet = document.createElement("div");
       rowSet.className = "card-preview-row";
+      const setString = (card.prints || [])
+        .map(p => p.setId)
+        .filter(Boolean)
+        .join(" & ");
       rowSet.innerHTML =
         '<span class="card-preview-label">Set:</span> <span>' +
-        (card.setName || "–") +
+        (setString || "–") +
         "</span>";
 
       const rowRarity = document.createElement("div");
@@ -1565,8 +1751,6 @@
       const id = Dom.cardIdInput.value.trim();
       const name = Dom.cardNameInput.value.trim();
       const type = Dom.cardTypeInput.value;
-      const setName = Dom.cardSetNameInput.value.trim();
-      const cardNumber = Dom.cardNumberInput.value.trim();
       const rarity = Dom.cardRarityInput.value.trim();
       const tagsStr = Dom.cardTagsInput.value.trim();
       const imageUrl = Dom.cardImageUrlInput.value.trim();
@@ -1588,7 +1772,12 @@
       const pitCostStr = Dom.pitCostInput.value.trim();
       const pitCost = pitCostStr !== "" ? Number(pitCostStr) : undefined;
 
-      let extra = {};
+      const prints = collectPrintingsFromUI();
+      const primary = prints[0] || {};
+      const setName = primary.setId || "";
+      const cardNumber = primary.cardNumber || "";
+
+      const extra = {};
 
       if (type === "Mod") {
         extra.modType = modType || undefined;
@@ -1618,8 +1807,11 @@
         notes,
         imageUrl,
         extra,
-        vehicleTypes: vehTypes
+        vehicleTypes: vehTypes,
+        prints
       };
+
+      normalizePrints(card);
       return card;
     }
 
@@ -1627,8 +1819,6 @@
       Dom.cardIdInput.value = card.id || "";
       Dom.cardNameInput.value = card.name || "";
       Dom.cardTypeInput.value = card.type || "";
-      Dom.cardSetNameInput.value = card.setName || "";
-      Dom.cardNumberInput.value = card.cardNumber || "";
       Dom.cardRarityInput.value = card.rarity || "";
       Dom.cardTagsInput.value = (card.tags || []).join(", ");
       Dom.cardImageUrlInput.value = card.imageUrl || "";
@@ -1654,6 +1844,7 @@
       const vehTypes = CardData.getVehicleTypes(card);
       setSelectedVehicleTypesInUI(vehTypes);
 
+      renderPrintingsUI(card.prints || []);
       renderSinglePreview();
       updateFieldVisibility();
     }
@@ -1752,8 +1943,6 @@
       Dom.cardIdInput.value = "";
       Dom.cardNameInput.value = "";
       Dom.cardTypeInput.value = "";
-      Dom.cardSetNameInput.value = "";
-      Dom.cardNumberInput.value = "";
       Dom.cardRarityInput.value = "";
       Dom.cardTagsInput.value = "";
       Dom.cardImageUrlInput.value = "";
@@ -1767,6 +1956,7 @@
       Dom.vehicleHpConInput.value = "";
       Dom.pitCostInput.value = "";
       clearVehicleTypeCheckboxes();
+      renderPrintingsUI([]);
       Dom.singleStatus.textContent = "New blank card.";
       Dom.singleStatus.className = "status small-note";
       renderSinglePreview();
@@ -1778,7 +1968,7 @@
       const card = collectSingleCardFromInputs(false);
       if (!card.name || !card.type || !card.setName) {
         Dom.singleStatus.textContent =
-          "Name, Type, and Set are required to save.";
+          "Name, Type, and at least one Set are required to save.";
         Dom.singleStatus.className = "status small-note error";
         return;
       }
@@ -1802,11 +1992,14 @@
         existing.imageUrl = card.imageUrl;
         existing.vehicleTypes = card.vehicleTypes;
         existing.extra = card.extra;
+        existing.prints = card.prints;
+        normalizePrints(existing);
         card.id = existing.id;
       } else {
         if (!card.id) {
           card.id = "card-" + Math.random().toString(36).slice(2);
         }
+        normalizePrints(card);
         AppState.cards.push(card);
         AppState.cardsById[card.id] = card;
       }
@@ -1970,6 +2163,11 @@
             if (n !== undefined && !Number.isNaN(n)) extra.pitCost = n;
           }
 
+          const prints = [];
+          if (setName || cardNumber) {
+            prints.push({ setId: setName, cardNumber });
+          }
+
           out.card = {
             id: null,
             name: name,
@@ -1981,9 +2179,11 @@
             notes,
             imageUrl: "",
             extra,
-            vehicleTypes
+            vehicleTypes,
+            prints
           };
 
+          normalizePrints(out.card);
           return out;
         });
 
@@ -1995,7 +2195,6 @@
         Bulk.renderSelectedBox();
       },
 
-      // Returns rows that are actually visible under current filters/search
       getFilteredRows() {
         const search = Dom.bulkSearchInput.value.toLowerCase().trim();
         const typeFilter = Dom.bulkTypeFilter.value;
@@ -2030,12 +2229,10 @@
           return;
         }
 
-        // Current filters in the UI
         const search = Dom.bulkSearchInput.value.toLowerCase().trim();
         const typeFilter = Dom.bulkTypeFilter.value;
         const setFilter = Dom.bulkSetFilter.value;
 
-        // Apply filters to figure out what's visible
         const rows = AppState.bulkRows.filter(r => {
           const c = r.card || {};
           if (typeFilter && c.type !== typeFilter) return false;
@@ -2047,7 +2244,6 @@
           return haystack.includes(search);
         });
 
-        // Build type/set lists based on ALL rows
         const types = new Set();
         const sets = new Set();
         AppState.bulkRows.forEach(r => {
@@ -2055,7 +2251,6 @@
           if (r.card.setName) sets.add(r.card.setName);
         });
 
-        // Preserve currently selected filters
         const prevType = typeFilter;
         const prevSet = setFilter;
 
@@ -2091,7 +2286,6 @@
           Dom.bulkSetFilter.value = prevSet;
         }
 
-        // Render only visible (filtered) rows
         rows.forEach(rowObj => {
           const c = rowObj.card;
           const row = document.createElement("div");
@@ -2135,7 +2329,6 @@
         }
       },
 
-      // New: render current selections overview
       renderSelectedBox() {
         const box = Dom.bulkSelectedBox;
         if (!box) return;
@@ -2193,7 +2386,6 @@
         });
       },
 
-      // Select / clear ONLY what is visible under current filters/search
       setSelectionForVisible(flag) {
         const rows = Bulk.getFilteredRows();
         rows.forEach(r => {
@@ -2222,6 +2414,7 @@
             return;
           }
           const newCard = cardToJson(rowObj.card);
+          normalizePrints(newCard);
           const key = normalizeNameTypeSet(newCard);
           const matches = cardIndex[key] || [];
 
@@ -2238,12 +2431,29 @@
               ? newCard.vehicleTypes
               : card.vehicleTypes;
             card.extra = Object.assign({}, card.extra || {}, newCard.extra || {});
+
+            if (Array.isArray(newCard.prints) && newCard.prints.length) {
+              if (!Array.isArray(card.prints)) card.prints = [];
+              newCard.prints.forEach(p => {
+                if (!p.setId && !p.cardNumber) return;
+                const idx = card.prints.findIndex(
+                  ep => (ep.setId || "").toLowerCase() === (p.setId || "").toLowerCase()
+                );
+                if (idx >= 0) {
+                  if (p.cardNumber) card.prints[idx].cardNumber = p.cardNumber;
+                } else {
+                  card.prints.push(p);
+                }
+              });
+              normalizePrints(card);
+            }
             updated++;
           } else {
             if (mode === "updateOnly") {
               skipped++;
               return;
             }
+            normalizePrints(newCard);
             AppState.cards.push(newCard);
             const libIdxKey = normalizeNameTypeSet(newCard);
             if (!cardIndex[libIdxKey]) cardIndex[libIdxKey] = [];
@@ -2563,6 +2773,7 @@
             if (!card.extra) card.extra = {};
             if (!Array.isArray(card.tags)) card.tags = [];
             if (typeof card.imageUrl !== "string") card.imageUrl = "";
+            normalizePrints(card);
             AppState.cardsById[card.id] = card;
           });
           renderCardLibraryList();
@@ -2608,8 +2819,6 @@
       [
         Dom.cardNameInput,
         Dom.cardTypeInput,
-        Dom.cardSetNameInput,
-        Dom.cardNumberInput,
         Dom.cardRarityInput,
         Dom.cardTagsInput,
         Dom.cardImageUrlInput,
@@ -2626,14 +2835,17 @@
         el.addEventListener("input", renderSinglePreview);
       });
 
-      // Vehicle type checkboxes -> preview
       getVehicleTypeCheckboxes().forEach(cb => {
         cb.addEventListener("change", renderSinglePreview);
       });
 
-      // Update visible fields when type changes
       Dom.cardTypeInput.addEventListener("change", () => {
         updateFieldVisibility();
+        renderSinglePreview();
+      });
+
+      Dom.addPrintingBtn.addEventListener("click", () => {
+        Dom.printingsContainer.appendChild(createPrintingRow({}));
         renderSinglePreview();
       });
 
