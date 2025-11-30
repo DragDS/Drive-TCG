@@ -5,671 +5,332 @@
   <title>DRIVE TCG – Card Library</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      color-scheme: dark;
+    }
+
     * {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+
     body {
       margin: 0;
-      background: #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617 55%);
       color: #e5e7eb;
+      min-height: 100vh;
     }
+
     .app {
       max-width: 1280px;
       margin: 0 auto;
-      padding: 1rem;
+      padding: 1rem 1.25rem 2.5rem;
     }
+
     header {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      justify-content: space-between;
       align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
       margin-bottom: 0.75rem;
+      flex-wrap: wrap;
     }
+
     header h1 {
       margin: 0;
-      font-size: 1.6rem;
+      font-size: 1.4rem;
+      letter-spacing: 0.04em;
     }
-    header small {
-      color: #9ca3af;
-      font-size: 0.85rem;
-    }
-    .mode-toggle {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 0.75rem;
-    }
-    .mode-label {
+
+    header p {
+      margin: 0;
       font-size: 0.8rem;
       color: #9ca3af;
     }
-    .mode-btn {
-      border-radius: 999px;
-      padding: 0.3rem 0.8rem;
-      font-size: 0.8rem;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      cursor: pointer;
-      transition: background 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
-    }
-    .mode-btn:hover {
-      background: #030712;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    }
-    .mode-btn.active {
-      border-color: #22c55e;
-      background: rgba(34,197,94,0.1);
-      box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
-    }
+
     .panel {
-      background: #020617;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       border: 1px solid #1f2937;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), #020617);
       padding: 0.75rem;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.45);
-      margin-bottom: 0.75rem;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
     }
-    .panel h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1.1rem;
-    }
-    .layout-three {
+
+    .layout-main {
       display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.1fr);
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) minmax(0, 1.4fr);
       gap: 0.75rem;
     }
-    @media (max-width: 1100px) {
-      .layout-three {
-        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+
+    @media (max-width: 1080px) {
+      .layout-main {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+        grid-template-rows: auto auto;
+      }
+      .detail-column {
+        grid-column: 1 / -1;
       }
     }
-    @media (max-width: 900px) {
-      .layout-three {
-        grid-template-columns: minmax(0, 1fr);
+
+    @media (max-width: 760px) {
+      .layout-main {
+        grid-template-columns: 1fr;
       }
     }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-      margin-bottom: 0.5rem;
+
+    h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
     }
-    .toolbar input[type="text"],
-    .toolbar select {
-      padding: 0.3rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.8rem;
-    }
-    .toolbar select {
-      min-width: 120px;
-    }
-    .toolbar .spacer {
-      flex: 1;
-    }
+
     .small-note {
       font-size: 0.78rem;
       color: #9ca3af;
-    }
-    .button {
-      border-radius: 999px;
-      border: 1px solid #374151;
-      background: #111827;
-      color: #e5e7eb;
-      padding: 0.3rem 0.7rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: background 0.08s ease, box-shadow 0.08s ease, transform 0.05s ease;
-    }
-    .button:hover {
-      background: #020617;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-      transform: translateY(-1px);
-    }
-    .button.secondary {
-      background: #020617;
-    }
-    .button.danger {
-      border-color: #b91c1c;
-      color: #fecaca;
-    }
-    .button.danger:hover {
-      background: #7f1d1d;
+      margin: 0.1rem 0;
     }
 
-    /* Card grid – auto-fit height */
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    .controls {
+      display: flex;
+      flex-direction: column;
       gap: 0.5rem;
-      max-height: calc(100vh - 260px);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    input[type="text"],
+    select {
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.82rem;
+      outline: none;
+      min-height: 1.9rem;
+    }
+
+    input[type="text"]:focus,
+    select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      padding: 0.15rem 0.55rem;
+      font-size: 0.7rem;
+      color: #cbd5f5;
+    }
+
+    .chip-primary {
+      border-color: #60a5fa;
+      background: radial-gradient(circle at top left, #1d4ed8, #020617);
+    }
+
+    .chip-muted {
+      opacity: 0.8;
+    }
+
+    .cards-grid {
+      margin-top: 0.25rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.5rem;
+      max-height: calc(100vh - 210px);
       overflow-y: auto;
       padding-right: 0.25rem;
     }
 
     .card-tile {
-      border-radius: 0.75rem;
+      border-radius: 0.6rem;
       border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, rgba(148,163,184,0.16), #020617);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-      overflow: hidden;
+      background: radial-gradient(
+        circle at top left,
+        rgba(148, 163, 184, 0.16),
+        #020617
+      );
+      padding: 0.4rem 0.45rem;
+      cursor: pointer;
       display: flex;
       flex-direction: column;
-      cursor: pointer;
-      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
-    }
-    .card-tile:hover {
-      transform: translateY(-2px);
-      border-color: #22c55e;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.8);
-    }
-    .card-image-wrapper {
-      aspect-ratio: 3/4;
-      background: #020617;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .card-image-wrapper img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      display: block;
-    }
-    .card-info {
-      padding: 0.35rem 0.45rem 0.4rem;
+      gap: 0.25rem;
       font-size: 0.78rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+      transition: transform 0.08s ease, box-shadow 0.1s ease,
+        border-color 0.1s ease;
     }
-    .card-title {
+
+    .card-tile:hover {
+      transform: translateY(-1px);
+      border-color: #3b82f6;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.4);
+    }
+
+    .card-tile.selected {
+      border-color: #facc15;
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9),
+        0 14px 30px rgba(234, 179, 8, 0.4);
+    }
+
+    .card-tile-name {
       font-weight: 600;
-      margin-bottom: 0.1rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .card-sub {
+
+    .card-tile-row {
       display: flex;
       justify-content: space-between;
-      gap: 0.25rem;
-      color: #9ca3af;
-      font-size: 0.72rem;
+      gap: 0.3rem;
+      align-items: baseline;
     }
-    .card-sub span {
+
+    .card-tile-type {
+      font-size: 0.73rem;
+      color: #9ca3af;
+    }
+
+    .card-tile-set {
+      font-size: 0.73rem;
+      color: #c4b5fd;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.05rem 0.4rem;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(15,23,42,0.8);
+
+    .card-tile-rarity {
+      font-size: 0.72rem;
+      color: #a7f3d0;
+    }
+
+    .card-tile-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem;
+    }
+
+    .status-line {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      margin-top: 0.15rem;
+    }
+
+    .status-line span {
       color: #e5e7eb;
     }
 
-    /* Detail view */
-    .detail-layout {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
     .detail-card {
-      display: flex;
-      gap: 0.6rem;
-      border-radius: 0.75rem;
+      border-radius: 0.9rem;
       border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, rgba(96,165,250,0.12), #020617);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.7);
+      background: radial-gradient(
+        circle at top left,
+        rgba(148, 163, 184, 0.16),
+        #020617
+      );
       padding: 0.6rem;
-    }
-    .detail-image-wrapper {
-      flex: 0 0 40%;
-      max-width: 40%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #020617;
-      border-radius: 0.6rem;
-      overflow: hidden;
-    }
-    .detail-image-wrapper img {
-      max-width: 100%;
-      max-height: 320px;
-      object-fit: contain;
-    }
-    .detail-body {
-      flex: 1;
-      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
-      font-size: 0.82rem;
+      gap: 0.4rem;
+      min-height: 200px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
     }
+
     .detail-header {
       display: flex;
       justify-content: space-between;
-      gap: 0.25rem;
+      gap: 0.5rem;
       align-items: baseline;
+      flex-wrap: wrap;
     }
+
     .detail-name {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
     }
+
     .detail-type {
-      font-size: 0.78rem;
-      color: #9ca3af;
-    }
-    .detail-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      color: #9ca3af;
-    }
-    .detail-label {
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-    .detail-text {
-      border-radius: 0.5rem;
-      border: 1px solid rgba(148,163,184,0.6);
-      background: rgba(15,23,42,0.9);
-      padding: 0.4rem 0.5rem;
-      white-space: pre-wrap;
       font-size: 0.8rem;
-    }
-    .detail-actions {
-      margin-top: 0.35rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-
-    /* Deck builder */
-    .deck-layout {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-    .deck-header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-    }
-    .deck-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.3rem;
-    }
-    .deck-tab {
-      border-radius: 999px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 0.25rem 0.7rem;
-      font-size: 0.78rem;
-      cursor: pointer;
-      transition: background 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
-    }
-    .deck-tab.active {
-      border-color: #22c55e;
-      background: rgba(34,197,94,0.12);
-      box-shadow: 0 0 0 1px rgba(34,197,94,0.35);
-    }
-    .deck-main {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      gap: 0.5rem;
-    }
-    @media (max-width: 700px) {
-      .deck-main {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    /* Deck list – auto-fit */
-    .deck-list {
-      max-height: calc(100vh - 300px);
-      overflow-y: auto;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.35rem;
-      background: #020617;
-      font-size: 0.78rem;
-    }
-    .deck-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.4rem;
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.4rem;
-    }
-    .deck-row:nth-child(odd) {
-      background: rgba(15,23,42,0.7);
-    }
-    .deck-row:nth-child(even) {
-      background: rgba(15,23,42,0.45);
-    }
-    .deck-row-main {
-      flex: 1;
-      min-width: 0;
-    }
-    .deck-row-main strong {
-      display: block;
-    }
-    .deck-row-main span {
-      display: block;
-      color: #9ca3af;
-      font-size: 0.7rem;
-    }
-    .deck-row-controls {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-    .deck-row-controls input[type="number"] {
-      width: 3rem;
-      padding: 0.1rem 0.2rem;
-      border-radius: 0.45rem;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 0.78rem;
-    }
-    .deck-stats-box {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      padding: 0.4rem 0.5rem;
-      background: radial-gradient(circle at top left, rgba(251,191,36,0.12), #020617);
-      font-size: 0.8rem;
-    }
-    .deck-stats-box h3 {
-      margin: 0 0 0.25rem;
-      font-size: 0.95rem;
-    }
-    .deck-issues {
-      margin-top: 0.25rem;
-      font-size: 0.78rem;
-    }
-    .deck-issues .ok { color: #4ade80; }
-    .deck-issues .warn { color: #facc15; }
-    .deck-issues .err { color: #f97373; }
-
-    /* Compare */
-    .compare-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 0.5rem;
-    }
-    @media (max-width: 900px) {
-      .compare-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-    .compare-card {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top, rgba(129,140,248,0.12), #020617);
-      padding: 0.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      min-height: 180px;
-    }
-    .compare-card header {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.25rem;
-      align-items: baseline;
-      margin-bottom: 0.25rem;
-    }
-    .compare-card h3 {
-      margin: 0;
-      font-size: 0.9rem;
-    }
-    .compare-badge {
-      font-size: 0.75rem;
       color: #9ca3af;
     }
-    .compare-body {
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      gap: 0.4rem;
-      font-size: 0.78rem;
-    }
-    @media (max-width: 700px) {
-      .compare-body {
-        grid-template-columns: minmax(0, 1fr);
-      }
+
+    .detail-columns {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
     }
 
-    /* Compare image – auto-fit */
-    .compare-image {
-      border-radius: 0.5rem;
-      border: 1px solid #1f2937;
+    .detail-image {
+      flex: 0 0 42%;
+      max-width: 42%;
       background: #020617;
+      border-radius: 0.7rem;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      max-height: calc(100vh - 340px);
+      min-height: 160px;
     }
-    .compare-image img {
+
+    .detail-image img {
       max-width: 100%;
-      max-height: 100%;
+      max-height: 260px;
       object-fit: contain;
     }
-    .compare-meta {
+
+    .detail-meta {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.8rem;
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
     }
-    .compare-section {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-    }
-    .compare-label {
+
+    .detail-row-label {
       font-weight: 600;
       color: #e5e7eb;
+      margin-right: 0.25rem;
     }
-    .compare-value {
-      color: #9ca3af;
-    }
-    .compare-empty {
+
+    .detail-rules {
+      border-radius: 0.6rem;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.98);
+      padding: 0.45rem 0.55rem;
       font-size: 0.78rem;
-      color: #6b7280;
-      font-style: italic;
-    }
-
-    /* Full card overlay */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.92);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 1rem;
-    }
-    .overlay.open {
-      display: flex;
-    }
-    .overlay-card {
-      background: #020617;
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      padding: 0.75rem;
-      max-width: 960px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.9);
-    }
-    .overlay-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    .overlay-header h2 {
-      margin: 0;
-      font-size: 1.1rem;
-    }
-    .overlay-close-btn {
-      border-radius: 999px;
-      border: 1px solid #4b5563;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 0.2rem 0.55rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-    .overlay-close-btn:hover {
-      background: #111827;
-    }
-    .overlay-body {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
-      gap: 0.6rem;
-    }
-    @media (max-width: 900px) {
-      .overlay-body {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-    .overlay-image {
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: #020617;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      max-height: 520px;
-    }
-    .overlay-image img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-    }
-    .overlay-meta {
-      font-size: 0.85rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .overlay-meta-row {
-      display: flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-      font-size: 0.8rem;
-    }
-    .overlay-meta-label {
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-    .overlay-meta-value {
-      color: #9ca3af;
-    }
-    .overlay-rules {
-      border-radius: 0.55rem;
-      border: 1px solid rgba(148,163,184,0.6);
-      padding: 0.4rem 0.5rem;
-      background: rgba(15,23,42,0.95);
       white-space: pre-wrap;
-      font-size: 0.82rem;
-    }
-    .overlay-actions {
-      margin-top: 0.4rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
     }
 
-    /* Precons – auto-fit lists */
-    .precon-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
-      gap: 0.6rem;
-    }
-    @media (max-width: 900px) {
-      .precon-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-    .precon-list {
-      max-height: calc(100vh - 300px);
-      overflow-y: auto;
-      border-radius: 0.6rem;
+    .inline-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
       border: 1px solid #1f2937;
-      background: #020617;
-      padding: 0.35rem;
-      font-size: 0.8rem;
-    }
-    .precon-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.4rem;
-    }
-    .precon-row:nth-child(odd) {
-      background: rgba(15,23,42,0.7);
-    }
-    .precon-row:nth-child(even) {
-      background: rgba(15,23,42,0.45);
-    }
-    .precon-row-main {
-      flex: 1;
-      min-width: 0;
-    }
-    .precon-row-main strong {
-      display: block;
-    }
-    .precon-row-main span {
-      display: block;
-      color: #9ca3af;
-      font-size: 0.72rem;
-    }
-    .precon-cards {
-      max-height: calc(100vh - 300px);
-      overflow-y: auto;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: #020617;
-      padding: 0.35rem;
-      font-size: 0.8rem;
-    }
-    .precon-card-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.35rem;
-      padding: 0.2rem 0.3rem;
-      border-radius: 0.4rem;
-    }
-    .precon-card-row:nth-child(odd) {
-      background: rgba(15,23,42,0.7);
-    }
-    .precon-card-row:nth-child(even) {
-      background: rgba(15,23,42,0.45);
+      padding: 0.05rem 0.4rem;
     }
   </style>
 </head>
@@ -678,1107 +339,614 @@
     <header>
       <div>
         <h1>DRIVE TCG – Card Library</h1>
-        <small>Browse cards, build decks, and view preconstructed decks.</small>
+        <p>Search and browse the released DRIVE cards.</p>
+      </div>
+      <div>
+        <p class="small-note">
+          Data from <span class="inline-code">drive-card.json</span>.
+        </p>
       </div>
     </header>
 
-    <div class="mode-toggle">
-      <span class="mode-label">View:</span>
-      <button id="modeCardsBtn" class="mode-btn active" type="button">Cards</button>
-      <button id="modeDecksBtn" class="mode-btn" type="button">Deck Builder</button>
-      <button id="modeCompareBtn" class="mode-btn" type="button">Compare</button>
-      <button id="modePreconsBtn" class="mode-btn" type="button">Precons</button>
-    </div>
-
-    <!-- CARDS MODE -->
-    <div id="cardsModePanel">
-      <section class="panel">
-        <h2>Card Library</h2>
-        <div class="toolbar">
-          <input id="searchInput" type="text" placeholder="Search name / rules / set..." />
-          <select id="typeFilter">
-            <option value="">All Types</option>
-            <option value="Crew">Crew</option>
-            <option value="Driver">Driver</option>
-            <option value="Named Driver">Named Driver</option>
-            <option value="Mod">Mod</option>
-            <option value="Vehicle">Vehicle</option>
-            <option value="Named Vehicle">Named Vehicle</option>
-            <option value="Track">Track</option>
-            <option value="Condition">Condition</option>
-            <option value="Misc">Misc</option>
-          </select>
-          <select id="setFilter">
-            <option value="">All Sets</option>
-          </select>
-          <select id="rarityFilter">
-            <option value="">All Rarities</option>
-          </select>
-          <select id="vehicleFilter">
-            <option value="">All Vehicle Types</option>
-            <option value="Drag">Drag</option>
-            <option value="Drift">Drift</option>
-            <option value="Off-Road">Off-Road</option>
-            <option value="Rally">Rally</option>
-          </select>
-          <span class="spacer"></span>
-          <span id="cardCountLabel" class="small-note">0 cards</span>
-        </div>
-        <div class="layout-three">
-          <div>
-            <div id="cardGrid" class="card-grid"></div>
-          </div>
-          <div>
-            <h2>Card Details</h2>
-            <div id="detailContainer" class="detail-layout">
-              <p class="small-note">
-                Select a card to view its details, add it to a deck, or send it to the compare view.
-              </p>
+    <section class="panel">
+      <div class="layout-main">
+        <!-- LEFT: Filters -->
+        <div>
+          <h2>Filters</h2>
+          <div class="controls">
+            <div class="field">
+              <label for="searchInput">Search</label>
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Name, type, text, set…"
+              />
             </div>
-          </div>
-          <div>
-            <h2>Quick Actions</h2>
-            <div class="deck-stats-box">
-              <h3>Deck & Compare Shortcuts</h3>
-              <p class="small-note">
-                From the card details or full view:
-                <br />– <strong>Add to Deck</strong>: quickly increase quantity in the active deck.
-                <br />– <strong>Add to Compare</strong>: toggle the card in one of the two compare slots.
-              </p>
-              <p class="small-note">
-                Open the full card modal for a large preview and more actions.
-              </p>
+            <div class="field">
+              <label for="typeFilter">Type</label>
+              <select id="typeFilter">
+                <option value="">All Types</option>
+              </select>
             </div>
-            <button id="openFullCardBtn" class="button secondary" type="button" disabled>
-              Open Selected Card in Full View
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- DECK MODE -->
-    <div id="decksModePanel" style="display:none;">
-      <section class="panel">
-        <h2>Deck Builder</h2>
-        <div class="deck-layout">
-          <div class="deck-header">
-            <div class="deck-tabs">
-              <button class="deck-tab active" data-deck-index="0" type="button">Deck 1</button>
-              <button class="deck-tab" data-deck-index="1" type="button">Deck 2</button>
-              <button class="deck-tab" data-deck-index="2" type="button">Deck 3</button>
+            <div class="field">
+              <label for="setFilter">Set</label>
+              <select id="setFilter">
+                <option value="">All Sets</option>
+              </select>
             </div>
-            <input id="deckNameInput" type="text" placeholder="Deck Name" style="flex:1; padding:0.35rem 0.6rem; border-radius:999px; border:1px solid #374151; background:#020617; color:#e5e7eb; font-size:0.8rem;" />
-            <button id="clearDeckBtn" class="button danger" type="button">Clear Deck</button>
-          </div>
-          <div class="deck-main">
-            <div>
-              <div id="deckList" class="deck-list"></div>
+            <div class="field">
+              <label for="rarityFilter">Rarity</label>
+              <select id="rarityFilter">
+                <option value="">All Rarities</option>
+              </select>
             </div>
-            <div>
-              <div id="deckStats" class="deck-stats-box">
-                <h3>Deck Stats</h3>
-                <p class="small-note">No cards yet.</p>
-              </div>
-              <div id="deckLegal" class="deck-issues small-note"></div>
-              <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-                <button id="exportDeckJsonBtn" class="button secondary" type="button">Export Deck as JSON</button>
-                <button id="exportDeckTextBtn" class="button secondary" type="button">Export Deck as Text</button>
-              </div>
-            </div>
+            <p id="filterStatus" class="status-line"></p>
           </div>
         </div>
-      </section>
-    </div>
 
-    <!-- COMPARE MODE -->
-    <div id="compareModePanel" style="display:none;">
-      <section class="panel">
-        <h2>Compare Cards</h2>
-        <div class="toolbar">
-          <select id="compareSelectA">
-            <option value="">Select Card A</option>
-          </select>
-          <button id="clearCompareABtn" class="button secondary" type="button">Clear A</button>
-          <select id="compareSelectB">
-            <option value="">Select Card B</option>
-          </select>
-          <button id="clearCompareBBtn" class="button secondary" type="button">Clear B</button>
+        <!-- MIDDLE: Card grid -->
+        <div>
+          <h2>Cards</h2>
+          <div id="cardsGrid" class="cards-grid">
+            <p class="small-note">Loading card data…</p>
+          </div>
         </div>
-        <div id="compareViewer" class="compare-layout"></div>
-      </section>
-    </div>
 
-    <!-- PRECONS MODE -->
-    <div id="preconsModePanel" style="display:none;">
-      <section class="panel">
-        <h2>Preconstructed Decks</h2>
-        <div class="toolbar">
-          <select id="preconSelect">
-            <option value="">Select Precon</option>
-          </select>
-          <button id="refreshPreconsBtn" class="button secondary" type="button">Reload Precons</button>
-          <span class="spacer"></span>
-          <span id="preconStats" class="small-note"></span>
-        </div>
-        <div class="precon-layout">
-          <div>
-            <div id="preconList" class="precon-list"></div>
-          </div>
-          <div>
-            <h3 style="margin-top:0; font-size:0.95rem;">Precon Details</h3>
-            <p id="preconDesc" class="small-note">Select a precon to see its contents.</p>
-            <div id="preconCards" class="precon-cards"></div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <!-- FULL CARD OVERLAY -->
-  <div id="fullCardOverlay" class="overlay">
-    <div class="overlay-card">
-      <div class="overlay-header">
-        <h2 id="fullCardTitle">Card</h2>
-        <button id="closeFullCardBtn" class="overlay-close-btn" type="button">✕</button>
-      </div>
-      <div class="overlay-body">
-        <div class="overlay-image">
-          <img id="fullCardImage" src="" alt="Card" />
-        </div>
-        <div class="overlay-meta">
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Type:</span>
-            <span id="fullCardType" class="overlay-meta-value"></span>
-          </div>
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Set:</span>
-            <span id="fullCardSet" class="overlay-meta-value"></span>
-          </div>
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Rarity:</span>
-            <span id="fullCardRarity" class="overlay-meta-value"></span>
-          </div>
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Vehicle Types:</span>
-            <span id="fullCardVehicles" class="overlay-meta-value"></span>
-          </div>
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Tags:</span>
-            <span id="fullCardTags" class="overlay-meta-value"></span>
-          </div>
-          <div class="overlay-meta-row">
-            <span class="overlay-meta-label">Mod Stats / HP/CON:</span>
-            <span id="fullCardStats" class="overlay-meta-value"></span>
-          </div>
-          <div>
-            <span class="overlay-meta-label">Rules Text:</span>
-            <div id="fullCardRules" class="overlay-rules"></div>
-          </div>
-          <div class="overlay-actions">
-            <button id="fullAddToDeckBtn" class="button" type="button">Add to Active Deck</button>
-            <button id="fullAddToCompareBtn" class="button secondary" type="button">Add/Toggle in Compare</button>
+        <!-- RIGHT: Detail view -->
+        <div class="detail-column">
+          <h2>Details</h2>
+          <div id="detailCard" class="detail-card">
+            <p class="small-note">
+              Select a card from the list to see full details.
+            </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 
   <script>
+    // --------------------------------------------------------------------
+    // RELEASE CONTROL: limit which sets appear on the public site.
+    // --------------------------------------------------------------------
+    //
+    // If RELEASED_SETS is:
+    //   - null or []:  all sets in drive-card.json will be shown.
+    //   - an array:    only printings with setId in that array are visible.
+    //
+    // Example:
+    //   const RELEASED_SETS = ["SET 1", "SET 2"];
+    //
+    // For now it defaults to "all released".
+    const RELEASED_SETS = null;
+    // const RELEASED_SETS = ["SET 1", "SET 2"]; // <- uncomment & edit to hide future sets
+
     const AppState = {
       cards: [],
-      cardsById: {},
-      decks: [
-        { name: "Deck 1", cards: {} },
-        { name: "Deck 2", cards: {} },
-        { name: "Deck 3", cards: {} }
-      ],
-      activeDeckIndex: 0,
-      compareSlots: [null, null],
-      precons: []
+      filteredCards: [],
+      selectedCardId: null,
+      sets: [],
+      types: [],
+      rarities: []
     };
 
-    const STORAGE_KEYS = { decks: "driveDecks_v1" };
-
     const Dom = {
-      modeCardsBtn: document.getElementById("modeCardsBtn"),
-      modeDecksBtn: document.getElementById("modeDecksBtn"),
-      modeCompareBtn: document.getElementById("modeCompareBtn"),
-      modePreconsBtn: document.getElementById("modePreconsBtn"),
-      cardsModePanel: document.getElementById("cardsModePanel"),
-      decksModePanel: document.getElementById("decksModePanel"),
-      compareModePanel: document.getElementById("compareModePanel"),
-      preconsModePanel: document.getElementById("preconsModePanel"),
-
       searchInput: document.getElementById("searchInput"),
       typeFilter: document.getElementById("typeFilter"),
       setFilter: document.getElementById("setFilter"),
       rarityFilter: document.getElementById("rarityFilter"),
-      vehicleFilter: document.getElementById("vehicleFilter"),
-      cardGrid: document.getElementById("cardGrid"),
-      cardCountLabel: document.getElementById("cardCountLabel"),
-      detailContainer: document.getElementById("detailContainer"),
-      openFullCardBtn: document.getElementById("openFullCardBtn"),
-
-      deckTabs: document.querySelectorAll(".deck-tab"),
-      deckNameInput: document.getElementById("deckNameInput"),
-      deckList: document.getElementById("deckList"),
-      deckStats: document.getElementById("deckStats"),
-      deckLegal: document.getElementById("deckLegal"),
-      clearDeckBtn: document.getElementById("clearDeckBtn"),
-      exportDeckJsonBtn: document.getElementById("exportDeckJsonBtn"),
-      exportDeckTextBtn: document.getElementById("exportDeckTextBtn"),
-
-      fullCardOverlay: document.getElementById("fullCardOverlay"),
-      fullCardTitle: document.getElementById("fullCardTitle"),
-      fullCardImage: document.getElementById("fullCardImage"),
-      fullCardType: document.getElementById("fullCardType"),
-      fullCardSet: document.getElementById("fullCardSet"),
-      fullCardRarity: document.getElementById("fullCardRarity"),
-      fullCardVehicles: document.getElementById("fullCardVehicles"),
-      fullCardTags: document.getElementById("fullCardTags"),
-      fullCardStats: document.getElementById("fullCardStats"),
-      fullCardRules: document.getElementById("fullCardRules"),
-      fullAddToDeckBtn: document.getElementById("fullAddToDeckBtn"),
-      fullAddToCompareBtn: document.getElementById("fullAddToCompareBtn"),
-      closeFullCardBtn: document.getElementById("closeFullCardBtn"),
-
-      compareSelectA: document.getElementById("compareSelectA"),
-      compareSelectB: document.getElementById("compareSelectB"),
-      clearCompareABtn: document.getElementById("clearCompareABtn"),
-      clearCompareBBtn: document.getElementById("clearCompareBBtn"),
-      compareViewer: document.getElementById("compareViewer"),
-
-      preconSelect: document.getElementById("preconSelect"),
-      refreshPreconsBtn: document.getElementById("refreshPreconsBtn"),
-      preconDesc: document.getElementById("preconDesc"),
-      preconStats: document.getElementById("preconStats"),
-      preconList: document.getElementById("preconList"),
-      preconCards: document.getElementById("preconCards")
+      filterStatus: document.getElementById("filterStatus"),
+      cardsGrid: document.getElementById("cardsGrid"),
+      detailCard: document.getElementById("detailCard")
     };
 
-    let selectedCardId = null;
+    // Helpers that mirror admin-side logic a bit
+    function parseTags(str) {
+      if (!str) return [];
+      return String(str)
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function parseHpCon(val) {
+      const out = { hp: undefined, con: undefined };
+      if (!val) return out;
+      const cleaned = String(val).replace(/\s/g, "");
+      const parts = cleaned.split("/");
+      if (parts[0] !== undefined && parts[0] !== "") out.hp = Number(parts[0]);
+      if (parts[1] !== undefined && parts[1] !== "") out.con = Number(parts[1]);
+      return out;
+    }
+
+    function isSetReleased(setId) {
+      if (!setId) return true;
+      if (!RELEASED_SETS || !RELEASED_SETS.length) return true;
+      return RELEASED_SETS.includes(setId);
+    }
+
+    function normalizePrints(card) {
+      if (!card) return;
+
+      // Ensure prints array exists if any legacy fields present
+      if (!Array.isArray(card.prints)) {
+        card.prints = [];
+      }
+      if (!card.prints.length && (card.setName || card.cardNumber)) {
+        card.prints.push({
+          setId: card.setName || "",
+          cardNumber: card.cardNumber || ""
+        });
+      }
+
+      // Make sure primary printing backfills setName/cardNumber
+      const primary = card.prints[0];
+      if (primary) {
+        card.setName = primary.setId || card.setName || "";
+        card.cardNumber = primary.cardNumber || card.cardNumber || "";
+      } else {
+        card.setName = card.setName || "";
+        card.cardNumber = card.cardNumber || "";
+      }
+
+      // Filter visible printings by RELEASED_SETS
+      const visible = (card.prints || []).filter(p =>
+        isSetReleased(p.setId)
+      );
+      card.visiblePrints = visible;
+    }
 
     const CardData = {
-      async load() {
-        try {
-          const res = await fetch("drive-card.json");
-          if (!res.ok) {
-            AppState.cards = [];
-            AppState.cardsById = {};
-            return;
-          }
-          const json = await res.json();
-          AppState.cards = Array.isArray(json) ? json : [];
-        } catch (e) {
-          console.error("Failed to load drive-card.json", e);
-          AppState.cards = [];
-        }
-
-        AppState.cardsById = {};
-        AppState.cards.forEach(c => {
-          if (!c.id) c.id = "card-" + Math.random().toString(36).slice(2);
-          if (!c.extra) c.extra = {};
-          if (!Array.isArray(c.tags)) c.tags = [];
-          if (typeof c.imageUrl !== "string") c.imageUrl = "";
-          AppState.cardsById[c.id] = c;
-        });
-      },
-      getCardById(id) {
-        return AppState.cardsById[id] || null;
-      },
       getVehicleTypes(card) {
         if (!card) return [];
-        if (card.extra && Array.isArray(card.extra.vehicleTypes) && card.extra.vehicleTypes.length) {
-          return card.extra.vehicleTypes;
+        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) {
+          return card.vehicleTypes;
         }
-        if (card.extra && typeof card.extra.vehicleType === "string" && card.extra.vehicleType.trim()) {
-          return [card.extra.vehicleType.trim()];
+        const e = card.extra || {};
+        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) {
+          return e.vehicleTypes;
         }
+        if (e.vehicleType) return [e.vehicleType];
         return [];
       },
       getModStats(card) {
-        if (!card || card.type !== "Mod") return "";
+        if (!card || card.type !== "Mod") return null;
         const e = card.extra || {};
         const parts = [];
-        if (e.modBasePart) parts.push(`Base: ${e.modBasePart}`);
-        const levels = [];
-        if (e.modLevel1) levels.push(`L1 ${e.modLevel1}`);
-        if (e.modLevel2) levels.push(`L2 ${e.modLevel2}`);
-        if (e.modLevel3) levels.push(`L3 ${e.modLevel3}`);
-        if (e.modLevel4) levels.push(`L4 ${e.modLevel4}`);
-        if (levels.length) parts.push(levels.join(" · "));
-        return parts.join(" | ");
+        if (e.modLevel1) parts.push(`L1 ${e.modLevel1}`);
+        if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
+        if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
+        if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
+        if (!parts.length && !e.modBasePart) return null;
+        const label = e.modType
+          ? `${e.modType} ${e.modBasePart || "Mod"}`
+          : (e.modBasePart || "Mod");
+        return parts.length ? `${label}: ${parts.join(" / ")}` : label;
       },
       getVehicleStats(card) {
-        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return "";
+        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle"))
+          return null;
         const e = card.extra || {};
         const bits = [];
-        if (typeof e.hp === "number") bits.push(`HP: ${e.hp}`);
-        if (typeof e.con === "number") bits.push(`CON: ${e.con}`);
-        return bits.join(" · ");
-      }
-    };
-
-    const Mode = {
-      setMode(mode) {
-        Dom.cardsModePanel.style.display = mode === "cards" ? "" : "none";
-        Dom.decksModePanel.style.display = mode === "decks" ? "" : "none";
-        Dom.compareModePanel.style.display = mode === "compare" ? "" : "none";
-        Dom.preconsModePanel.style.display = mode === "precons" ? "" : "none";
-
-        Dom.modeCardsBtn.classList.toggle("active", mode === "cards");
-        Dom.modeDecksBtn.classList.toggle("active", mode === "decks");
-        Dom.modeCompareBtn.classList.toggle("active", mode === "compare");
-        Dom.modePreconsBtn.classList.toggle("active", mode === "precons");
-      },
-      init() {
-        Dom.modeCardsBtn.addEventListener("click", () => Mode.setMode("cards"));
-        Dom.modeDecksBtn.addEventListener("click", () => Mode.setMode("decks"));
-        Dom.modeCompareBtn.addEventListener("click", () => Mode.setMode("compare"));
-        Dom.modePreconsBtn.addEventListener("click", () => Mode.setMode("precons"));
-      }
-    };
-
-    const CardGrid = {
-      buildFilterOptions() {
-        const sets = new Set();
-        const rarities = new Set();
-        AppState.cards.forEach(card => {
-          if (card.setName) sets.add(card.setName);
-          if (card.rarity) rarities.add(card.rarity);
-        });
-        Dom.setFilter.innerHTML = '<option value="">All Sets</option>';
-        Array.from(sets).sort().forEach(s => {
-          const opt = document.createElement("option");
-          opt.value = s;
-          opt.textContent = s;
-          Dom.setFilter.appendChild(opt);
-        });
-        Dom.rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-        Array.from(rarities).sort().forEach(r => {
-          const opt = document.createElement("option");
-          opt.value = r;
-          opt.textContent = r;
-          Dom.rarityFilter.appendChild(opt);
-        });
-      },
-      getFilteredCards() {
-        const q = Dom.searchInput.value.trim().toLowerCase();
-        const type = Dom.typeFilter.value;
-        const setName = Dom.setFilter.value;
-        const rarity = Dom.rarityFilter.value;
-        const vehType = Dom.vehicleFilter.value;
-
-        return AppState.cards.filter(card => {
-          if (type && card.type !== type) return false;
-          if (setName && card.setName !== setName) return false;
-          if (rarity && card.rarity !== rarity) return false;
-          if (vehType) {
-            const vt = CardData.getVehicleTypes(card);
-            if (!vt.includes(vehType)) return false;
-          }
-          if (q) {
-            const haystack = [
-              card.name || "",
-              card.type || "",
-              card.setName || "",
-              card.rarity || "",
-              card.notes || ""
-            ].join(" ").toLowerCase();
-            if (!haystack.includes(q)) return false;
-          }
-          return true;
-        });
-      },
-      renderGrid() {
-        const cards = CardGrid.getFilteredCards();
-        Dom.cardGrid.innerHTML = "";
-        Dom.cardCountLabel.textContent = `${cards.length} card${cards.length === 1 ? "" : "s"} found`;
-
-        if (!cards.length) {
-          Dom.cardGrid.innerHTML = "<p class='small-note'>No cards match the current filters.</p>";
-          return;
+        if (e.hp !== undefined || e.con !== undefined) {
+          bits.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
         }
+        if (e.pitCost !== undefined) {
+          bits.push(`PIT: ${e.pitCost}`);
+        }
+        return bits.length ? bits.join(" | ") : null;
+      }
+    };
 
-        cards
-          .slice()
-          .sort((a,b) => {
-            const typeCmp = (a.type || "").localeCompare(b.type || "");
-            if (typeCmp !== 0) return typeCmp;
-            const setCmp = (a.setName || "").localeCompare(b.setName || "");
-            if (setCmp !== 0) return setCmp;
-            const numCmp = (a.cardNumber || "").localeCompare(b.cardNumber || "");
-            if (numCmp !== 0) return numCmp;
-            return (a.name || "").localeCompare(b.name || "");
-          })
-          .forEach(card => {
-            const tile = document.createElement("div");
-            tile.className = "card-tile";
+    function loadCards() {
+      Dom.cardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
+      fetch("drive-card.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch drive-card.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json)) {
+            throw new Error("drive-card.json is not an array.");
+          }
+          AppState.cards = json.map(raw => {
+            const card = Object.assign({}, raw);
 
-            const imgWrap = document.createElement("div");
-            imgWrap.className = "card-image-wrapper";
-            const img = document.createElement("img");
-            img.src = card.imageUrl || "";
-            img.alt = card.name || "Card";
-            imgWrap.appendChild(img);
+            if (!card.extra) card.extra = {};
+            if (!Array.isArray(card.tags)) {
+              card.tags = parseTags(card.tags);
+            }
+            if (typeof card.imageUrl !== "string") {
+              card.imageUrl = card.imageUrl || "";
+            }
 
-            const info = document.createElement("div");
-            info.className = "card-info";
-            const title = document.createElement("div");
-            title.className = "card-title";
-            title.textContent = card.name || "(No Name)";
-            const sub = document.createElement("div");
-            sub.className = "card-sub";
-            const left = document.createElement("span");
-            left.textContent = card.type || "";
-            const right = document.createElement("span");
-            right.textContent = (card.setName || "") + (card.cardNumber ? ` #${card.cardNumber}` : "");
-            sub.appendChild(left);
-            sub.appendChild(right);
-            info.appendChild(title);
-            info.appendChild(sub);
+            // Normalize prints & compute visible printings
+            normalizePrints(card);
 
-            tile.appendChild(imgWrap);
-            tile.appendChild(info);
+            // Vehicle types may be in array or extra
+            if (!Array.isArray(card.vehicleTypes)) {
+              const vt = card.extra.vehicleTypes || card.extra.vehicleType || [];
+              card.vehicleTypes = Array.isArray(vt) ? vt : vt ? [vt] : [];
+            }
 
-            tile.addEventListener("click", () => {
-              selectedCardId = card.id;
-              DetailPanel.render(card.id);
-              Dom.openFullCardBtn.disabled = false;
-            });
+            // Some data might encode hp/con in a string; admin now should handle this,
+            // but just in case, do a fallback parse:
+            if (
+              (card.type === "Vehicle" || card.type === "Named Vehicle") &&
+              !("hp" in card.extra) &&
+              !("con" in card.extra)
+            ) {
+              const fromField =
+                card.extra.hpCon || card.vehicleHpCon || card.HP_CON || "";
+              const parsed = parseHpCon(fromField);
+              if (parsed.hp !== undefined) card.extra.hp = parsed.hp;
+              if (parsed.con !== undefined) card.extra.con = parsed.con;
+            }
 
-            Dom.cardGrid.appendChild(tile);
+            return card;
           });
-      },
-      init() {
-        ["input", "change"].forEach(evt => {
-          Dom.searchInput.addEventListener(evt, () => CardGrid.renderGrid());
-          Dom.typeFilter.addEventListener(evt, () => CardGrid.renderGrid());
-          Dom.setFilter.addEventListener(evt, () => CardGrid.renderGrid());
-          Dom.rarityFilter.addEventListener(evt, () => CardGrid.renderGrid());
-          Dom.vehicleFilter.addEventListener(evt, () => CardGrid.renderGrid());
-        });
-      }
-    };
 
-    const DetailPanel = {
-      render(cardId) {
-        const card = CardData.getCardById(cardId);
-        Dom.detailContainer.innerHTML = "";
-        if (!card) {
-          Dom.detailContainer.innerHTML = "<p class='small-note'>No card selected.</p>";
-          return;
+          // Apply release filtering: hide cards with no visible printings at all
+          AppState.cards = AppState.cards.filter(card => {
+            // If card has no prints at all, decide:
+            if (!card.prints || !card.prints.length) {
+              // If release list is open, we allow it; otherwise hide
+              if (!RELEASED_SETS || !RELEASED_SETS.length) {
+                card.visiblePrints = [];
+                return true;
+              }
+              return false;
+            }
+            return card.visiblePrints && card.visiblePrints.length > 0;
+          });
+
+          extractFilterValues();
+          applyFiltersAndRender();
+        })
+        .catch(err => {
+          console.error(err);
+          Dom.cardsGrid.innerHTML =
+            "<p class='small-note'>Error loading drive-card.json. Check the console for details.</p>";
+        });
+    }
+
+    function extractFilterValues() {
+      const types = new Set();
+      const sets = new Set();
+      const rarities = new Set();
+
+      AppState.cards.forEach(card => {
+        if (card.type) types.add(card.type);
+        if (card.rarity) rarities.add(card.rarity);
+
+        (card.visiblePrints || []).forEach(p => {
+          if (p.setId) sets.add(p.setId);
+        });
+      });
+
+      AppState.types = Array.from(types).sort();
+      AppState.sets = Array.from(sets).sort();
+      AppState.rarities = Array.from(rarities).sort();
+
+      // Populate dropdowns
+      Dom.typeFilter.innerHTML = '<option value="">All Types</option>';
+      AppState.types.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        Dom.typeFilter.appendChild(opt);
+      });
+
+      Dom.setFilter.innerHTML = '<option value="">All Sets</option>';
+      AppState.sets.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s;
+        opt.textContent = s;
+        Dom.setFilter.appendChild(opt);
+      });
+
+      Dom.rarityFilter.innerHTML = '<option value="">All Rarities</option>';
+      AppState.rarities.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.textContent = r;
+        Dom.rarityFilter.appendChild(opt);
+      });
+    }
+
+    function applyFiltersAndRender() {
+      const q = Dom.searchInput.value.toLowerCase().trim();
+      const typeFilter = Dom.typeFilter.value;
+      const setFilter = Dom.setFilter.value;
+      const rarityFilter = Dom.rarityFilter.value;
+
+      let cards = AppState.cards.slice();
+
+      cards = cards.filter(card => {
+        // Drop cards with no visible printings if set filtering is in use
+        const prints = card.visiblePrints || [];
+        if (prints.length === 0 && setFilter) {
+          return false;
         }
 
-        const wrapper = document.createElement("div");
-        wrapper.className = "detail-card";
+        if (typeFilter && card.type !== typeFilter) return false;
+        if (rarityFilter && card.rarity !== rarityFilter) return false;
 
-        const imgWrap = document.createElement("div");
-        imgWrap.className = "detail-image-wrapper";
-        const img = document.createElement("img");
-        img.src = card.imageUrl || "";
-        img.alt = card.name || "Card";
-        imgWrap.appendChild(img);
+        if (setFilter) {
+          if (!prints.some(p => p.setId === setFilter)) return false;
+        }
 
-        const body = document.createElement("div");
-        body.className = "detail-body";
+        if (q) {
+          const textParts = [
+            card.name,
+            card.type,
+            card.rarity,
+            card.setName,
+            (card.notes || "").replace(/\s+/g, " ")
+          ];
+          const haystack = textParts
+            .join(" | ")
+            .toLowerCase();
+          if (!haystack.includes(q)) return false;
+        }
+
+        return true;
+      });
+
+      // Sort: type → set → cardNumber → name
+      cards.sort((a, b) => {
+        const t = (a.type || "").localeCompare(b.type || "");
+        if (t !== 0) return t;
+
+        const as = (a.setName || "").localeCompare(b.setName || "");
+        if (as !== 0) return as;
+
+        const an = (a.cardNumber || "").localeCompare(b.cardNumber || "");
+        if (an !== 0) return an;
+
+        return (a.name || "").localeCompare(b.name || "");
+      });
+
+      AppState.filteredCards = cards;
+      renderCardsGrid();
+      renderFilterStatus();
+      renderDetailCard(); // refresh details if selection changed or filtered out
+    }
+
+    function renderFilterStatus() {
+      const total = AppState.cards.length;
+      const shown = AppState.filteredCards.length;
+      Dom.filterStatus.innerHTML =
+        `Showing <span>${shown}</span> of <span>${total}</span> cards.`;
+    }
+
+    function renderCardsGrid() {
+      const grid = Dom.cardsGrid;
+      grid.innerHTML = "";
+
+      if (!AppState.filteredCards.length) {
+        grid.innerHTML =
+          "<p class='small-note'>No cards match the current filters.</p>";
+        return;
+      }
+
+      AppState.filteredCards.forEach(card => {
+        const tile = document.createElement("div");
+        tile.className = "card-tile";
+        if (card.id === AppState.selectedCardId) {
+          tile.classList.add("selected");
+        }
 
         const header = document.createElement("div");
-        header.className = "detail-header";
-
-        const nameEl = document.createElement("div");
-        nameEl.className = "detail-name";
-        nameEl.textContent = card.name || "(No Name)";
-
-        const typeEl = document.createElement("div");
-        typeEl.className = "detail-type";
-        typeEl.textContent = card.type || "";
-
-        header.appendChild(nameEl);
-        header.appendChild(typeEl);
+        header.className = "card-tile-name";
+        header.textContent = card.name || "(No Name)";
 
         const row1 = document.createElement("div");
-        row1.className = "detail-row";
-        row1.innerHTML =
-          `<span class="detail-label">Set:</span> <span>${card.setName || ""}</span>` +
-          ` · <span class="detail-label">Rarity:</span> <span>${card.rarity || ""}</span>` +
-          (card.cardNumber ? ` · <span class="detail-label">Card #:</span> <span>${card.cardNumber}</span>` : "");
+        row1.className = "card-tile-row";
+        const typeSpan = document.createElement("span");
+        typeSpan.className = "card-tile-type";
+        typeSpan.textContent = card.type || "";
+        const raritySpan = document.createElement("span");
+        raritySpan.className = "card-tile-rarity";
+        raritySpan.textContent = card.rarity || "";
+        row1.appendChild(typeSpan);
+        row1.appendChild(raritySpan);
 
         const row2 = document.createElement("div");
-        row2.className = "detail-row";
-        const vt = CardData.getVehicleTypes(card);
+        row2.className = "card-tile-row";
+        const sets = (card.visiblePrints || [])
+          .map(p => p.setId)
+          .filter(Boolean);
+        const setSpan = document.createElement("span");
+        setSpan.className = "card-tile-set";
+        setSpan.textContent = sets.length ? sets.join(" & ") : "—";
+        row2.appendChild(setSpan);
+
+        const tagsRow = document.createElement("div");
+        tagsRow.className = "card-tile-tags";
         const tags = card.tags || [];
-        row2.innerHTML =
-          `<span class="detail-label">Vehicle Types:</span> <span>${vt.length ? vt.join(", ") : "—"}</span>` +
-          ` · <span class="detail-label">Tags:</span> <span>${tags.length ? tags.join(", ") : "—"}</span>`;
-
-        const row3 = document.createElement("div");
-        row3.className = "detail-row";
-        const modStats = CardData.getModStats(card);
-        const vehStats = CardData.getVehicleStats(card);
-        const statPieces = [];
-        if (modStats) statPieces.push(modStats);
-        if (vehStats) statPieces.push(vehStats);
-        row3.innerHTML =
-          `<span class="detail-label">Stats:</span> <span>${statPieces.length ? statPieces.join(" | ") : "—"}</span>`;
-
-        const rulesBox = document.createElement("div");
-        rulesBox.className = "detail-text";
-        rulesBox.textContent = card.notes || "";
-
-        const actions = document.createElement("div");
-        actions.className = "detail-actions";
-
-        const addToDeckBtn = document.createElement("button");
-        addToDeckBtn.type = "button";
-        addToDeckBtn.className = "button";
-        addToDeckBtn.textContent = "Add to Active Deck";
-        addToDeckBtn.addEventListener("click", () => {
-          DeckManager.addCard(card.id, 1);
-        });
-
-        const addToCompareBtn = document.createElement("button");
-        addToCompareBtn.type = "button";
-        addToCompareBtn.className = "button secondary";
-        addToCompareBtn.textContent = "Add/Toggle in Compare";
-        addToCompareBtn.addEventListener("click", () => {
-          CompareModule.addCardToCompare(card.id);
-        });
-
-        const openFullBtn = document.createElement("button");
-        openFullBtn.type = "button";
-        openFullBtn.className = "button secondary";
-        openFullBtn.textContent = "Open Full Card View";
-        openFullBtn.addEventListener("click", () => {
-          FullCardModal.open(card.id);
-        });
-
-        actions.appendChild(addToDeckBtn);
-        actions.appendChild(addToCompareBtn);
-        actions.appendChild(openFullBtn);
-
-        body.appendChild(header);
-        body.appendChild(row1);
-        body.appendChild(row2);
-        body.appendChild(row3);
-        body.appendChild(rulesBox);
-        body.appendChild(actions);
-
-        wrapper.appendChild(imgWrap);
-        wrapper.appendChild(body);
-        Dom.detailContainer.appendChild(wrapper);
-      }
-    };
-
-    const DeckManager = {
-      loadFromStorage() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEYS.decks);
-          if (!raw) return;
-          const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed) || parsed.length !== 3) return;
-          AppState.decks = parsed.map(d => ({
-            name: d.name || "Deck",
-            cards: d.cards || {}
-          }));
-        } catch {}
-      },
-      saveToStorage() {
-        localStorage.setItem(STORAGE_KEYS.decks, JSON.stringify(AppState.decks));
-      },
-      setActiveDeck(index) {
-        if (index < 0 || index > 2) return;
-        AppState.activeDeckIndex = index;
-        Dom.deckTabs.forEach(tab => {
-          tab.classList.toggle("active", Number(tab.dataset.deckIndex) === index);
-        });
-        const deck = AppState.decks[index];
-        Dom.deckNameInput.value = deck.name || "";
-        DeckManager.renderDeck();
-      },
-      renderDeck() {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        Dom.deckList.innerHTML = "";
-        const entries = Object.entries(deck.cards)
-          .map(([cardId, qty]) => {
-            const card = CardData.getCardById(cardId);
-            return { cardId, card, qty: Number(qty) || 0 };
-          })
-          .filter(e => e.card && e.qty > 0)
-          .sort((a,b) => {
-            const typeCmp = (a.card.type || "").localeCompare(b.card.type || "");
-            if (typeCmp !== 0) return typeCmp;
-            return (a.card.name || "").localeCompare(b.card.name || "");
+        if (tags.length) {
+          tags.slice(0, 3).forEach(t => {
+            const chip = document.createElement("span");
+            chip.className = "chip chip-muted";
+            chip.textContent = t;
+            tagsRow.appendChild(chip);
           });
-
-        if (!entries.length) {
-          Dom.deckList.innerHTML = "<p class='small-note'>No cards in this deck yet.</p>";
-        } else {
-          entries.forEach(entry => {
-            const { cardId, card, qty } = entry;
-            const row = document.createElement("div");
-            row.className = "deck-row";
-
-            const main = document.createElement("div");
-            main.className = "deck-row-main";
-            main.innerHTML = `<strong>${qty}x ${card.name}</strong>
-              <span>${card.type || ""} · ${card.setName || ""}</span>`;
-
-            const controls = document.createElement("div");
-            controls.className = "deck-row-controls";
-
-            const input = document.createElement("input");
-            input.type = "number";
-            input.min = "0";
-            input.value = String(qty);
-            input.addEventListener("change", () => {
-              const newQty = Math.max(0, Number(input.value) || 0);
-              DeckManager.setCardQuantity(cardId, newQty);
-            });
-
-            const minusBtn = document.createElement("button");
-            minusBtn.type = "button";
-            minusBtn.className = "button secondary";
-            minusBtn.textContent = "-";
-            minusBtn.addEventListener("click", () => {
-              DeckManager.addCard(cardId, -1);
-            });
-
-            const plusBtn = document.createElement("button");
-            plusBtn.type = "button";
-            plusBtn.className = "button secondary";
-            plusBtn.textContent = "+";
-            plusBtn.addEventListener("click", () => {
-              DeckManager.addCard(cardId, 1);
-            });
-
-            controls.appendChild(minusBtn);
-            controls.appendChild(input);
-            controls.appendChild(plusBtn);
-
-            row.appendChild(main);
-            row.appendChild(controls);
-            Dom.deckList.appendChild(row);
-          });
-        }
-
-        DeckManager.updateStats(deck);
-      },
-      updateStats(deck) {
-        const total = Object.values(deck.cards).reduce((sum, qty) => sum + Number(qty || 0), 0);
-        const typeCounts = {};
-        let vehicleCount = 0;
-        Object.entries(deck.cards).forEach(([cardId, qty]) => {
-          const card = CardData.getCardById(cardId);
-          if (!card) return;
-          const n = Number(qty) || 0;
-          const type = card.type || "Unknown";
-          typeCounts[type] = (typeCounts[type] || 0) + n;
-          if (type === "Vehicle" || type === "Named Vehicle") vehicleCount += n;
-        });
-
-        let html = `<h3>Deck Stats</h3>`;
-        html += `<div class="small-note">Total Cards: ${total}</div>`;
-        const lines = [];
-        Object.entries(typeCounts)
-          .sort((a,b) => a[0].localeCompare(b[0]))
-          .forEach(([type, count]) => lines.push(`${type}: ${count}`));
-        if (vehicleCount) lines.push(`Vehicles / Named Vehicles: ${vehicleCount}`);
-        if (lines.length) html += `<div class="small-note">${lines.join("<br>")}</div>`;
-        Dom.deckStats.innerHTML = html;
-        DeckManager.updateLegality(total, vehicleCount);
-      },
-      updateLegality(total, vehicleCount) {
-        const issues = [];
-        if (total !== 50) {
-          issues.push({ level: "err", text: `Deck must contain exactly 50 cards (current: ${total}).` });
-        } else {
-          issues.push({ level: "ok", text: "Deck has 50 cards." });
-        }
-        if (vehicleCount < 2) {
-          issues.push({ level: "warn", text: `Deck should contain at least 2 Vehicles / Named Vehicles (current: ${vehicleCount}).` });
-        } else {
-          issues.push({ level: "ok", text: `Vehicles / Named Vehicles: ${vehicleCount}.` });
-        }
-        Dom.deckLegal.innerHTML = issues
-          .map(issue => `<div class="${issue.level}">${issue.text}</div>`)
-          .join("");
-      },
-      addCard(cardId, delta) {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        const current = Number(deck.cards[cardId] || 0);
-        const next = Math.max(0, current + delta);
-        if (next === 0) delete deck.cards[cardId];
-        else deck.cards[cardId] = next;
-        DeckManager.saveToStorage();
-        DeckManager.renderDeck();
-      },
-      setCardQuantity(cardId, qty) {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        if (qty <= 0) delete deck.cards[cardId];
-        else deck.cards[cardId] = qty;
-        DeckManager.saveToStorage();
-        DeckManager.renderDeck();
-      },
-      clearDeck() {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        if (!confirm("Clear all cards from this deck?")) return;
-        deck.cards = {};
-        DeckManager.saveToStorage();
-        DeckManager.renderDeck();
-      },
-      exportDeckAsJson() {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        const payload = {
-          name: deck.name || `Deck ${AppState.activeDeckIndex + 1}`,
-          cards: deck.cards
-        };
-        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${(deck.name || "deck").replace(/\s+/g,"_")}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-      exportDeckAsText() {
-        const deck = AppState.decks[AppState.activeDeckIndex];
-        if (!deck) return;
-        const lines = [];
-        lines.push(deck.name || `Deck ${AppState.activeDeckIndex + 1}`);
-        lines.push("================================");
-        const entries = Object.entries(deck.cards)
-          .map(([cardId, qty]) => {
-            const card = CardData.getCardById(cardId);
-            return { card, qty: Number(qty) || 0 };
-          })
-          .filter(e => e.card && e.qty > 0)
-          .sort((a,b) => (a.card.type || "").localeCompare(b.card.type || "") ||
-                        (a.card.name || "").localeCompare(b.card.name || ""));
-        entries.forEach(e => {
-          lines.push(`${e.qty}x ${e.card.name} [${e.card.type || ""}]`);
-        });
-        const blob = new Blob([lines.join("\n")], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${(deck.name || "deck").replace(/\s+/g,"_")}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-      init() {
-        DeckManager.loadFromStorage();
-        Dom.deckTabs.forEach(tab => {
-          tab.addEventListener("click", () => {
-            const idx = Number(tab.dataset.deckIndex);
-            DeckManager.setActiveDeck(idx);
-          });
-        });
-        Dom.deckNameInput.addEventListener("input", () => {
-          const deck = AppState.decks[AppState.activeDeckIndex];
-          if (!deck) return;
-          deck.name = Dom.deckNameInput.value.trim() || `Deck ${AppState.activeDeckIndex + 1}`;
-          DeckManager.saveToStorage();
-        });
-        Dom.clearDeckBtn.addEventListener("click", () => DeckManager.clearDeck());
-        Dom.exportDeckJsonBtn.addEventListener("click", () => DeckManager.exportDeckAsJson());
-        Dom.exportDeckTextBtn.addEventListener("click", () => DeckManager.exportDeckAsText());
-        DeckManager.setActiveDeck(AppState.activeDeckIndex);
-      }
-    };
-
-    const FullCardModal = {
-      open(cardId) {
-        const card = CardData.getCardById(cardId);
-        if (!card) return;
-        Dom.fullCardTitle.textContent = card.name || "(No Name)";
-        Dom.fullCardImage.src = card.imageUrl || "";
-        Dom.fullCardImage.alt = card.name || "Card";
-        Dom.fullCardType.textContent = card.type || "";
-        Dom.fullCardSet.textContent = card.setName || "";
-        Dom.fullCardRarity.textContent = card.rarity || "";
-        const vt = CardData.getVehicleTypes(card);
-        Dom.fullCardVehicles.textContent = vt.length ? vt.join(", ") : "—";
-        const tags = card.tags || [];
-        Dom.fullCardTags.textContent = tags.length ? tags.join(", ") : "—";
-        const modStats = CardData.getModStats(card);
-        const vehStats = CardData.getVehicleStats(card);
-        const statPieces = [];
-        if (modStats) statPieces.push(modStats);
-        if (vehStats) statPieces.push(vehStats);
-        Dom.fullCardStats.textContent = statPieces.length ? statPieces.join(" | ") : "—";
-        Dom.fullCardRules.textContent = card.notes || "";
-
-        Dom.fullAddToDeckBtn.onclick = () => DeckManager.addCard(card.id, 1);
-        Dom.fullAddToCompareBtn.onclick = () => CompareModule.addCardToCompare(card.id);
-
-        Dom.fullCardOverlay.classList.add("open");
-      },
-      close() {
-        Dom.fullCardOverlay.classList.remove("open");
-      },
-      init() {
-        Dom.openFullCardBtn.addEventListener("click", () => {
-          if (!selectedCardId) return;
-          FullCardModal.open(selectedCardId);
-        });
-        Dom.closeFullCardBtn.addEventListener("click", () => FullCardModal.close());
-        Dom.fullCardOverlay.addEventListener("click", e => {
-          if (e.target === Dom.fullCardOverlay) FullCardModal.close();
-        });
-      }
-    };
-
-    const CompareModule = {
-      addCardToCompare(cardId) {
-        const slots = AppState.compareSlots;
-        if (slots[0] === cardId) slots[0] = null;
-        else if (slots[1] === cardId) slots[1] = null;
-        else if (!slots[0]) slots[0] = cardId;
-        else if (!slots[1]) slots[1] = cardId;
-        else slots[1] = cardId;
-        CompareModule.syncSelects();
-        CompareModule.render();
-      },
-      syncSelects() {
-        const optsA = ['<option value="">Select Card A</option>'];
-        const optsB = ['<option value="">Select Card B</option>'];
-        AppState.cards
-          .slice()
-          .sort((a,b) => (a.name || "").localeCompare(b.name || ""))
-          .forEach(card => {
-            optsA.push(`<option value="${card.id}">${card.name}</option>`);
-            optsB.push(`<option value="${card.id}">${card.name}</option>`);
-          });
-        Dom.compareSelectA.innerHTML = optsA.join("");
-        Dom.compareSelectB.innerHTML = optsB.join("");
-        Dom.compareSelectA.value = AppState.compareSlots[0] || "";
-        Dom.compareSelectB.value = AppState.compareSlots[1] || "";
-      },
-      render() {
-        const [idA, idB] = AppState.compareSlots;
-        const cardA = CardData.getCardById(idA);
-        const cardB = CardData.getCardById(idB);
-        Dom.compareViewer.innerHTML = "";
-
-        const createCompareCard = (label, card) => {
-          const box = document.createElement("div");
-          box.className = "compare-card";
-
-          const header = document.createElement("header");
-          const h3 = document.createElement("h3");
-          h3.textContent = card ? (card.name || "(No Name)") : `Slot ${label}`;
-          const badge = document.createElement("span");
-          badge.className = "compare-badge";
-          badge.textContent = card ? (card.type || "") : "No card selected.";
-          header.appendChild(h3);
-          header.appendChild(badge);
-          box.appendChild(header);
-
-          if (!card) {
-            const p = document.createElement("p");
-            p.className = "compare-empty";
-            p.textContent = "Choose a card from the dropdown above or add via the card view.";
-            box.appendChild(p);
-            return box;
+          if (tags.length > 3) {
+            const extra = document.createElement("span");
+            extra.className = "chip chip-muted";
+            extra.textContent = `+${tags.length - 3}`;
+            tagsRow.appendChild(extra);
           }
-
-          const body = document.createElement("div");
-          body.className = "compare-body";
-
-          const imgWrap = document.createElement("div");
-          imgWrap.className = "compare-image";
-          const img = document.createElement("img");
-          img.src = card.imageUrl || "";
-          img.alt = card.name || "Card";
-          imgWrap.appendChild(img);
-
-          const meta = document.createElement("div");
-          meta.className = "compare-meta";
-
-          const vt = CardData.getVehicleTypes(card);
-          const tags = card.tags || [];
-          const modStats = CardData.getModStats(card);
-          const vehStats = CardData.getVehicleStats(card);
-          const statsPieces = [];
-          if (modStats) statsPieces.push(modStats);
-          if (vehStats) statsPieces.push(vehStats);
-
-          meta.innerHTML = `
-            <div class="compare-section">
-              <span class="compare-label">Type:</span>
-              <span class="compare-value">${card.type || ""}</span>
-            </div>
-            <div class="compare-section">
-              <span class="compare-label">Set / Rarity:</span>
-              <span class="compare-value">${card.setName || ""} ${card.cardNumber ? ("#" + card.cardNumber) : ""} · ${card.rarity || ""}</span>
-            </div>
-            <div class="compare-section">
-              <span class="compare-label">Vehicle Types:</span>
-              <span class="compare-value">${vt.length ? vt.join(", ") : "—"}</span>
-            </div>
-            <div class="compare-section">
-              <span class="compare-label">Tags:</span>
-              <span class="compare-value">${tags.length ? tags.join(", ") : "—"}</span>
-            </div>
-            <div class="compare-section">
-              <span class="compare-label">Stats:</span>
-              <span class="compare-value">${statsPieces.length ? statsPieces.join(" | ") : "—"}</span>
-            </div>
-            <div class="compare-section">
-              <span class="compare-label">Rules:</span>
-              <span class="compare-value">${(card.notes || "").replace(/\n/g,"<br>")}</span>
-            </div>
-          `;
-
-          body.appendChild(imgWrap);
-          body.appendChild(meta);
-          box.appendChild(body);
-          return box;
-        };
-
-        Dom.compareViewer.appendChild(createCompareCard("A", cardA));
-        Dom.compareViewer.appendChild(createCompareCard("B", cardB));
-      },
-      init() {
-        Dom.compareSelectA.addEventListener("change", () => {
-          AppState.compareSlots[0] = Dom.compareSelectA.value || null;
-          CompareModule.render();
-        });
-        Dom.compareSelectB.addEventListener("change", () => {
-          AppState.compareSlots[1] = Dom.compareSelectB.value || null;
-          CompareModule.render();
-        });
-        Dom.clearCompareABtn.addEventListener("click", () => {
-          AppState.compareSlots[0] = null;
-          CompareModule.syncSelects();
-          CompareModule.render();
-        });
-        Dom.clearCompareBBtn.addEventListener("click", () => {
-          AppState.compareSlots[1] = null;
-          CompareModule.syncSelects();
-          CompareModule.render();
-        });
-      }
-    };
-
-    const PreconViewer = {
-      async loadPrecons() {
-        try {
-          const res = await fetch("drive-precons.json");
-          if (!res.ok) {
-            AppState.precons = [];
-            return;
-          }
-          const json = await res.json();
-          AppState.precons = Array.isArray(json) ? json : [];
-        } catch (e) {
-          console.error("Failed to load drive-precons.json", e);
-          AppState.precons = [];
-        }
-        PreconViewer.renderSelect();
-      },
-      renderSelect() {
-        Dom.preconSelect.innerHTML = '<option value="">Select Precon</option>';
-        AppState.precons.forEach((p, idx) => {
-          const opt = document.createElement("option");
-          opt.value = String(idx);
-          opt.textContent = p.name || `Precon ${idx + 1}`;
-          Dom.preconSelect.appendChild(opt);
-        });
-        Dom.preconStats.textContent = AppState.precons.length
-          ? `${AppState.precons.length} precon deck${AppState.precons.length === 1 ? "" : "s"} loaded`
-          : "No precons found.";
-      },
-      renderPrecon(indexStr) {
-        Dom.preconList.innerHTML = "";
-        Dom.preconCards.innerHTML = "";
-        Dom.preconDesc.textContent = "";
-        if (!indexStr) return;
-        const idx = Number(indexStr);
-        const precon = AppState.precons[idx];
-        if (!precon) return;
-
-        Dom.preconDesc.textContent = precon.notes || "No description.";
-        const cardsObj = precon.cards || {};
-        const entries = Object.entries(cardsObj)
-          .map(([cardId, qty]) => {
-            const card = CardData.getCardById(cardId);
-            return { cardId, card, qty: Number(qty) || 0 };
-          })
-          .filter(e => e.card && e.qty > 0)
-          .sort((a,b) => (a.card.type || "").localeCompare(b.card.type || "") ||
-                        (a.card.name || "").localeCompare(b.card.name || ""));
-
-        let total = 0;
-        entries.forEach(e => total += e.qty);
-
-        if (!entries.length) {
-          Dom.preconCards.innerHTML = "<p class='small-note'>No cards in this precon.</p>";
-        } else {
-          entries.forEach(entry => {
-            const { card, qty } = entry;
-            const row = document.createElement("div");
-            row.className = "precon-card-row";
-
-            const main = document.createElement("div");
-            main.style.flex = "1";
-            main.style.minWidth = "0";
-            main.innerHTML = `<strong>${qty}x ${card.name}</strong>
-              <div class="small-note">${card.type || ""} · ${card.setName || ""}</div>`;
-
-            const img = document.createElement("img");
-            img.src = card.imageUrl || "";
-            img.alt = card.name || "Card";
-            img.style.maxWidth = "40px";
-            img.style.borderRadius = "0.35rem";
-            img.style.border = "1px solid #1f2937";
-
-            row.appendChild(main);
-            row.appendChild(img);
-            Dom.preconCards.appendChild(row);
-          });
         }
 
-        Dom.preconList.innerHTML =
-          `<div class="precon-row">
-            <div class="precon-row-main">
-              <strong>${precon.name || "Unnamed Precon"}</strong>
-              <span>Total cards: ${total}</span>
-            </div>
-          </div>`;
-      },
-      init() {
-        Dom.preconSelect.addEventListener("change", () => {
-          PreconViewer.renderPrecon(Dom.preconSelect.value);
+        tile.appendChild(header);
+        tile.appendChild(row1);
+        tile.appendChild(row2);
+        if (tags.length) tile.appendChild(tagsRow);
+
+        tile.addEventListener("click", () => {
+          AppState.selectedCardId = card.id;
+          renderCardsGrid();
+          renderDetailCard();
         });
-        Dom.refreshPreconsBtn.addEventListener("click", () => PreconViewer.loadPrecons());
+
+        grid.appendChild(tile);
+      });
+    }
+
+    function renderDetailCard() {
+      const container = Dom.detailCard;
+      container.innerHTML = "";
+
+      const card = AppState.cards.find(c => c.id === AppState.selectedCardId);
+      if (!card) {
+        container.innerHTML =
+          "<p class='small-note'>Select a card from the list to see its full details.</p>";
+        return;
       }
-    };
 
-    (async function init() {
-      Mode.init();
-      DeckManager.init();
-      FullCardModal.init();
-      CompareModule.init();
-      PreconViewer.init();
+      const header = document.createElement("div");
+      header.className = "detail-header";
+      const nameEl = document.createElement("div");
+      nameEl.className = "detail-name";
+      nameEl.textContent = card.name || "(No Name)";
+      const typeEl = document.createElement("div");
+      typeEl.className = "detail-type";
+      typeEl.textContent = card.type || "";
+      header.appendChild(nameEl);
+      header.appendChild(typeEl);
 
-      await CardData.load();
-      CardGrid.buildFilterOptions();
-      CardGrid.init();
-      CardGrid.renderGrid();
-      CompareModule.syncSelects();
-      CompareModule.render();
-      PreconViewer.loadPrecons();
+      const columns = document.createElement("div");
+      columns.className = "detail-columns";
 
-      Mode.setMode("cards");
-    })();
+      // Image
+      const imgBox = document.createElement("div");
+      imgBox.className = "detail-image";
+      if (card.imageUrl) {
+        const img = document.createElement("img");
+        img.src = card.imageUrl;
+        img.alt = card.name || "Card image";
+        imgBox.appendChild(img);
+      } else {
+        const placeholder = document.createElement("span");
+        placeholder.className = "small-note";
+        placeholder.textContent = "No image";
+        imgBox.appendChild(placeholder);
+      }
+
+      // Meta
+      const meta = document.createElement("div");
+      meta.className = "detail-meta";
+
+      // Sets & card numbers
+      const setsRow = document.createElement("div");
+      const setsLabel = document.createElement("span");
+      setsLabel.className = "detail-row-label";
+      setsLabel.textContent = "Set(s):";
+      setsRow.appendChild(setsLabel);
+
+      const setChips = document.createElement("div");
+      setChips.className = "chip-row";
+      const prints = card.visiblePrints || [];
+      if (!prints.length && (!RELEASED_SETS || !RELEASED_SETS.length)) {
+        // If we're not restricting releases and there are no prints, fall back to legacy fields
+        const chip = document.createElement("span");
+        chip.className = "chip chip-muted";
+        chip.textContent = card.setName || "—";
+        setChips.appendChild(chip);
+      } else if (!prints.length) {
+        const chip = document.createElement("span");
+        chip.className = "chip chip-muted";
+        chip.textContent = "Hidden (unreleased set)";
+        setChips.appendChild(chip);
+      } else {
+        prints.forEach(p => {
+          const label = p.cardNumber ? `${p.setId} – ${p.cardNumber}` : p.setId;
+          const chip = document.createElement("span");
+          chip.className = "chip chip-primary";
+          chip.textContent = label;
+          setChips.appendChild(chip);
+        });
+      }
+      setsRow.appendChild(setChips);
+
+      // Rarity
+      const rarityRow = document.createElement("div");
+      const rarityLabel = document.createElement("span");
+      rarityLabel.className = "detail-row-label";
+      rarityLabel.textContent = "Rarity:";
+      const rarityVal = document.createElement("span");
+      rarityVal.textContent = card.rarity || "—";
+      rarityRow.appendChild(rarityLabel);
+      rarityRow.appendChild(rarityVal);
+
+      // Vehicle Types
+      const vtRow = document.createElement("div");
+      const vtLabel = document.createElement("span");
+      vtLabel.className = "detail-row-label";
+      vtLabel.textContent = "Vehicle Types:";
+      const vtVal = document.createElement("span");
+      const vt = CardData.getVehicleTypes(card);
+      vtVal.textContent = vt.length ? vt.join(", ") : "—";
+      vtRow.appendChild(vtLabel);
+      vtRow.appendChild(vtVal);
+
+      // Tags
+      const tagsRow = document.createElement("div");
+      const tagsLabel = document.createElement("span");
+      tagsLabel.className = "detail-row-label";
+      tagsLabel.textContent = "Tags:";
+      const tagsVal = document.createElement("span");
+      const tags = card.tags || [];
+      tagsVal.textContent = tags.length ? tags.join(", ") : "—";
+      tagsRow.appendChild(tagsLabel);
+      tagsRow.appendChild(tagsVal);
+
+      // Stats (Mods / Vehicles)
+      const statsRow = document.createElement("div");
+      const statsLabel = document.createElement("span");
+      statsLabel.className = "detail-row-label";
+      statsLabel.textContent = "Stats:";
+      const statsVal = document.createElement("span");
+      const modStats = CardData.getModStats(card);
+      const vehStats = CardData.getVehicleStats(card);
+      const pieces = [];
+      if (modStats) pieces.push(modStats);
+      if (vehStats) pieces.push(vehStats);
+      statsVal.textContent = pieces.length ? pieces.join(" | ") : "—";
+      statsRow.appendChild(statsLabel);
+      statsRow.appendChild(statsVal);
+
+      meta.appendChild(setsRow);
+      meta.appendChild(rarityRow);
+      meta.appendChild(vtRow);
+      meta.appendChild(tagsRow);
+      meta.appendChild(statsRow);
+
+      columns.appendChild(imgBox);
+      columns.appendChild(meta);
+
+      // Rules text
+      const rules = document.createElement("div");
+      rules.className = "detail-rules";
+      rules.textContent = card.notes || "No rules text.";
+
+      container.appendChild(header);
+      container.appendChild(columns);
+      container.appendChild(rules);
+    }
+
+    function init() {
+      Dom.searchInput.addEventListener("input", applyFiltersAndRender);
+      Dom.typeFilter.addEventListener("change", applyFiltersAndRender);
+      Dom.setFilter.addEventListener("change", applyFiltersAndRender);
+      Dom.rarityFilter.addEventListener("change", applyFiltersAndRender);
+
+      loadCards();
+    }
+
+    init();
   </script>
 </body>
 </html>
