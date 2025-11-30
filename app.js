@@ -5,7 +5,8 @@ import { downloadJson, loadCards } from "./state.js";
 import { Dom } from "./dom.js";
 import { initSingle, refreshSingleUi, getCardsForExport } from "./single.js";
 import { initBulk } from "./bulk.js";
-import { initPrecons, loadPrecons } from "./precons.js";
+// IMPORTANT: namespace import so missing named exports can't break loading
+import * as Precons from "./precons.js";
 import { initHelp } from "./help.js";
 
 /************************************************************
@@ -57,19 +58,25 @@ function initExportButtons() {
  * Kick everything off
  ************************************************************/
 (async function init() {
+  // UI wiring
   initNav();
   initSingle();
   initBulk();
-  initPrecons();
+  if (typeof Precons.initPrecons === "function") {
+    Precons.initPrecons();
+  }
   initHelp();
   initModal();
   initExportButtons();
 
+  // Load core data
   await loadCards();
-  // cards are now in AppState, re-render single editor view
   refreshSingleUi();
 
-  await loadPrecons();
+  // Load precons if the module provides a loader
+  if (typeof Precons.loadPrecons === "function") {
+    await Precons.loadPrecons();
+  }
 
   showSection("single");
 })();
