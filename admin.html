@@ -958,41 +958,81 @@
       return "";
     }
 
+    /**
+     * Normalize a raw card object from JSON or bulk import into the internal shape.
+     * - Accepts old prints: [{ setId, cardNumber }]
+     * - Accepts new prints: [{ setName, cardNumber }]
+     * - If no prints array but setName/cardNumber fields exist, synthesizes one.
+     * - Ensures card.setName/cardNumber are aligned with the first print.
+     */
     function normalizeCardShape(raw) {
       const base = raw || {};
-      const card = Object.assign(
-        {
-          id: generateId(),
-          name: "",
-          type: "",
-          setName: "",
-          cardNumber: "",
-          rarity: "",
-          vehicleTypes: [],
-          tags: [],
-          imageUrl: "",
-          notes: "",
-          extra: {},
-          prints: []
-        },
-        base
-      );
-      if (!card.id) card.id = generateId();
-      if (!Array.isArray(card.vehicleTypes)) {
-        card.vehicleTypes = card.vehicleTypes ? [].concat(card.vehicleTypes) : [];
+
+      // Vehicle types & tags
+      const vehicleTypes = Array.isArray(base.vehicleTypes)
+        ? base.vehicleTypes
+        : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
+
+      const tags = Array.isArray(base.tags)
+        ? base.tags
+        : (base.tags ? [].concat(base.tags) : []);
+
+      const extra = (base.extra && typeof base.extra === "object")
+        ? { ...base.extra }
+        : {};
+
+      // Normalize prints
+      const printsRaw = Array.isArray(base.prints) ? base.prints : [];
+
+      let prints = printsRaw
+        .map(p => ({
+          setName: (p.setName || p.setId || "").trim(),
+          cardNumber: (p.cardNumber || "").trim()
+        }))
+        .filter(p => p.setName || p.cardNumber);
+
+      // Try to infer from root fields if needed
+      let setName = (base.setName || base.setId || "").trim();
+      let cardNumber = (base.cardNumber || base.cardNo || "").trim();
+
+      if (!prints.length && (setName || cardNumber)) {
+        prints = [{ setName, cardNumber }];
       }
-      if (!Array.isArray(card.tags)) {
-        card.tags = card.tags ? [].concat(card.tags) : [];
+
+      // If root fields are empty but we have prints, sync them from the first print
+      if (!setName && prints[0]) setName = prints[0].setName || "";
+      if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
+
+      return {
+        id: base.id || generateId(),
+        name: base.name || "",
+        type: base.type || "",
+        setName,
+        cardNumber,
+        rarity: base.rarity || "",
+        vehicleTypes,
+        tags,
+        imageUrl: base.imageUrl || "",
+        notes: base.notes || "",
+        extra,
+        prints
+      };
+    }
+
+    // When exporting to drive-card.json, convert prints back to { setId, cardNumber }
+    function serializeCardForExport(card) {
+      const clean = JSON.parse(JSON.stringify(card));
+      if (Array.isArray(clean.prints)) {
+        clean.prints = clean.prints.map(p => ({
+          setId: p.setId || p.setName || "",
+          cardNumber: p.cardNumber || ""
+        }));
       }
-      if (!card.extra || typeof card.extra !== "object") {
-        card.extra = {};
-      }
-      if (!Array.isArray(card.prints)) {
-        const setName = card.setName || "";
-        const cardNumber = card.cardNumber || "";
-        card.prints = (setName || cardNumber) ? [{ setName, cardNumber }] : [];
-      }
-      return card;
+      return clean;
+    }
+
+    function getCardsForExport() {
+      return AppState.cards.map(serializeCardForExport);
     }
 
     function updateTypeFieldVisibility() {
@@ -1896,7 +1936,7 @@
       updateTypeFieldVisibility();
 
       Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
-        downloadJson(AppState.cards, "drive-card.json");
+        downloadJson(getCardsForExport(), "drive-card.json");
       });
     }
 
@@ -1978,7 +2018,7 @@
      * Global Download Button
      ************************************************************/
     Dom.downloadCardsJsonBtn.addEventListener("click", () => {
-      downloadJson(AppState.cards, "drive-card.json");
+      downloadJson(getCardsForExport(), "drive-card.json");
     });
 
     /************************************************************
