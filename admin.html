@@ -2,2333 +2,1897 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE TCG – Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DRIVE TCG Admin</title>
   <style>
+    :root {
+      --bg: #050509;
+      --bg-elevated: #0f1016;
+      --bg-elevated-soft: #151726;
+      --border-subtle: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.18);
+      --accent: #ff6b3a;
+      --accent-soft: rgba(255,107,58,0.15);
+      --accent-strong: #ff8356;
+      --accent-glow: 0 0 18px rgba(255,107,58,0.4);
+      --accent-muted: #fcb99d;
+      --accent-secondary: #46c2ff;
+      --accent-secondary-soft: rgba(70,194,255,0.12);
+      --text: #f5f5f7;
+      --text-dim: #a5a7b5;
+      --text-soft: #7f8190;
+      --danger: #f44336;
+      --danger-soft: rgba(244,67,54,0.12);
+      --success: #4caf50;
+      --success-soft: rgba(76,175,80,0.14);
+      --warning: #ffb300;
+      --warning-soft: rgba(255,179,0,0.18);
+      --radius-lg: 18px;
+      --radius-xl: 22px;
+      --radius-pill: 999px;
+      --shadow-soft: 0 22px 45px rgba(0,0,0,0.68);
+      --shadow-subtle: 0 12px 28px rgba(0,0,0,0.55);
+      --shadow-tiny: 0 4px 14px rgba(0,0,0,0.65);
+      --transition-fast: 0.18s ease-out;
+      --transition-med: 0.26s ease;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
     * {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: radial-gradient(circle at top, #141628 0, #050509 50%);
+      color: var(--text);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
     body {
-      margin: 0;
-      background: #020617;
-      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    .app {
-      max-width: 1280px;
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px clamp(16px, 4vw, 32px);
+      max-width: 1440px;
       margin: 0 auto;
-      padding: 1rem;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      gap: 1rem;
-    }
-    header h1 {
-      font-size: 1.25rem;
-      margin: 0;
-    }
-    header .right {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      background: rgba(15,23,42,0.9);
-      border: 1px solid #1f2937;
-    }
-    .badge span {
-      opacity: 0.7;
-    }
-    nav {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-    .nav-btn {
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.95);
-      color: #e5e7eb;
-      padding: 0.35rem 0.9rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    .nav-btn span.icon {
-      opacity: 0.7;
-    }
-    .nav-btn.active {
-      background: linear-gradient(to right, #0f172a, #1d4ed8);
-      border-color: #1d4ed8;
-    }
-    .nav-btn:hover {
-      border-color: #4b5563;
-    }
-    .pill {
-      border-radius: 999px;
-      padding: 0.1rem 0.45rem;
-      background: rgba(15,23,42,0.9);
-      font-size: 0.7rem;
-      border: 1px solid rgba(55,65,81,0.8);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      opacity: 0.8;
     }
 
-    main {
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), #020617);
-      padding: 1rem;
-    }
-
-    section {
-      display: none;
-    }
-    section.active {
-      display: block;
-    }
-
-    .layout {
+    .app-header {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-      gap: 1rem;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(15,16,22,0.98), rgba(9,10,14,0.98));
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(18px);
+    }
+
+    .app-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-title span.drive {
+      padding: 2px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: radial-gradient(circle at top left, rgba(255,107,58,0.24), transparent 45%),
+                  radial-gradient(circle at bottom right, rgba(70,194,255,0.22), transparent 55%);
+      box-shadow: 0 0 18px rgba(255,107,58,0.35);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+    }
+
+    .app-title span.admin {
+      font-weight: 500;
+      font-size: 18px;
+      opacity: 0.9;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--text-soft);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .app-subtitle strong {
+      color: var(--accent-muted);
+      font-weight: 600;
+    }
+
+    .app-meta {
+      display: flex;
+      justify-content: center;
+    }
+
+    .meta-pills {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      box-shadow: 0 0 12px rgba(255,107,58,0.8);
+    }
+
+    .pill-key {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    .pill-tag {
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-secondary-soft);
+      color: var(--accent-muted);
+      border: 1px solid rgba(70,194,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .pill-warn {
+      background: var(--warning-soft);
+      border-color: rgba(255,179,0,0.45);
+      color: #ffde7a;
+    }
+
+    .pill-ok {
+      background: var(--success-soft);
+      border-color: rgba(76,175,80,0.5);
+      color: #c3f7c4;
+    }
+
+    .app-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      outline: none;
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .btn:hover {
+      background: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), var(--shadow-tiny);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.02);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      border-color: rgba(255,255,255,0.16);
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(255,107,58,0.55);
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(135deg, var(--accent-strong), #ff9a6c);
+      box-shadow: 0 12px 30px rgba(255,107,58,0.7);
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.16);
+      color: var(--text-dim);
+    }
+
+    .btn.secondary:hover {
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+    }
+
+    .btn.small {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: rgba(255,255,255,0.08);
+      color: var(--text-soft);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: rgba(244,67,54,0.45);
+      color: #ffc5c0;
+    }
+
+    .btn-danger:hover {
+      background: rgba(244,67,54,0.22);
+      box-shadow: 0 0 0 1px rgba(244,67,54,0.35);
+    }
+
+    .btn-icon {
+      padding: 6px 8px;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      border-color: transparent;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .btn-icon span {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .app-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.65fr) minmax(0, 1.1fr);
+      gap: 14px;
       align-items: flex-start;
     }
-    .panel {
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.9);
-      padding: 0.75rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+
+    @media (max-width: 1100px) {
+      .app-header {
+        grid-template-columns: 1fr;
+        align-items: flex-start;
+      }
+      .app-main {
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+      }
     }
-    .panel h2 {
-      font-size: 0.95rem;
-      margin: 0 0 0.5rem;
+
+    @media (max-width: 900px) {
+      .app-main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 50%),
+                  radial-gradient(circle at bottom right, rgba(80,81,101,0.3), transparent 55%),
+                  linear-gradient(145deg, rgba(11,12,19,0.98), rgba(6,7,11,0.98));
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: var(--shadow-soft);
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-subtle {
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 60%),
+                  linear-gradient(145deg, rgba(9,10,17,0.96), rgba(4,4,8,0.98));
+      border-color: rgba(255,255,255,0.04);
+      box-shadow: var(--shadow-subtle);
+    }
+
+    .panel-header {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
-    .panel h2 span.icon {
-      font-size: 0.9rem;
-      opacity: 0.8;
+
+    .panel-header-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
-    .panel h2 .pill {
-      margin-left: auto;
+
+    .panel-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #f8f8fb;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title-pill {
+      font-size: 10px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .panel-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .panel-subtitle strong {
+      color: var(--accent-muted);
+      font-weight: 600;
+    }
+
+    .panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .nav-tabs {
+      display: inline-flex;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.7);
+    }
+
+    .nav-tab {
+      position: relative;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: var(--text-soft);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color var(--transition-fast), transform var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: inherit;
+      background: radial-gradient(circle at top, rgba(255,255,255,0.05), transparent 55%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+    }
+
+    .nav-tab span.bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+    }
+
+    .nav-tab.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 18px 40px rgba(0,0,0,0.85);
+      transform: translateY(-0.5px);
+    }
+
+    .nav-tab.active::before {
+      opacity: 1;
+    }
+
+    .nav-tab.active span.bullet {
+      background: linear-gradient(135deg, var(--accent-secondary), var(--accent));
+      box-shadow: 0 0 12px rgba(255,107,58,0.9);
+    }
+
+    .nav-tab:hover {
+      color: #f7f7fd;
+    }
+
+    .nav-tab:not(.active):hover span.bullet {
+      background: rgba(255,255,255,0.4);
+    }
+
+    .form-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 1100px) {
+      .form-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .field-card {
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 55%),
+                  linear-gradient(145deg, rgba(16,17,29,0.98), rgba(9,9,16,0.98));
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.07);
+      padding: 10px 12px;
+      box-shadow: 0 16px 30px rgba(0,0,0,0.85);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .field-card-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .field-card-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #f7f7fa;
+    }
+
+    .field-card-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
     }
 
     .field-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      margin-top: 4px;
     }
+
+    .field-grid.single-col {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    @media (max-width: 1000px) {
+      .field-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
     .field {
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
-      font-size: 0.8rem;
-    }
-    .field label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      opacity: 0.8;
-    }
-    .field input,
-    .field select,
-    .field textarea {
-      border-radius: 0.4rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.95);
-      color: #e5e7eb;
-      padding: 0.25rem 0.4rem;
-      font-size: 0.8rem;
-      min-height: 1.9rem;
-      outline: none;
-    }
-    .field textarea {
-      resize: vertical;
-      min-height: 4rem;
-    }
-    .hidden-set-basic {
-      display: none;
-    }
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 1px rgba(79,70,229,0.3);
+      gap: 2px;
     }
 
-    .btn-row {
+    .field-label {
+      font-size: 11px;
+      color: var(--text-soft);
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-top: 0.5rem;
-    }
-    .btn {
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.95);
-      color: #e5e7eb;
-      padding: 0.35rem 0.9rem;
-      font-size: 0.75rem;
-      cursor: pointer;
-      display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-    }
-    .btn.primary {
-      background: linear-gradient(to right, #4f46e5, #06b6d4);
-      border-color: #4f46e5;
-    }
-    .btn.danger {
-      background: rgba(127,29,29,0.9);
-      border-color: #b91c1c;
-    }
-    .btn.secondary {
-      background: rgba(15,23,42,0.95);
-      border-color: #374151;
-    }
-    .btn.small {
-      padding: 0.25rem 0.7rem;
-      font-size: 0.7rem;
-    }
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: default;
+      justify-content: space-between;
+      gap: 4px;
     }
 
-    .status-line {
-      font-size: 0.7rem;
-      opacity: 0.8;
-      margin-top: 0.4rem;
+    .field-label span.hint {
+      font-size: 10px;
+      opacity: 0.7;
+      font-family: var(--font-mono);
+    }
+
+    .field-required::after {
+      content: "•";
+      margin-left: 4px;
+      color: var(--accent);
+      font-size: 10px;
+    }
+
+    .input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(4,4,10,0.94);
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+      font-family: var(--font-sans);
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), transform var(--transition-fast);
+    }
+
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.8) 50%),
+        linear-gradient(135deg, rgba(255,255,255,0.8) 50%, transparent 50%);
+      background-position:
+        calc(100% - 14px) calc(50% - 3px),
+        calc(100% - 10px) calc(50% - 3px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      padding-right: 24px;
+    }
+
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.16), 0 0 18px rgba(255,107,58,0.35);
+      background: radial-gradient(circle at top, rgba(255,255,255,0.06), rgba(4,4,10,0.98));
+      transform: translateY(-0.5px);
+    }
+
+    .input::placeholder,
+    textarea::placeholder {
+      color: rgba(166,167,184,0.65);
+      font-size: 11px;
+    }
+
+    .input-mono {
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .tag-row span.tip {
+      font-size: 10px;
+      color: var(--text-soft);
+      opacity: 0.85;
+    }
+
+    .tag-row code {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      padding: 1px 7px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #f7f7fa;
+    }
+
+    .type-badge {
+      font-size: 10px;
+      padding: 1px 7px;
+      border-radius: 999px;
+      background: var(--accent-secondary-soft);
+      color: var(--accent-muted);
+      border: 1px solid rgba(70,194,255,0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
     }
 
     .preview-card {
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, rgba(15,23,42,0.98), #020617);
-      padding: 0.75rem;
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
-      gap: 0.75rem;
-      align-items: stretch;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), transparent 50%),
+                  radial-gradient(circle at bottom right, rgba(70,194,255,0.16), transparent 55%),
+                  linear-gradient(150deg, rgba(10,11,18,0.98), rgba(4,4,7,0.98));
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 12px 12px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
+      position: relative;
+      overflow: hidden;
+      min-height: 180px;
     }
-    .card-preview-img {
-      border-radius: 0.6rem;
-      border: 1px dashed rgba(55,65,81,0.8);
-      background: rgba(15,23,42,0.7);
+
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .preview-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .previewName {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .previewMeta {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .preview-fields {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .chip.key {
+      background: var(--accent-soft);
+      border-color: rgba(255,107,58,0.75);
+      color: #ffd2bd;
+      font-family: var(--font-mono);
+    }
+
+    .chip.mod {
+      background: rgba(70,194,255,0.12);
+      border-color: rgba(70,194,255,0.45);
+      color: #d1efff;
+    }
+
+    .chip.type {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .preview-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.5fr);
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 1100px) {
+      .preview-body {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .preview-art {
+      border-radius: 12px;
+      background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(10,11,16,0.98));
+      border: 1px solid rgba(255,255,255,0.16);
+      height: 140px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      text-align: center;
-      padding: 0.5rem;
+      font-size: 11px;
+      color: var(--text-soft);
+      position: relative;
       overflow: hidden;
     }
-    .card-preview-img img {
-      max-width: 100%;
-      max-height: 240px;
-      object-fit: contain;
+
+    .preview-art img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
       display: block;
     }
-    .card-preview-meta {
+
+    .preview-text {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-    }
-    .card-preview-meta h3 {
-      font-size: 0.95rem;
-      margin: 0;
-    }
-    .meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      align-items: center;
-    }
-    .chip {
-      border-radius: 999px;
-      border: 1px solid rgba(55,65,81,0.8);
-      padding: 0.1rem 0.45rem;
-      font-size: 0.7rem;
-      background: rgba(15,23,42,0.8);
-    }
-    .chip.key {
-      border-color: #4f46e5;
-    }
-    .chip.veh-type {
-      border-color: #22c55e;
-    }
-    .chip.tag {
-      border-color: #f97316;
-    }
-    .notes-block {
-      border-radius: 0.6rem;
-      border: 1px dashed rgba(55,65,81,0.8);
-      background: rgba(15,23,42,0.6);
-      padding: 0.4rem 0.5rem;
-      font-size: 0.75rem;
-      max-height: 180px;
-      overflow: auto;
+      gap: 6px;
     }
 
-    .library-panel {
-      margin-top: 0.75rem;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.9);
-      padding: 0.5rem;
+    .preview-notes {
+      padding: 6px 8px;
+      border-radius: 12px;
+      background: rgba(10,10,15,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      min-height: 60px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      color: var(--text-dim);
     }
-    .library-header {
+
+    .preview-footer {
+      margin-top: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.4rem;
-      font-size: 0.75rem;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
     }
-    .library-header input {
+
+    .preview-footer-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .preview-footer-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-family: var(--font-mono);
+    }
+
+    .scroll-column {
+      border-radius: 16px;
+      background: radial-gradient(circle at top, rgba(255,255,255,0.02), transparent 50%),
+                  linear-gradient(145deg, rgba(10,10,17,0.98), rgba(5,5,9,0.98));
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.85);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 540px;
+    }
+
+    .scroll-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 0 2px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .scroll-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #f7f7fb;
+    }
+
+    .scroll-count {
+      font-size: 10px;
+      color: var(--text-soft);
+      font-family: var(--font-mono);
+    }
+
+    .scroll-body {
       flex: 1;
-      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+      position: relative;
+    }
+
+    .scroll-inner {
+      height: 100%;
+      overflow: auto;
+      padding: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.3) rgba(0,0,0,0.4);
+    }
+
+    .scroll-inner::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .scroll-inner::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.4);
+      border-radius: 999px;
+    }
+
+    .scroll-inner::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.35);
+      border-radius: 999px;
+    }
+
+    .input-search {
+      border-radius: 999px;
+      padding-left: 8px;
+      padding-right: 8px;
+      font-size: 11px;
+      font-family: var(--font-sans);
+    }
+
+    .input-search::placeholder {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
 
     .library-list {
-      max-height: 260px;
-      overflow: auto;
-      border-radius: 0.5rem;
-      border: 1px solid #111827;
-      background: rgba(15,23,42,0.7);
-      font-size: 0.75rem;
-    }
-    .library-item {
-      padding: 0.25rem 0.4rem;
-      display: flex;
-      justify-content: space-between;
-      gap: 0.4rem;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(15,23,42,0.9);
-    }
-    .library-item:last-child {
-      border-bottom: none;
-    }
-    .library-item:hover {
-      background: rgba(30,64,175,0.35);
-    }
-    .library-item.active {
-      background: rgba(37,99,235,0.5);
-    }
-    .library-item-main {
+      list-style: none;
+      padding: 0;
+      margin: 0;
       display: flex;
       flex-direction: column;
-    }
-    .library-item-main span.name {
-      font-weight: 500;
-    }
-    .library-item-main span.meta {
-      opacity: 0.8;
-      font-size: 0.7rem;
-    }
-    .library-item-tags {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.2rem;
+      gap: 4px;
+      font-size: 12px;
     }
 
-    .section-title {
-      font-size: 0.9rem;
-      margin: 0 0 0.5rem;
+    .library-item {
+      padding: 6px 6px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      cursor: pointer;
+      transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .library-item:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-0.5px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.75);
+    }
+
+    .library-item .header {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .library-item .title {
+      font-size: 12px;
+      color: #f8f8fb;
+      font-weight: 500;
+    }
+
+    .library-item .chips {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .library-item .sub {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .single-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .status-msg {
+      font-size: 11px;
+      color: var(--accent-muted);
+      font-family: var(--font-mono);
+    }
+
+    .prints-card {
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,0.15);
+      background: linear-gradient(135deg, rgba(0,0,0,0.45), rgba(15,15,25,0.9));
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .prints-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .prints-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .prints-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 11px;
+    }
+
+    .prints-list li {
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .prints-list li:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-0.5px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.7);
+    }
+
+    .prints-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr) auto;
+      gap: 4px;
+      align-items: center;
+    }
+
+    @media (max-width: 600px) {
+      .prints-row {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .bulk-layout {
       display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-      gap: 0.75rem;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 10px;
       align-items: flex-start;
     }
+
+    @media (max-width: 900px) {
+      .bulk-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
     .bulk-textarea {
-      width: 100%;
-      min-height: 260px;
-      resize: vertical;
-      border-radius: 0.6rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.95);
-      color: #e5e7eb;
-      padding: 0.5rem;
-      font-size: 0.75rem;
+      height: 260px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.4;
     }
 
-    .help-list {
-      list-style: disc;
-      padding-left: 1.25rem;
-      margin: 0.25rem 0 0;
-      font-size: 0.8rem;
-    }
-
-    /* Old precon-card styles kept in case you reference them later */
-    .precon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
-      gap: 0.75rem;
-    }
-    .precon-card {
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.9);
-      padding: 0.6rem;
-      font-size: 0.8rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-    .precon-card h3 {
-      font-size: 0.9rem;
-      margin: 0;
+    .bulk-options {
       display: flex;
       align-items: center;
-      gap: 0.35rem;
-    }
-    .precon-card h3 .pill {
-      margin-left: auto;
-    }
-    .precon-card ul {
-      padding-left: 1rem;
-      margin: 0.25rem 0 0.4rem;
-    }
-    .precon-card li {
-      margin-bottom: 0.1rem;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
+      margin-top: 4px;
     }
 
-    /* New precon editor layout */
-    .precon-layout {
+    .bulk-options label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: var(--text-soft);
+    }
+
+    .bulk-preview-box {
+      height: 260px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.55);
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+
+    .bulk-status {
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--text-soft);
+    }
+
+    .precon-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 2.4fr);
-      gap: 0.75rem;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .precon-card {
+      padding: 8px 9px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%),
+                  linear-gradient(145deg, rgba(10,11,18,0.97), rgba(5,6,10,0.98));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 38px rgba(0,0,0,0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .precon-card h3 {
+      margin: 0;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .precon-card ul {
+      margin: 4px 0 0;
+      padding-left: 16px;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .precon-card li {
+      margin-bottom: 2px;
+    }
+
+    .help-section {
+      font-size: 12px;
+      color: var(--text-soft);
+      line-height: 1.6;
+    }
+
+    .help-section h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 0 0 6px;
+      color: #f7f7fb;
+    }
+
+    .help-section code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(255,255,255,0.08);
+      padding: 1px 5px;
+      border-radius: 999px;
+    }
+
+    .help-section pre {
+      background: rgba(0,0,0,0.65);
+      border-radius: 10px;
+      padding: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .help-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
+      gap: 10px;
       align-items: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      .help-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .help-note {
+      font-size: 11px;
+      color: var(--text-soft);
+      border-radius: 12px;
+      padding: 6px 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
     }
 
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.75);
-      display: none;
+      background: radial-gradient(circle at top, rgba(0,0,0,0.65), rgba(0,0,0,0.95));
+      backdrop-filter: blur(10px);
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 50;
-    }
-    .modal-backdrop.active {
-      display: flex;
-    }
-    .modal {
-      border-radius: 0.75rem;
-      border: 1px solid #1f2937;
-      background: rgba(15,23,42,0.98);
-      padding: 1rem;
-      max-width: 420px;
-      width: 100%;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-      font-size: 0.85rem;
-    }
-    .modal h3 {
-      margin-top: 0;
-      font-size: 1rem;
-    }
-    .modal-footer {
-      margin-top: 0.75rem;
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.4rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.18s ease-out;
+      z-index: 200;
     }
 
-    @media (max-width: 900px) {
-      .layout {
-        grid-template-columns: minmax(0,1fr);
-      }
-      .preview-card {
-        grid-template-columns: minmax(0,1fr);
-      }
-      .bulk-layout {
-        grid-template-columns: minmax(0,1fr);
-      }
-      .precon-layout {
-        grid-template-columns: minmax(0,1fr);
-      }
+    .modal-backdrop.active {
+      pointer-events: auto;
+      opacity: 1;
+    }
+
+    .modal {
+      width: min(360px, 92vw);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%),
+                  linear-gradient(145deg, #141726, #070814);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.95);
+      padding: 12px 14px 10px;
+      transform: translateY(6px);
+      opacity: 0;
+      transition: all 0.18s ease-out;
+    }
+
+    .modal-backdrop.active .modal {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #f7f7fb;
+    }
+
+    .modal-body {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-bottom: 8px;
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      box-shadow: 0 0 12px rgba(255,107,58,0.9);
+    }
+
+    .label-pill {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-soft);
+    }
+
+    .label-pill.warn {
+      background: var(--warning-soft);
+      border-color: rgba(255,179,0,0.6);
+      color: #ffe89a;
+    }
+
+    .label-pill.info {
+      background: rgba(70,194,255,0.14);
+      border-color: rgba(70,194,255,0.5);
+      color: #d4f0ff;
+    }
+
+    .label-pill.ok {
+      background: var(--success-soft);
+      border-color: rgba(76,175,80,0.6);
+      color: #c4f8c6;
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div>
-        <h1>DRIVE TCG – Admin Tool</h1>
-        <div style="font-size:0.75rem;opacity:0.8;">Single card editor • Bulk import • Precon builder</div>
-      </div>
-      <div class="right">
-        <div class="badge">
-          <span>Library:</span>
-          <strong id="libraryCount">0 cards</strong>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-title-block">
+        <div class="app-title">
+          <span class="drive">DRIVE TCG</span>
+          <span class="admin">Admin Toolkit</span>
         </div>
-        <button id="downloadCardsJsonBtn" class="btn small secondary" title="Download drive-card.json">
-          <span class="icon">⬇️</span> Download drive-card.json
+        <div class="app-subtitle">
+          Editing <strong>drive-card.json</strong> and <strong>drive-precons.json</strong> directly in your browser.
+        </div>
+      </div>
+
+      <div class="app-meta">
+        <div class="meta-pills">
+          <div class="pill">
+            <span class="pill-dot"></span>
+            <span>Single-file JSON · No server</span>
+          </div>
+          <div class="pill pill-ok">
+            <span>Changes are live in memory</span>
+          </div>
+          <div class="pill pill-warn">
+            <span>Use <strong>Export JSON</strong> to save your edits</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-actions">
+        <button id="downloadCardsJsonBtn" class="btn secondary small">
+          Export Card JSON
+        </button>
+        <button id="downloadPreconsJsonBtn" class="btn secondary small">
+          Export Precon JSON
         </button>
       </div>
     </header>
 
-    <nav>
-      <button id="navSingleBtn" class="nav-btn active">
-        <span class="icon">📝</span> Single Card
-        <span class="pill">Editor</span>
-      </button>
-      <button id="navBulkBtn" class="nav-btn">
-        <span class="icon">📥</span> Bulk Import
-        <span class="pill">Excel / CSV</span>
-      </button>
-      <button id="navPreconsBtn" class="nav-btn">
-        <span class="icon">🧩</span> Precons
-        <span class="pill">Decks</span>
-      </button>
-      <button id="navHelpBtn" class="nav-btn">
-        <span class="icon">❓</span> Help & Workflow
-      </button>
-    </nav>
-
-    <main>
-      <!-- SINGLE CARD SECTION -->
-      <section id="singleSection" class="active">
-        <div class="layout">
-          <div class="panel">
-            <h2><span class="icon">🧾</span> Single Card Editor</h2>
-
-            <h3>Card Basics</h3>
-            <div class="field-grid">
-              <div class="field">
-                <label for="cardIdInput">Internal ID (read-only)</label>
-                <input id="cardIdInput" type="text" placeholder="Generated automatically" readonly />
-              </div>
-              <div class="field">
-                <label for="cardNameInput">Card Name</label>
-                <input id="cardNameInput" type="text" placeholder="Danny's GTS-4" />
-              </div>
-              <div class="field">
-                <label for="cardTypeInput">Type</label>
-                <select id="cardTypeInput">
-                  <option value="">– Select –</option>
-                  <option value="Crew">Crew</option>
-                  <option value="Driver">Driver</option>
-                  <option value="Named Driver">Named Driver</option>
-                  <option value="Mod">Mod</option>
-                  <option value="Vehicle">Vehicle</option>
-                  <option value="Named Vehicle">Named Vehicle</option>
-                  <option value="Track">Track</option>
-                  <option value="Condition">Condition</option>
-                  <option value="Misc">Misc</option>
-                </select>
-              </div>
-              <div class="field hidden-set-basic">
-                <label for="cardSetNameInput">Set Name (primary / display)</label>
-                <input id="cardSetNameInput" type="text" placeholder="SET 1" />
-              </div>
-              <div class="field hidden-set-basic">
-                <label for="cardNumberInput">Card Number (primary print)</label>
-                <input id="cardNumberInput" type="text" placeholder="01-001" />
-              </div>
-              <div class="field">
-                <label for="cardRarityInput">Rarity</label>
-                <input id="cardRarityInput" type="text" placeholder="Common / Rare / Promo…" />
-              </div>
-              <div class="field" data-for-types="Track,Vehicle,Named Vehicle">
-                <label for="cardVehicleTypesInput">Vehicle Types (comma separated)</label>
-                <input id="cardVehicleTypesInput" type="text" placeholder="Drag, Drift…" />
-              </div>
-              <div class="field">
-                <label for="cardTagsInput">Tags (comma separated)</label>
-                <input id="cardTagsInput" type="text" placeholder="Junkyard, Starter Deck…" />
-              </div>
-              <div class="field">
-                <label for="cardImageUrlInput">Image URL</label>
-                <input id="cardImageUrlInput" type="text" placeholder="images/Set1/DANNYS_GTS-4.png" />
-              </div>
+    <main class="app-main">
+      <section class="panel panel-subtle">
+        <header class="panel-header">
+          <div class="panel-header-main">
+            <div class="panel-title">
+              <span>Workspace</span>
+              <span class="panel-title-pill">Card &amp; Deck Editor</span>
             </div>
-
-            <h3>Prints (Sets / Card Numbers)</h3>
-            <div class="field-grid">
-              <div class="field">
-                <label for="printSetSelect">Set</label>
-                <select id="printSetSelect">
-                  <option value="">– Select –</option>
-                  <option value="SET 1">SET 1</option>
-                  <option value="SET 2">SET 2</option>
-                  <option value="SET 3">SET 3</option>
-                  <option value="SET 4">SET 4</option>
-                  <option value="SET 5">SET 5</option>
-                  <option value="CUSTOM">Custom…</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="printCustomSetInput">Custom Set Name (if 'Custom')</label>
-                <input id="printCustomSetInput" type="text" placeholder="Father's Day Mini, Promo, etc." />
-              </div>
-              <div class="field">
-                <label for="printCardNumberInput">Card Number</label>
-                <input id="printCardNumberInput" type="text" placeholder="01-001" />
-              </div>
-              <div class="field">
-                <label>&nbsp;</label>
-                <button id="printSetPrimaryBtn" class="btn small secondary" type="button">
-                  <span class="icon">➕</span> Add / Update Print
-                </button>
-              </div>
-            </div>
-
-            <div class="panel" style="margin-top:0.5rem;padding:0.4rem 0.5rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
-                <div style="font-size:0.75rem;opacity:0.85;">
-                  <strong>Print History for this Card</strong>
-                  <div style="opacity:0.8;">Control which Sets & serials this card appears in.</div>
-                </div>
-                <button id="printClearAllBtn" class="btn small danger" type="button">
-                  <span class="icon">🧹</span> Clear All Prints
-                </button>
-              </div>
-              <div id="printsList" style="margin-top:0.4rem;font-size:0.75rem;border-radius:0.5rem;border:1px solid #111827;background:rgba(15,23,42,0.85);max-height:140px;overflow:auto;padding:0.25rem 0.35rem;"></div>
-            </div>
-
-            <h3>Type-Specific Fields</h3>
-            <div class="field-grid">
-              <!-- Mods -->
-              <div class="field" data-for-types="Mod">
-                <label for="modBasePartInput">Mod – Base Part</label>
-                <input id="modBasePartInput" type="text" placeholder="Engine / Tires / Suspension…" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL1Input">Mod – Level 1</label>
-                <input id="modL1Input" type="text" placeholder="1/2 etc" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL2Input">Mod – Level 2</label>
-                <input id="modL2Input" type="text" placeholder="2/2 etc" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL3Input">Mod – Level 3</label>
-                <input id="modL3Input" type="text" placeholder="3/3 etc" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL4Input">Mod – Level 4</label>
-                <input id="modL4Input" type="text" placeholder="5/3 etc" />
-              </div>
-
-              <!-- Vehicles -->
-              <div class="field" data-for-types="Vehicle,Named Vehicle">
-                <label for="vehicleHpConInput">Vehicle – HP/CON</label>
-                <input id="vehicleHpConInput" type="text" placeholder="10/4 etc" />
-              </div>
-              <div class="field" data-for-types="Vehicle,Named Vehicle">
-                <label for="vehiclePitCostInput">Vehicle – Pit Cost</label>
-                <input id="vehiclePitCostInput" type="text" placeholder="3 etc" />
-              </div>
-            </div>
-
-            <h3>Card Rules / Trait Text</h3>
-            <div class="field">
-              <label for="cardNotesInput">Rules / Trait / Reminder Text</label>
-              <textarea id="cardNotesInput" placeholder="Card ability text, Crew Trait, Vehicle Trait, etc."></textarea>
-            </div>
-
-            <div class="btn-row">
-              <button id="singleSaveBtn" class="btn primary" type="button">
-                <span class="icon">💾</span> Save / Update in Library
-              </button>
-              <button id="singleNewBtn" class="btn secondary" type="button">
-                <span class="icon">✨</span> New Card
-              </button>
-              <button id="singleDeleteBtn" class="btn danger" type="button">
-                <span class="icon">🗑️</span> Delete Card
-              </button>
-              <button id="downloadCardsJsonBtn_single" class="btn small secondary" type="button">
-                <span class="icon">⬇️</span> Download drive-card.json
-              </button>
-            </div>
-            <div id="singleStatus" class="status-line"></div>
-          </div>
-
-          <div class="panel">
-            <h2><span class="icon">👁️</span> Live Card Preview</h2>
-            <div class="preview-card" id="singlePreview"></div>
-
-            <div class="library-panel">
-              <div class="library-header">
-                <span style="opacity:0.9;">Card Library</span>
-                <input id="cardLibrarySearchInput" type="text" placeholder="Search by name, type, set, tags…" />
-              </div>
-              <div id="cardLibraryList" class="library-list"></div>
+            <div class="panel-subtitle">
+              Use the tabs to switch between <strong>Single Card</strong>, <strong>Bulk Import</strong>, and <strong>Precon Decks</strong>.
             </div>
           </div>
-        </div>
-      </section>
+          <div class="panel-actions">
+            <nav class="nav-tabs">
+              <button id="navSingleBtn" class="nav-tab active">
+                <span class="bullet"></span>
+                Single Card
+              </button>
+              <button id="navBulkBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Bulk Import
+              </button>
+              <button id="navPreconsBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Precons
+              </button>
+              <button id="navHelpBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Help
+              </button>
+            </nav>
+          </div>
+        </header>
 
-      <!-- BULK IMPORT SECTION -->
-      <section id="bulkSection">
-        <div class="panel">
-          <h2><span class="icon">📥</span> Bulk Import from Excel / CSV</h2>
-          <p style="font-size:0.8rem;opacity:0.9;">
-            Paste rows from your Excel sheet (Crew, Mods, Drivers, Vehicles, Tracks, Conditions, Misc).
-            The tool will try to map columns based on header names (e.g., “Crew Name”, “Vehicle Type”, “Mod Name”, etc.).
-          </p>
-
-          <div class="bulk-layout">
-            <div>
-              <label class="section-title" for="bulkInput">
-                <span class="icon">🧾</span> Raw Spreadsheet Data
-              </label>
-              <textarea id="bulkInput" class="bulk-textarea" placeholder="Paste from Excel here…"></textarea>
-
-              <div class="field-grid" style="margin-top:0.5rem;">
-                <div class="field">
-                  <label for="bulkDelimiterSelect">Delimiter</label>
-                  <select id="bulkDelimiterSelect">
-                    <option value="tab">Tab (Excel/TSV)</option>
-                    <option value="comma">Comma (CSV)</option>
-                    <option value="semicolon">Semicolon</option>
-                    <option value="pipe">Pipe |</option>
-                  </select>
+        <div class="panel-body">
+          <section id="singleSection" class="section active">
+            <div class="form-layout">
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Single Card Editor</div>
+                    <div class="field-card-subtitle">
+                      Edit the core data for a single card, then export the full <code>drive-card.json</code>.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Live Preview</span>
+                  </div>
                 </div>
-                <div class="field">
-                  <label for="bulkHasHeaderCheckbox">
-                    <input id="bulkHasHeaderCheckbox" type="checkbox" checked /> First row is header
+
+                <div class="field-grid">
+                  <div class="field">
+                    <label class="field-label">
+                      <span class="field-required">Card Name</span>
+                    </label>
+                    <input id="cardNameInput" class="input" type="text" placeholder="e.g. LUCKY CHARM, JUNKYARD DOG" />
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span class="field-required">Card Type</span>
+                      <span class="hint">Crew / Driver / Mod / Vehicle / Track / Condition</span>
+                    </label>
+                    <select id="cardTypeInput" class="input">
+                      <option value="Crew">Crew</option>
+                      <option value="Driver">Driver</option>
+                      <option value="Named Driver">Named Driver</option>
+                      <option value="Mod">Mod</option>
+                      <option value="Vehicle">Vehicle</option>
+                      <option value="Named Vehicle">Named Vehicle</option>
+                      <option value="Track">Track</option>
+                      <option value="Condition">Condition</option>
+                      <option value="Misc">Misc</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span class="field-required">Set Name</span>
+                      <span class="hint">Displayed set, e.g. Set 1, Set 2, etc.</span>
+                    </label>
+                    <input id="cardSetNameInput" class="input input-mono" type="text" placeholder="e.g. Set 1, Set 2, Father's Day" />
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span class="field-required">Card Number</span>
+                      <span class="hint">Numeric or alphanumeric</span>
+                    </label>
+                    <input id="cardNumberInput" class="input input-mono" type="text" placeholder="e.g. 001, 02, FD-03" />
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Rarity</span>
+                      <span class="hint">Common, Uncommon, Rare, Ultra Rare, etc.</span>
+                    </label>
+                    <input id="cardRarityInput" class="input" type="text" placeholder="e.g. Common" />
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Image URL</span>
+                      <span class="hint">Path or URL to art</span>
+                    </label>
+                    <input id="cardImageUrlInput" class="input input-mono" type="text" placeholder="e.g. /img/cards/lucky_charm.png" />
+                  </div>
+                </div>
+
+                <div class="field-grid" style="margin-top: 4px;">
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Vehicle Types</span>
+                      <span class="hint">Comma-separated: Drag, Drift, Off-Road, Rally</span>
+                    </label>
+                    <input id="cardVehicleTypesInput" class="input" type="text" placeholder="e.g. Drag, Drift" />
+                    <div class="tag-row">
+                      <span class="tip">Used to filter vehicles and synergy for Tracks/Conditions.</span>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Tags</span>
+                      <span class="hint">Comma-separated keywords</span>
+                    </label>
+                    <input id="cardTagsInput" class="input" type="text" placeholder="e.g. Junkyard, Sponsor, Holiday" />
+                    <div class="tag-row">
+                      <span class="tip">Searchable tags for deckbuilding and referencing.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-grid" style="margin-top: 6px;">
+                  <div class="field" data-for-types="Mod">
+                    <label class="field-label">
+                      <span>Mod Base Part</span>
+                      <span class="hint">Mod-only</span>
+                    </label>
+                    <input id="modBasePartInput" class="input input-mono" type="text" placeholder="Headers, Engine, Brakes" />
+                    <div class="field-grid" style="margin-top: 4px; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px;">
+                      <div class="field">
+                        <label class="field-label"><span>Lvl 1</span></label>
+                        <input id="modL1Input" class="input input-mono" type="text" placeholder="e.g. 1/2" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>Lvl 2</span></label>
+                        <input id="modL2Input" class="input input-mono" type="text" placeholder="2/2" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>Lvl 3</span></label>
+                        <input id="modL3Input" class="input input-mono" type="text" placeholder="3/3" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>Lvl 4</span></label>
+                        <input id="modL4Input" class="input input-mono" type="text" placeholder="5/3" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field" data-for-types="Vehicle,Named Vehicle">
+                    <label class="field-label">
+                      <span>Vehicle Stats</span>
+                      <span class="hint">Vehicle-only</span>
+                    </label>
+                    <div class="field-grid" style="grid-template-columns: minmax(0,1.1fr) minmax(0,0.9fr); gap: 4px;">
+                      <div class="field">
+                        <label class="field-label">
+                          <span>HP / CON</span>
+                          <span class="hint">e.g. 3/2</span>
+                        </label>
+                        <input id="vehicleHpConInput" class="input input-mono" type="text" placeholder="HP/CON" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label">
+                          <span>Pit Cost</span>
+                          <span class="hint">Numeric</span>
+                        </label>
+                        <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" placeholder="e.g. 2" />
+                      </div>
+                    </div>
+                    <div class="tag-row">
+                      <span class="tip">HP/CON and Pit Cost are only relevant for Vehicles.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top: 6px;">
+                  <label class="field-label">
+                    <span>Card Notes / Rules Text</span>
+                    <span class="hint">Use full rules text; preview appears on the right.</span>
                   </label>
+                  <textarea id="cardNotesInput" class="input bulk-textarea" style="height: 120px;" placeholder="Enter the card's full rules text, flavor, or reminder text here."></textarea>
                 </div>
-              </div>
 
-              <div class="btn-row">
-                <button id="bulkParseBtn" class="btn secondary" type="button">
-                  <span class="icon">🔍</span> Parse Preview
-                </button>
-                <button id="bulkImportBtn" class="btn primary" type="button">
-                  <span class="icon">📤</span> Import into Library
-                </button>
-              </div>
-              <div id="bulkStatus" class="status-line"></div>
-            </div>
-
-            <div class="panel" style="margin:0;">
-              <h3 class="section-title"><span class="icon">👓</span> Parsed Preview</h3>
-              <div id="bulkPreview" style="max-height:320px;overflow:auto;font-size:0.75rem;border-radius:0.6rem;border:1px solid #111827;background:rgba(15,23,42,0.8);padding:0.35rem;"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PRECONS SECTION -->
-      <section id="preconsSection">
-        <div class="panel">
-          <h2><span class="icon">🧩</span> Preconstructed Decks</h2>
-          <p style="font-size:0.8rem;opacity:0.9;">
-            Create and edit preconstructed decks using cards from the library. Changes are stored locally
-            until you download <code>drive-precons.json</code>.
-          </p>
-
-          <div class="precon-layout">
-            <!-- Left: Precon list -->
-            <div>
-              <h3 class="section-title">
-                <span class="icon">📋</span> Precon List
-              </h3>
-              <div id="preconList" class="library-list" style="max-height:280px;"></div>
-
-              <div class="btn-row">
-                <button id="preconNewBtn" class="btn secondary" type="button">
-                  <span class="icon">✨</span> New Precon
-                </button>
-                <button id="preconDeleteBtn" class="btn danger" type="button">
-                  <span class="icon">🗑️</span> Delete Precon
-                </button>
-              </div>
-            </div>
-
-            <!-- Right: Precon editor -->
-            <div>
-              <h3 class="section-title">
-                <span class="icon">✏️</span> Precon Editor
-              </h3>
-
-              <div class="field-grid">
-                <div class="field">
-                  <label for="preconNameInput">Precon Name</label>
-                  <input id="preconNameInput" type="text" placeholder="Danny's Garage" />
+                <div class="prints-card">
+                  <div class="prints-header">
+                    <span>Prints (Set / Number pairs)</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                      <span class="label-pill info">FIRST print is primary by default</span>
+                    </div>
+                  </div>
+                  <div class="prints-body">
+                    <div class="prints-row">
+                      <select id="printSetSelect" class="input">
+                        <option value="">(use card Set Name)</option>
+                        <option value="Set 1">Set 1</option>
+                        <option value="Set 2">Set 2</option>
+                        <option value="Set 3">Set 3</option>
+                        <option value="Set 4">Set 4</option>
+                        <option value="Set 5">Set 5</option>
+                        <option value="Set 6">Set 6</option>
+                        <option value="Father's Day Mini Set">Father's Day Mini Set</option>
+                        <option value="CUSTOM">Custom...</option>
+                      </select>
+                      <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name (if CUSTOM selected)" />
+                      <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="Card Number (e.g. 001)" />
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:4px;">
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <button id="printSetPrimaryBtn" class="btn small secondary" type="button">Set last as primary</button>
+                        <button id="printClearAllBtn" class="btn small btn-ghost" type="button">Clear all prints</button>
+                      </div>
+                      <span style="font-size:10px;color:var(--text-soft);">Click a pill below to remove that print.</span>
+                    </div>
+                    <ul id="printsList" class="prints-list"></ul>
+                  </div>
                 </div>
-                <div class="field">
-                  <label for="preconNotesInput">Notes</label>
-                  <textarea id="preconNotesInput" rows="2" placeholder="Starter deck, theme notes, etc."></textarea>
-                </div>
-              </div>
 
-              <h4 class="section-title" style="margin-top:0.75rem;">
-                <span class="icon">🃏</span> Cards in Deck
-              </h4>
-
-              <div class="field-grid">
-                <div class="field">
-                  <label for="preconCardSelect">Card from Library</label>
-                  <select id="preconCardSelect">
-                    <option value="">– Select Card –</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="preconCardCountInput">Count</label>
-                  <input id="preconCardCountInput" type="number" min="1" value="1" />
-                </div>
-                <div class="field">
-                  <label>&nbsp;</label>
-                  <button id="preconAddCardBtn" class="btn small secondary" type="button">
-                    <span class="icon">➕</span> Add / Update Card
+                <input id="cardIdInput" type="hidden" />
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button id="singleSaveBtn" class="btn primary small" type="button">
+                      Save / Update Card
+                    </button>
+                    <button id="singleNewBtn" class="btn secondary small" type="button">
+                      New Card
+                    </button>
+                    <button id="singleDeleteBtn" class="btn small btn-danger" type="button">
+                      Delete Card
+                    </button>
+                  </div>
+                  <button id="downloadCardsJsonBtn_single" class="btn btn-ghost small" type="button">
+                    Export JSON
                   </button>
                 </div>
+
+                <div class="single-footer-row">
+                  <div id="singleStatus" class="status-msg">Ready.</div>
+                  <div class="label-pill info">Remember to export JSON to persist your edits.</div>
+                </div>
               </div>
 
-              <div id="preconCardsList"
-                   class="library-list"
-                   style="max-height:210px;margin-top:0.5rem;"></div>
+              <div class="preview-card">
+                <div class="preview-header">
+                  <div class="preview-heading">
+                    <div class="previewName" id="previewName">Untitled Card</div>
+                    <div class="previewMeta">
+                      <span id="previewType" class="type-badge">Type ?</span>
+                      <span id="previewSet">Set ?</span>
+                      <span>•</span>
+                      <span id="previewNumber">###</span>
+                      <span>•</span>
+                      <span id="previewRarity">Common</span>
+                    </div>
+                  </div>
+                  <div class="preview-fields" id="previewChips">
+                  </div>
+                </div>
+                <div class="preview-body">
+                  <div class="preview-art">
+                    <div id="previewArtPlaceholder">No image URL set. This area will show your card art.</div>
+                  </div>
+                  <div class="preview-text">
+                    <div class="preview-notes" id="previewNotes">
+                      Card notes and rules text will appear here.
+                    </div>
+                    <div class="preview-footer">
+                      <div class="preview-footer-left">
+                        <span class="label-pill">Preview only</span>
+                        <span>Values are derived from your inputs.</span>
+                      </div>
+                      <div class="preview-footer-right" id="previewStats">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-              <div class="btn-row">
-                <button id="preconSaveBtn" class="btn primary" type="button">
-                  <span class="icon">💾</span> Save Precon
-                </button>
-                <button id="downloadPreconsJsonBtn" class="btn small secondary" type="button">
-                  <span class="icon">⬇️</span> Download drive-precons.json
-                </button>
+            <div class="scroll-column" style="margin-top:10px;">
+              <div class="scroll-header">
+                <div>
+                  <div class="scroll-title">Card Library</div>
+                  <div class="scroll-count" id="libraryCount">0 cards</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input id="cardLibrarySearchInput" class="input input-search" type="text" placeholder="Filter by name / type / tags" />
+                </div>
+              </div>
+              <div class="scroll-body">
+                <div class="scroll-inner">
+                  <ul id="cardLibraryList" class="library-list"></ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="bulkSection" class="section">
+            <div class="bulk-layout">
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Bulk Text Import</div>
+                    <div class="field-card-subtitle">
+                      Paste CSV/TSV here to create or update multiple cards at once.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Header-aware</span>
+                  </div>
+                </div>
+
+                <textarea id="bulkInput" class="input bulk-textarea" placeholder="Paste rows here. Example:
+
+Name,Type,Set,CardNumber,Rarity,VehicleType,Tags,ImageUrl,Notes
+LUCKY CHARM,Crew,Set 1,001,Common,,Charm,&#x2F;img&#x2F;cards&#x2F;lucky_charm.png,Basic starter charm
+"></textarea>
+
+                <div class="bulk-options">
+                  <label>
+                    <span>Delimiter:</span>
+                    <select id="bulkDelimiterSelect" class="input input-mono" style="width:auto;">
+                      <option value="auto">Auto-detect</option>
+                      <option value="comma">Comma (,)</option>
+                      <option value="tab">Tab (↹)</option>
+                      <option value="semicolon">Semicolon (;)</option>
+                      <option value="pipe">Pipe (|)</option>
+                    </select>
+                  </label>
+                  <label>
+                    <input id="bulkHasHeaderCheckbox" type="checkbox" checked />
+                    <span>First row is header</span>
+                  </label>
+                  <span class="label-pill info">Column names are loosely matched (case &amp; spacing ignored).</span>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+                  <button id="bulkParseBtn" class="btn primary small" type="button">
+                    Parse Text
+                  </button>
+                  <button id="bulkImportBtn" class="btn secondary small" type="button">
+                    Import Parsed Cards
+                  </button>
+                </div>
+                <div id="bulkStatus" class="bulk-status">Waiting for data…</div>
               </div>
 
-              <div id="preconsStatus" class="status-line"></div>
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Bulk Preview</div>
+                    <div class="field-card-subtitle">
+                      Shows a summary of parsed rows before they are merged into the library.
+                    </div>
+                  </div>
+                  <div class="label-pill warn">Cards are not saved until you import.</div>
+                </div>
+                <div id="bulkPreview" class="bulk-preview-box"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="preconsSection" class="section">
+            <div class="field-card">
+              <div class="field-card-label">
+                <div>
+                  <div class="field-card-title">Preconstructed Decks</div>
+                  <div class="field-card-subtitle">
+                    Read-only view of <code>drive-precons.json</code>. Use your editor for heavy changes, or export to update.
+                  </div>
+                </div>
+                <div class="badge">
+                  <span class="badge-dot"></span>
+                  <span>JSON-backed</span>
+                </div>
+              </div>
+              <div id="preconGrid" class="precon-grid"></div>
+              <div id="preconsStatus" class="bulk-status" style="margin-top:6px;">
+                Loading precons…
+              </div>
+            </div>
+          </section>
+
+          <section id="helpSection" class="section">
+            <div class="help-grid">
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">How This Admin Works</div>
+                    <div class="field-card-subtitle">
+                      This panel manipulates in-memory data for <code>drive-card.json</code> and <code>drive-precons.json</code>.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>DRIVE TCG internal tool</span>
+                  </div>
+                </div>
+                <div class="help-section">
+                  <h3>Single Card Editor</h3>
+                  <p>
+                    The Single Card tab lets you edit one card at a time. The preview on the right updates as you type.
+                  </p>
+                  <ul>
+                    <li><strong>Save / Update Card</strong> will add or update the card in the in-memory library.</li>
+                    <li><strong>New Card</strong> clears the form so you can create a fresh entry.</li>
+                    <li><strong>Delete Card</strong> removes the selected card from the library.</li>
+                  </ul>
+                  <p>
+                    Use the <strong>Card Library</strong> list below the editor to filter and select existing cards.
+                    Click any card to load it into the editor for changes.
+                  </p>
+
+                  <h3>Bulk Import</h3>
+                  <p>
+                    The Bulk tab supports pasting CSV/TSV-like data. It respects headers loosely (ignoring case, spacing, etc.).
+                  </p>
+                  <p>
+                    Basic example:
+                  </p>
+                  <pre><code>Name,Type,Set,CardNumber,Rarity,VehicleType,Tags,ImageUrl,Notes
+LUCKY CHARM,Crew,Set 1,001,Common,,Charm,/img/cards/lucky_charm.png,Basic starter charm
+</code></pre>
+                  <p>
+                    After parsing, the preview shows a summary. When you click <strong>Import Parsed Cards</strong>, these cards are
+                    merged with the in-memory library.
+                  </p>
+
+                  <h3>Preconstructed Decks</h3>
+                  <p>
+                    The Precons tab reads from <code>drive-precons.json</code>. It’s currently a read-only summary:
+                  </p>
+                  <ul>
+                    <li>Deck name and description.</li>
+                    <li>List of card IDs plus counts, resolved against the current card library when possible.</li>
+                  </ul>
+                  <p>
+                    Use your code editor to change the JSON, then refresh this page, or export a new JSON from here using the
+                    <strong>Export Precon JSON</strong> button.
+                  </p>
+                </div>
+              </div>
+
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">JSON Structure</div>
+                    <div class="field-card-subtitle">
+                      Reference for the shape of <code>drive-card.json</code> and <code>drive-precons.json</code>.
+                    </div>
+                  </div>
+                  <div class="label-pill info">Kept in sync with the admin logic.</div>
+                </div>
+                <div class="help-section">
+                  <h3>Card JSON</h3>
+                  <pre><code>[
+  {
+    "id": "card_xxx",
+    "name": "LUCKY CHARM",
+    "type": "Crew",
+    "setName": "Set 1",
+    "cardNumber": "001",
+    "rarity": "Common",
+    "vehicleTypes": [],
+    "tags": ["Charm"],
+    "imageUrl": "/img/cards/lucky_charm.png",
+    "notes": "Rules text goes here.",
+    "extra": {
+      "modBasePart": "Headers",
+      "modLevel1": "1/2",
+      "modLevel2": "2/2",
+      "modLevel3": "3/3",
+      "modLevel4": "5/3"
+    },
+    "prints": [
+      { "setId": "Set 1", "cardNumber": "001" }
+    ]
+  }
+]</code></pre>
+
+                  <h3>Precon JSON</h3>
+                  <pre><code>[
+  {
+    "id": "precon_junkyard_intro",
+    "name": "Junkyard Intro",
+    "description": "A starter precon built around Ray's junkyard vehicles.",
+    "cards": [
+      { "cardId": "card_lucky_charm", "count": 2 },
+      { "cardId": "card_junkyard_dog", "count": 3 }
+    ]
+  }
+]</code></pre>
+
+                  <div class="help-note">
+                    <strong>Tip:</strong>
+                    Whenever you change card IDs in <code>drive-card.json</code>, make sure to update references in
+                    <code>drive-precons.json</code> so precon summaries stay accurate.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <div class="panel panel-subtle">
+        <header class="panel-header">
+          <div class="panel-header-main">
+            <div class="panel-title">
+              <span>Local Backup &amp; Tools</span>
+              <span class="panel-title-pill">Safe Editing</span>
+            </div>
+            <div class="panel-subtitle">
+              The admin will try to load <strong>drive-card.json</strong> &amp; <strong>drive-precons.json</strong>, and fall back to
+              <strong>localStorage</strong> backups if needed.
             </div>
           </div>
+          <div class="panel-actions">
+            <span class="label-pill ok">Auto-load from JSON when possible</span>
+          </div>
+        </header>
+        <div class="panel-body">
+          <div class="help-note">
+            <strong>Workflow suggestion:</strong>
+            <ol style="margin:4px 0 0;padding-left:18px;font-size:11px;">
+              <li>Open this admin and let it load <code>drive-card.json</code> and <code>drive-precons.json</code>.</li>
+              <li>Use <strong>Single</strong> and <strong>Bulk</strong> tabs to edit or create cards.</li>
+              <li>Check precons under <strong>Precons</strong> to verify deck contents are correct.</li>
+              <li>Click <strong>Export Card JSON</strong> and <strong>Export Precon JSON</strong> to download updated files.</li>
+              <li>Replace the JSON files in your repo with the exported ones and commit.</li>
+            </ol>
+          </div>
         </div>
-      </section>
-
-      <!-- HELP / WORKFLOW SECTION -->
-      <section id="helpSection">
-        <div class="panel">
-          <h2><span class="icon">❓</span> Help & Workflow Notes</h2>
-
-          <h3 class="section-title"><span class="icon">1️⃣</span> Recommended Workflow</h3>
-          <ol class="help-list">
-            <li><strong>Build the master list of cards in Excel</strong> using the provided columns (Crew, Mods, Drivers, Tracks, Vehicles, Conditions, Misc).</li>
-            <li><strong>Use Bulk Import</strong> to paste ranges from each sheet. The admin will map columns like <em>Crew Name</em>, <em>Vehicle Type</em>, <em>Mod Name</em>, etc.</li>
-            <li><strong>Refine individual cards</strong> in the Single Card Editor (fix text, tags, images, cross-set prints).</li>
-            <li><strong>Download drive-card.json</strong> and drop it into the DRIVE app / GitHub viewer.</li>
-            <li><strong>Use Precons</strong> to define starter decks / junkyard precons, then export <code>drive-precons.json</code>.</li>
-          </ol>
-
-          <h3 class="section-title"><span class="icon">2️⃣</span> Column Mapping Tips</h3>
-          <ul class="help-list">
-            <li><strong>Crew / Driver / Named Driver / Condition:</strong> use columns like <em>Crew Name</em>, <em>Driver Name</em>, <em>Condition Name</em> plus a Trait/Effect column.</li>
-            <li><strong>Mods:</strong> <em>Mod Name</em>, <em>Mod TYPE</em>, <em>Base Part</em>, <em>Mod Ability</em>, and Lvl columns (1–4).</li>
-            <li><strong>Vehicles / Named Vehicles:</strong> <em>VEHICLE name</em>, <em>VEHICLE HP/CON</em>, <em>Vehicle Type</em>, <em>PIT COST</em>, and <em>TRAIT</em>.</li>
-            <li><strong>Tracks:</strong> <em>Track Name</em>, <em>Track Trait</em>, and <em>Vehicle Type</em>.</li>
-          </ul>
-
-          <h3 class="section-title"><span class="icon">3️⃣</span> Set & Print Logic</h3>
-          <ul class="help-list">
-            <li>The <strong>Prints</strong> block lets you define multiple Set / Card Number pairs for a single logical card.</li>
-            <li>Use <strong>SET 1–5</strong> from the dropdown for main sets, or choose <strong>Custom…</strong> for things like promos or mini-sets.</li>
-            <li>The hidden <em>Set Name</em> and <em>Card Number</em> fields in basics mirror the <em>primary</em> print and are kept for backward compatibility.</li>
-          </ul>
-        </div>
-      </section>
+      </div>
     </main>
   </div>
 
-  <!-- Simple modal for confirmations -->
   <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
-      <h3 id="modalTitle">Confirm</h3>
-      <div id="modalBody">Are you sure?</div>
+      <div class="modal-header">
+        <h3 id="modalTitle">Confirm</h3>
+        <span class="label-pill warn">Dangerous</span>
+      </div>
+      <div id="modalBody" class="modal-body">
+        Are you sure?
+      </div>
       <div class="modal-footer">
-        <button id="modalCancelBtn" class="btn small secondary" type="button">Cancel</button>
-        <button id="modalConfirmBtn" class="btn small primary" type="button">OK</button>
+        <button id="modalCancelBtn" class="btn small btn-ghost" type="button">Cancel</button>
+        <button id="modalConfirmBtn" class="btn small btn-danger" type="button">Confirm</button>
       </div>
     </div>
   </div>
 
-  <script>
-    /************************************************************
-     * Local backup keys (used as fallback if JSON files not found)
-     ************************************************************/
-    const STORAGE_KEYS = {
-      CARDS: "drive_admin_cards_json",
-      PRECONS: "drive_admin_precons_json"
-    };
-
-    function loadFromLocalStorage(key, fallback) {
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return fallback;
-        return JSON.parse(raw);
-      } catch (e) {
-        console.warn("Failed to parse localStorage for", key, e);
-        return fallback;
-      }
-    }
-
-    function saveToLocalStorage(key, value) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value, null, 2));
-      } catch (e) {
-        console.warn("Failed to save localStorage for", key, e);
-      }
-    }
-
-    /************************************************************
-     * Card / Precon Data Structures
-     ************************************************************/
-    const AppState = {
-      cards: [],
-      selectedCardId: null,
-      currentSinglePrints: [],
-      precons: [],
-      selectedPreconId: null,
-      currentPreconCards: {}
-    };
-
-    const Dom = {
-      navSingleBtn: document.getElementById("navSingleBtn"),
-      navBulkBtn: document.getElementById("navBulkBtn"),
-      navPreconsBtn: document.getElementById("navPreconsBtn"),
-      navHelpBtn: document.getElementById("navHelpBtn"),
-
-      singleSection: document.getElementById("singleSection"),
-      bulkSection: document.getElementById("bulkSection"),
-      preconsSection: document.getElementById("preconsSection"),
-      helpSection: document.getElementById("helpSection"),
-
-      cardIdInput: document.getElementById("cardIdInput"),
-      cardNameInput: document.getElementById("cardNameInput"),
-      cardTypeInput: document.getElementById("cardTypeInput"),
-      cardSetNameInput: document.getElementById("cardSetNameInput"),
-      cardNumberInput: document.getElementById("cardNumberInput"),
-      cardRarityInput: document.getElementById("cardRarityInput"),
-      cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
-      cardTagsInput: document.getElementById("cardTagsInput"),
-      cardImageUrlInput: document.getElementById("cardImageUrlInput"),
-      modBasePartInput: document.getElementById("modBasePartInput"),
-      modL1Input: document.getElementById("modL1Input"),
-      modL2Input: document.getElementById("modL2Input"),
-      modL3Input: document.getElementById("modL3Input"),
-      modL4Input: document.getElementById("modL4Input"),
-      vehicleHpConInput: document.getElementById("vehicleHpConInput"),
-      vehiclePitCostInput: document.getElementById("vehiclePitCostInput"),
-      cardNotesInput: document.getElementById("cardNotesInput"),
-
-      printSetSelect: document.getElementById("printSetSelect"),
-      printCustomSetInput: document.getElementById("printCustomSetInput"),
-      printCardNumberInput: document.getElementById("printCardNumberInput"),
-      printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
-      printClearAllBtn: document.getElementById("printClearAllBtn"),
-      printsList: document.getElementById("printsList"),
-
-      singleSaveBtn: document.getElementById("singleSaveBtn"),
-      singleNewBtn: document.getElementById("singleNewBtn"),
-      singleDeleteBtn: document.getElementById("singleDeleteBtn"),
-      singleStatus: document.getElementById("singleStatus"),
-
-      singlePreview: document.getElementById("singlePreview"),
-      cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
-      cardLibraryList: document.getElementById("cardLibraryList"),
-      libraryCount: document.getElementById("libraryCount"),
-
-      bulkInput: document.getElementById("bulkInput"),
-      bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
-      bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
-      bulkParseBtn: document.getElementById("bulkParseBtn"),
-      bulkImportBtn: document.getElementById("bulkImportBtn"),
-      bulkPreview: document.getElementById("bulkPreview"),
-      bulkStatus: document.getElementById("bulkStatus"),
-
-      preconList: document.getElementById("preconList"),
-      preconNameInput: document.getElementById("preconNameInput"),
-      preconNotesInput: document.getElementById("preconNotesInput"),
-      preconCardsList: document.getElementById("preconCardsList"),
-      preconCardSelect: document.getElementById("preconCardSelect"),
-      preconCardCountInput: document.getElementById("preconCardCountInput"),
-      preconAddCardBtn: document.getElementById("preconAddCardBtn"),
-      preconNewBtn: document.getElementById("preconNewBtn"),
-      preconSaveBtn: document.getElementById("preconSaveBtn"),
-      preconDeleteBtn: document.getElementById("preconDeleteBtn"),
-      preconsStatus: document.getElementById("preconsStatus"),
-
-      downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
-      downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
-      downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
-
-      modalBackdrop: document.getElementById("modalBackdrop"),
-      modalTitle: document.getElementById("modalTitle"),
-      modalBody: document.getElementById("modalBody"),
-      modalCancelBtn: document.getElementById("modalCancelBtn"),
-      modalConfirmBtn: document.getElementById("modalConfirmBtn")
-    };
-
-    /************************************************************
-     * Utilities
-     ************************************************************/
-    function generateId() {
-      return "card_" + Math.random().toString(36).slice(2, 10);
-    }
-
-    function parseVehicleTypes(str) {
-      if (!str) return [];
-      return str
-        .split(/[;,]/)
-        .map(s => s.trim())
-        .filter(Boolean);
-    }
-
-    function parseTags(str) {
-      if (!str) return [];
-      return str
-        .split(/[;,]/)
-        .map(s => s.trim())
-        .filter(Boolean);
-    }
-
-    function parseHpCon(str) {
-      if (!str) return {};
-      const parts = str.split("/");
-      const hp = parts[0] !== undefined && parts[0] !== "" ? Number(parts[0]) : undefined;
-      const con = parts[1] !== undefined && parts[1] !== "" ? Number(parts[1]) : undefined;
-      return { hp, con };
-    }
-
-    function formatHpCon(extra) {
-      if (!extra) return "";
-      const hp = extra.hp;
-      const con = extra.con;
-      if (hp === undefined && con === undefined) return "";
-      return `${hp ?? "?"}/${con ?? "?"}`;
-    }
-
-    function formatExtraForSummary(card) {
-      const e = card.extra || {};
-      if (card.type === "Mod") {
-        const levels = [e.modLevel1, e.modLevel2, e.modLevel3, e.modLevel4]
-          .filter(Boolean)
-          .join(" / ");
-        return `Base: ${e.modBasePart || "?"}${levels ? " | Lvls: " + levels : ""}`;
-      }
-      if (card.type === "Vehicle" || card.type === "Named Vehicle") {
-        const parts = [];
-        if (e.hp !== undefined || e.con !== undefined) {
-          parts.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
-        }
-        if (e.pitCost !== undefined) {
-          parts.push(`PIT: ${e.pitCost}`);
-        }
-        return parts.join(" | ");
-      }
-      return "";
-    }
-
-    /**
-     * Normalize a raw card object from JSON or bulk import into the internal shape.
-     */
-    function normalizeCardShape(raw) {
-      const base = raw || {};
-
-      const vehicleTypes = Array.isArray(base.vehicleTypes)
-        ? base.vehicleTypes
-        : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
-
-      const tags = Array.isArray(base.tags)
-        ? base.tags
-        : (base.tags ? [].concat(base.tags) : []);
-
-      const extra = (base.extra && typeof base.extra === "object")
-        ? { ...base.extra }
-        : {};
-
-      const printsRaw = Array.isArray(base.prints) ? base.prints : [];
-
-      let prints = printsRaw
-        .map(p => ({
-          setName: (p.setName || p.setId || "").trim(),
-          cardNumber: (p.cardNumber || "").trim()
-        }))
-        .filter(p => p.setName || p.cardNumber);
-
-      let setName = (base.setName || base.setId || "").trim();
-      let cardNumber = (base.cardNumber || base.cardNo || "").trim();
-
-      if (!prints.length && (setName || cardNumber)) {
-        prints = [{ setName, cardNumber }];
-      }
-
-      if (!setName && prints[0]) setName = prints[0].setName || "";
-      if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
-
-      return {
-        id: base.id || generateId(),
-        name: base.name || "",
-        type: base.type || "",
-        setName,
-        cardNumber,
-        rarity: base.rarity || "",
-        vehicleTypes,
-        tags,
-        imageUrl: base.imageUrl || "",
-        notes: base.notes || "",
-        extra,
-        prints
-      };
-    }
-
-    function serializeCardForExport(card) {
-      const clean = JSON.parse(JSON.stringify(card));
-      if (Array.isArray(clean.prints)) {
-        clean.prints = clean.prints.map(p => ({
-          setId: p.setId || p.setName || "",
-          cardNumber: p.cardNumber || ""
-        }));
-      }
-      return clean;
-    }
-
-    function getCardsForExport() {
-      return AppState.cards.map(serializeCardForExport);
-    }
-
-    function updateTypeFieldVisibility() {
-      const type = Dom.cardTypeInput.value || "";
-      const fields = document.querySelectorAll('.field-grid .field[data-for-types]');
-      fields.forEach(field => {
-        const typesAttr = field.dataset.forTypes || "";
-        const allowed = typesAttr.split(",").map(t => t.trim()).filter(Boolean);
-        if (!allowed.length || allowed.includes(type)) {
-          field.style.display = "";
-        } else {
-          field.style.display = "none";
-        }
-      });
-    }
-
-    function renderSinglePreview() {
-      const previewEl = Dom.singlePreview;
-      previewEl.innerHTML = "";
-
-      const card = collectSingleCardFromInputs(false);
-
-      const imgWrap = document.createElement("div");
-      imgWrap.className = "card-preview-img";
-      if (card.imageUrl) {
-        const img = document.createElement("img");
-        img.src = card.imageUrl;
-        img.alt = card.name || "Card image";
-        imgWrap.appendChild(img);
-      } else {
-        const span = document.createElement("span");
-        span.textContent = "No image URL set. This area will show your card art.";
-        imgWrap.appendChild(span);
-      }
-
-      const meta = document.createElement("div");
-      meta.className = "card-preview-meta";
-
-      const titleRow = document.createElement("div");
-      titleRow.className = "meta-row";
-      const title = document.createElement("h3");
-      title.textContent = card.name || "Untitled Card";
-      titleRow.appendChild(title);
-
-      if (card.type) {
-        const typeChip = document.createElement("span");
-        typeChip.className = "chip key";
-        typeChip.textContent = card.type;
-        titleRow.appendChild(typeChip);
-      }
-      if (card.rarity) {
-        const rarChip = document.createElement("span");
-        rarChip.className = "chip";
-        rarChip.textContent = card.rarity;
-        titleRow.appendChild(rarChip);
-      }
-
-      const primaryPrint = card.prints && card.prints.length
-        ? card.prints.find(p => p.setName === card.setName && p.cardNumber === card.cardNumber) || card.prints[0]
-        : (card.setName || card.cardNumber
-            ? { setName: card.setName, cardNumber: card.cardNumber }
-            : null);
-
-      if (primaryPrint && (primaryPrint.setName || primaryPrint.cardNumber)) {
-        const printChip = document.createElement("span");
-        printChip.className = "chip";
-        printChip.textContent = `${primaryPrint.setName || "SET ?"} ${primaryPrint.cardNumber || ""}`.trim();
-        titleRow.appendChild(printChip);
-      }
-
-      meta.appendChild(titleRow);
-
-      if (card.vehicleTypes && card.vehicleTypes.length) {
-        const row = document.createElement("div");
-        row.className = "meta-row";
-        card.vehicleTypes.forEach(vt => {
-          const chip = document.createElement("span");
-          chip.className = "chip veh-type";
-          chip.textContent = vt;
-          row.appendChild(chip);
-        });
-        meta.appendChild(row);
-      }
-
-      if (card.tags && card.tags.length) {
-        const row = document.createElement("div");
-        row.className = "meta-row";
-        card.tags.forEach(t => {
-          const chip = document.createElement("span");
-          chip.className = "chip tag";
-          chip.textContent = t;
-          row.appendChild(chip);
-        });
-        meta.appendChild(row);
-      }
-
-      const extraSummary = formatExtraForSummary(card);
-      if (extraSummary) {
-        const row = document.createElement("div");
-        row.className = "meta-row";
-        const chip = document.createElement("span");
-        chip.className = "chip";
-        chip.textContent = extraSummary;
-        row.appendChild(chip);
-        meta.appendChild(row);
-      }
-
-      const notesBlock = document.createElement("div");
-      notesBlock.className = "notes-block";
-      notesBlock.textContent = card.notes || "Rules text / trait text will appear here.";
-      meta.appendChild(notesBlock);
-
-      const container = document.createElement("div");
-      container.className = "preview-card";
-      container.appendChild(imgWrap);
-      container.appendChild(meta);
-
-      previewEl.innerHTML = "";
-      previewEl.appendChild(container);
-    }
-
-    function renderCardLibraryList() {
-      const listEl = Dom.cardLibraryList;
-      const q = (Dom.cardLibrarySearchInput.value || "").toLowerCase();
-
-      const cards = AppState.cards.slice().sort((a, b) => {
-        const an = (a.name || "").toLowerCase();
-        const bn = (b.name || "").toLowerCase();
-        return an.localeCompare(bn);
-      });
-
-      const filtered = cards.filter(card => {
-        if (!q) return true;
-        const haystack = [
-          card.name,
-          card.type,
-          card.setName,
-          card.cardNumber,
-          card.rarity,
-          (card.vehicleTypes || []).join(" "),
-          (card.tags || []).join(" "),
-          card.notes
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(q);
-      });
-
-      listEl.innerHTML = "";
-
-      filtered.forEach(card => {
-        const item = document.createElement("div");
-        item.className = "library-item";
-        if (card.id === AppState.selectedCardId) {
-          item.classList.add("active");
-        }
-
-        const main = document.createElement("div");
-        main.className = "library-item-main";
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "name";
-        nameSpan.textContent = card.name || "(Untitled)";
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "meta";
-
-        const parts = [];
-        if (card.type) parts.push(card.type);
-        if (card.setName || card.cardNumber) {
-          parts.push(`${card.setName || "SET ?"} ${card.cardNumber || ""}`.trim());
-        }
-        if (card.rarity) parts.push(card.rarity);
-        metaSpan.textContent = parts.join(" • ");
-
-        main.appendChild(nameSpan);
-        main.appendChild(metaSpan);
-
-        const right = document.createElement("div");
-        right.className = "library-item-tags";
-
-        if (card.vehicleTypes && card.vehicleTypes.length) {
-          const vtSpan = document.createElement("span");
-          vtSpan.className = "meta";
-          vtSpan.textContent = `VT: ${card.vehicleTypes.join(", ")}`;
-          right.appendChild(vtSpan);
-        }
-
-        if (card.tags && card.tags.length) {
-          const tagSpan = document.createElement("span");
-          tagSpan.className = "meta";
-          tagSpan.textContent = `Tags: ${card.tags.join(", ")}`;
-          right.appendChild(tagSpan);
-        }
-
-        item.appendChild(main);
-        item.appendChild(right);
-
-        item.addEventListener("click", () => {
-          AppState.selectedCardId = card.id;
-          fillSingleCardInputs(card);
-          AppState.currentSinglePrints = (card.prints || []).slice();
-          renderSinglePreview();
-          renderPrintsList();
-          renderCardLibraryList();
-          Dom.singleStatus.textContent = `Loaded ${card.name || "card"} (${card.id})`;
-        });
-
-        listEl.appendChild(item);
-      });
-
-      Dom.libraryCount.textContent = `${AppState.cards.length} cards`;
-    }
-
-    function renderPrintsList() {
-      const listEl = Dom.printsList;
-      const prints = AppState.currentSinglePrints || [];
-
-      if (!prints.length) {
-        listEl.innerHTML = `<div style="opacity:0.7;">No prints defined yet. Add a Set + Card Number above.</div>`;
-        return;
-      }
-
-      const table = document.createElement("table");
-      table.style.width = "100%";
-      table.style.borderCollapse = "collapse";
-
-      prints.forEach((p, idx) => {
-        const tr = document.createElement("tr");
-        tr.style.borderBottom = "1px solid rgba(15,23,42,0.9)";
-
-        const tdLeft = document.createElement("td");
-        tdLeft.style.padding = "0.15rem 0.3rem";
-        tdLeft.style.fontSize = "0.75rem";
-        tdLeft.textContent = `${p.setName || "SET ?"} ${p.cardNumber || ""}`.trim();
-
-        const tdRight = document.createElement("td");
-        tdRight.style.padding = "0.15rem 0.3rem";
-        tdRight.style.textAlign = "right";
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn small secondary";
-        btn.textContent = "Remove";
-        btn.addEventListener("click", () => {
-          AppState.currentSinglePrints.splice(idx, 1);
-          renderPrintsList();
-        });
-
-        tdRight.appendChild(btn);
-        tr.appendChild(tdLeft);
-        tr.appendChild(tdRight);
-        table.appendChild(tr);
-      });
-
-      listEl.innerHTML = "";
-      listEl.appendChild(table);
-    }
-
-    /************************************************************
-     * Single Card Editor – Collect / Fill
-     ************************************************************/
-    function collectSingleCardFromInputs(requireId) {
-      const id = Dom.cardIdInput.value.trim();
-      const name = Dom.cardNameInput.value.trim();
-      const type = Dom.cardTypeInput.value;
-      const setName = Dom.cardSetNameInput.value.trim();
-      const cardNumber = Dom.cardNumberInput.value.trim();
-      const rarity = Dom.cardRarityInput.value.trim();
-      const vehTypesStr = Dom.cardVehicleTypesInput.value.trim();
-      const tagsStr = Dom.cardTagsInput.value.trim();
-      const imageUrl = Dom.cardImageUrlInput.value.trim();
-      const notes = Dom.cardNotesInput.value;
-
-      const vehTypes = parseVehicleTypes(vehTypesStr);
-      const tags = parseTags(tagsStr);
-
-      const modBase = Dom.modBasePartInput.value.trim();
-      const modL1 = Dom.modL1Input.value.trim();
-      const modL2 = Dom.modL2Input.value.trim();
-      const modL3 = Dom.modL3Input.value.trim();
-      const modL4 = Dom.modL4Input.value.trim();
-
-      const hpConStr = Dom.vehicleHpConInput.value.trim();
-      const hpCon = parseHpCon(hpConStr);
-      const pitCostStr = Dom.vehiclePitCostInput.value.trim();
-      const pitCost = pitCostStr ? Number(pitCostStr) : undefined;
-
-      let extra = {};
-
-      if (type === "Mod") {
-        extra.modBasePart = modBase || undefined;
-        extra.modLevel1 = modL1 || undefined;
-        extra.modLevel2 = modL2 || undefined;
-        extra.modLevel3 = modL3 || undefined;
-        extra.modLevel4 = modL4 || undefined;
-      }
-
-      if (type === "Vehicle" || type === "Named Vehicle") {
-        extra.hp = hpCon.hp !== undefined ? hpCon.hp : extra.hp;
-        extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
-        if (pitCost !== undefined && !Number.isNaN(pitCost)) {
-          extra.pitCost = pitCost;
-        }
-      }
-
-      let prints = Array.isArray(AppState.currentSinglePrints)
-        ? AppState.currentSinglePrints.slice()
-        : [];
-
-      if (setName || cardNumber) {
-        const primaryExists = prints.some(
-          p => (p.setName || "").trim() === setName && (p.cardNumber || "").trim() === cardNumber
-        );
-        if (!primaryExists) {
-          prints.unshift({ setName, cardNumber });
-        }
-      }
-
-      const card = normalizeCardShape({
-        id: requireId ? (id || generateId()) : (id || generateId()),
-        name,
-        type,
-        setName,
-        cardNumber,
-        rarity,
-        vehicleTypes: vehTypes,
-        tags,
-        imageUrl,
-        notes,
-        extra,
-        prints
-      });
-
-      Dom.cardIdInput.value = card.id;
-      return card;
-    }
-
-    function fillSingleCardInputs(card) {
-      Dom.cardIdInput.value = card.id || "";
-      Dom.cardNameInput.value = card.name || "";
-      Dom.cardTypeInput.value = card.type || "";
-      updateTypeFieldVisibility();
-      Dom.cardSetNameInput.value = card.setName || "";
-      Dom.cardNumberInput.value = card.cardNumber || "";
-      Dom.cardRarityInput.value = card.rarity || "";
-      Dom.cardVehicleTypesInput.value = (card.vehicleTypes || []).join(", ");
-      Dom.cardTagsInput.value = (card.tags || []).join(", ");
-      Dom.cardImageUrlInput.value = card.imageUrl || "";
-      Dom.cardNotesInput.value = card.notes || "";
-
-      const e = card.extra || {};
-      Dom.modBasePartInput.value = e.modBasePart || "";
-      Dom.modL1Input.value = e.modLevel1 || "";
-      Dom.modL2Input.value = e.modLevel2 || "";
-      Dom.modL3Input.value = e.modLevel3 || "";
-      Dom.modL4Input.value = e.modLevel4 || "";
-
-      const hpConStr =
-        e.hp !== undefined || e.con !== undefined ? `${e.hp || ""}/${e.con || ""}` : "";
-      Dom.vehicleHpConInput.value = hpConStr;
-      Dom.vehiclePitCostInput.value = e.pitCost !== undefined ? String(e.pitCost) : "";
-
-      let prints = Array.isArray(card.prints) ? card.prints.slice() : [];
-      if (!prints.length && (card.setName || card.cardNumber)) {
-        prints.push({ setName: card.setName || "", cardNumber: card.cardNumber || "" });
-      }
-      AppState.currentSinglePrints = prints;
-      renderPrintsList();
-    }
-
-    /************************************************************
-     * Card CRUD
-     ************************************************************/
-    function upsertCard(card) {
-      const idx = AppState.cards.findIndex(c => c.id === card.id);
-      if (idx === -1) {
-        AppState.cards.push(card);
-      } else {
-        AppState.cards[idx] = card;
-      }
-      saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
-    }
-
-    async function handleSingleSave() {
-      const card = collectSingleCardFromInputs(true);
-      upsertCard(card);
-      AppState.selectedCardId = card.id;
-      Dom.singleStatus.textContent = `Saved card "${card.name || card.id}"`;
-      renderCardLibraryList();
-      renderSinglePreview();
-    }
-
-    function handleSingleNew() {
-      Dom.cardIdInput.value = "";
-      Dom.cardNameInput.value = "";
-      Dom.cardTypeInput.value = "";
-      Dom.cardSetNameInput.value = "";
-      Dom.cardNumberInput.value = "";
-      Dom.cardRarityInput.value = "";
-      Dom.cardVehicleTypesInput.value = "";
-      Dom.cardTagsInput.value = "";
-      Dom.cardImageUrlInput.value = "";
-      Dom.cardNotesInput.value = "";
-      Dom.modBasePartInput.value = "";
-      Dom.modL1Input.value = "";
-      Dom.modL2Input.value = "";
-      Dom.modL3Input.value = "";
-      Dom.modL4Input.value = "";
-      Dom.vehicleHpConInput.value = "";
-      Dom.vehiclePitCostInput.value = "";
-      updateTypeFieldVisibility();
-      Dom.printSetSelect.value = "";
-      Dom.printCustomSetInput.value = "";
-      Dom.printCardNumberInput.value = "";
-      Dom.singleStatus.textContent = "";
-      AppState.selectedCardId = null;
-      AppState.currentSinglePrints = [];
-      renderPrintsList();
-      renderSinglePreview();
-    }
-
-    function confirmAction(title, body) {
-      return new Promise(resolve => {
-        Dom.modalTitle.textContent = title;
-        Dom.modalBody.textContent = body;
-        Dom.modalBackdrop.classList.add("active");
-
-        function cleanup(result) {
-          Dom.modalBackdrop.classList.remove("active");
-          Dom.modalCancelBtn.removeEventListener("click", onCancel);
-          Dom.modalConfirmBtn.removeEventListener("click", onConfirm);
-          resolve(result);
-        }
-
-        function onCancel() { cleanup(false); }
-        function onConfirm() { cleanup(true); }
-
-        Dom.modalCancelBtn.addEventListener("click", onCancel);
-        Dom.modalConfirmBtn.addEventListener("click", onConfirm);
-      });
-    }
-
-    async function handleSingleDelete() {
-      const id = Dom.cardIdInput.value.trim();
-      if (!id) {
-        Dom.singleStatus.textContent = "No card selected to delete.";
-        return;
-      }
-      const card = AppState.cards.find(c => c.id === id);
-      const name = card ? card.name : id;
-
-      const ok = await confirmAction(
-        "Delete Card",
-        `Are you sure you want to delete "${name}" from the library?`
-      );
-      if (!ok) return;
-
-      AppState.cards = AppState.cards.filter(c => c.id !== id);
-      saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
-
-      Dom.singleStatus.textContent = `Deleted card "${name}".`;
-      handleSingleNew();
-      renderCardLibraryList();
-    }
-
-    /************************************************************
-     * Prints Handlers
-     ************************************************************/
-    function handleSetPrintPrimary() {
-      const setValue = Dom.printSetSelect.value;
-      let setName = "";
-      if (!setValue) {
-        Dom.singleStatus.textContent = "Select a Set (or Custom) before adding a print.";
-        return;
-      }
-      if (setValue === "CUSTOM") {
-        setName = Dom.printCustomSetInput.value.trim();
-        if (!setName) {
-          Dom.singleStatus.textContent = "Enter a custom set name.";
-          return;
-        }
-      } else {
-        setName = setValue;
-      }
-
-      const num = Dom.printCardNumberInput.value.trim();
-      if (!num) {
-        Dom.singleStatus.textContent = "Enter a card number.";
-        return;
-      }
-
-      if (!AppState.currentSinglePrints) AppState.currentSinglePrints = [];
-
-      const existingIndex = AppState.currentSinglePrints.findIndex(
-        p => (p.setName || "").trim() === setName && (p.cardNumber || "").trim() === num
-      );
-      if (existingIndex >= 0) {
-        AppState.currentSinglePrints[existingIndex] = { setName, cardNumber: num };
-      } else {
-        AppState.currentSinglePrints.push({ setName, cardNumber: num });
-      }
-
-      if (!Dom.cardSetNameInput.value) Dom.cardSetNameInput.value = setName;
-      if (!Dom.cardNumberInput.value) Dom.cardNumberInput.value = num;
-
-      renderPrintsList();
-      renderSinglePreview();
-      Dom.singleStatus.textContent = `Print set: ${setName} ${num}`;
-    }
-
-    function handleClearAllPrints() {
-      AppState.currentSinglePrints = [];
-      renderPrintsList();
-      renderSinglePreview();
-      Dom.singleStatus.textContent = "Cleared all prints for this card.";
-    }
-
-    /************************************************************
-     * Bulk Import
-     ************************************************************/
-    function detectDelimiter(value) {
-      const counts = {
-        tab: (value.match(/\t/g) || []).length,
-        comma: (value.match(/,/g) || []).length,
-        semicolon: (value.match(/;/g) || []).length,
-        pipe: (value.match(/\|/g) || []).length
-      };
-      let best = "tab";
-      let bestCount = counts.tab;
-      for (const [key, val] of Object.entries(counts)) {
-        if (val > bestCount) {
-          best = key;
-          bestCount = val;
-        }
-      }
-      return best;
-    }
-
-    function splitLine(line, delimiter) {
-      if (delimiter === "tab") return line.split("\t");
-      if (delimiter === "comma") return line.split(",");
-      if (delimiter === "semicolon") return line.split(";");
-      if (delimiter === "pipe") return line.split("|");
-      return [line];
-    }
-
-    function normalizeHeader(str) {
-      return (str || "")
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/[\s_]+/g, " ");
-    }
-
-    function mapRowToCard(rowObj) {
-      const row = {};
-      for (const [k, v] of Object.entries(rowObj)) {
-        row[k.trim()] = v;
-      }
-
-      const norm = {};
-      for (const [k, v] of Object.entries(row)) {
-        norm[normalizeHeader(k)] = v;
-      }
-
-      const get = (...keys) => {
-        for (const key of keys) {
-          const nk = normalizeHeader(key);
-          if (nk in norm) return norm[nk];
-        }
-        return "";
-      };
-
-      const hasAny = (...keys) => {
-        return keys.some(k => {
-          const nk = normalizeHeader(k);
-          return nk in norm && norm[nk] !== "";
-        });
-      };
-
-      const isCrew = hasAny("crew name");
-      const isDriver = hasAny("driver name") && !hasAny("named vehicle name");
-      const isNamedDriver =
-        hasAny("named driver name") ||
-        (hasAny("driver name") && get("set").toString().toLowerCase().includes("named"));
-      const isMod = hasAny("mod name");
-      const isVehicle = hasAny("vehicle name", "vehicle name ", "vehicle name  ");
-      const isNamedVehicle = hasAny("named vehicle name");
-      const isCondition = hasAny("condition name");
-      const isTrack = hasAny("track name");
-      const isMisc = hasAny("tokens/counters");
-
-      let type = "";
-      if (isCrew) type = "Crew";
-      else if (isNamedDriver) type = "Named Driver";
-      else if (isDriver) type = "Driver";
-      else if (isMod) type = "Mod";
-      else if (isNamedVehicle) type = "Named Vehicle";
-      else if (isVehicle) type = "Vehicle";
-      else if (isTrack) type = "Track";
-      else if (isCondition) type = "Condition";
-      else if (isMisc) type = "Misc";
-      else type = "Misc";
-
-      let name = "";
-      let notes = "";
-      let rarity = get("rarity");
-      let setName = get("set");
-      let cardNumber = get("card number", "card #");
-      let vehicleTypesStr = "";
-      let tagsStr = "";
-
-      const extra = {};
-
-      if (type === "Crew") {
-        name = get("crew name");
-        notes = get("crew trait", "ability", "text");
-      } else if (type === "Driver" || type === "Named Driver") {
-        name = get("driver name");
-        notes = get("driver trait", "ability", "text");
-      } else if (type === "Mod") {
-        name = get("mod name");
-        extra.modBasePart = get("base part");
-        extra.modLevel1 = get("mod lvl 1", "l1", "level 1");
-        extra.modLevel2 = get("mod lvl 2", "l2", "level 2");
-        extra.modLevel3 = get("mod lvl 3", "l3", "level 3");
-        extra.modLevel4 = get("mod lvl 4", "l4", "level 4");
-        notes = get("mod ability", "ability", "text");
-        vehicleTypesStr = get("mod type", "type");
-      } else if (type === "Vehicle" || type === "Named Vehicle") {
-        name = get("vehicle name", "named vehicle name", "vehicle name ", "vehicle name  ");
-        const hpConStr = get("vehicle hp/con", "hp/con", "hp con", "hp_con", "hp-con");
-        const hpCon = parseHpCon(hpConStr);
-        if (hpCon.hp !== undefined) extra.hp = hpCon.hp;
-        if (hpCon.con !== undefined) extra.con = hpCon.con;
-        const pitCost = Number(get("pit cost"));
-        if (!Number.isNaN(pitCost) && get("pit cost") !== "") {
-          extra.pitCost = pitCost;
-        }
-        vehicleTypesStr = get("vehicle type");
-        notes = get("vehicle trait", "trait", "ability", "text");
-      } else if (type === "Track") {
-        name = get("track name");
-        notes = get("track trait", "ability", "text");
-        vehicleTypesStr = get("vehicle type");
-      } else if (type === "Condition") {
-        name = get("condition name");
-        notes = get("condition trait", "ability", "text");
-      } else if (type === "Misc") {
-        name = get("tokens/counters", "name");
-        notes = get("ability", "text");
-      }
-
-      const vehicleTypes = parseVehicleTypes(vehicleTypesStr);
-      const tags = parseTags(tagsStr);
-
-      const card = normalizeCardShape({
-        id: generateId(),
-        name: name || "(Untitled)",
-        type,
-        setName,
-        cardNumber,
-        rarity,
-        vehicleTypes,
-        tags,
-        imageUrl: "",
-        notes,
-        extra,
-        prints: setName || cardNumber ? [{ setName, cardNumber }] : []
-      });
-
-      return card;
-    }
-
-    function parseBulkInput() {
-      const raw = Dom.bulkInput.value || "";
-      if (!raw.trim()) {
-        Dom.bulkStatus.textContent = "Paste some rows from Excel first.";
-        Dom.bulkPreview.innerHTML = "";
-        return [];
-      }
-
-      let delim = Dom.bulkDelimiterSelect.value;
-      if (!delim || delim === "auto") {
-        delim = detectDelimiter(raw);
-        Dom.bulkDelimiterSelect.value = delim;
-      }
-
-      const lines = raw.split(/\r?\n/).filter(line => line.trim().length > 0);
-      if (!lines.length) {
-        Dom.bulkStatus.textContent = "No non-empty lines detected.";
-        Dom.bulkPreview.innerHTML = "";
-        return [];
-      }
-
-      const rows = lines.map(line => splitLine(line, delim));
-      let header = [];
-      let dataRows = rows;
-
-      if (Dom.bulkHasHeaderCheckbox.checked) {
-        header = rows[0];
-        dataRows = rows.slice(1);
-      } else {
-        const maxLen = rows.reduce((m, r) => Math.max(m, r.length), 0);
-        header = Array.from({ length: maxLen }, (_, i) => `Col${i + 1}`);
-      }
-
-      const previewTable = document.createElement("table");
-      previewTable.style.width = "100%";
-      previewTable.style.borderCollapse = "collapse";
-
-      const headerTr = document.createElement("tr");
-      header.forEach(col => {
-        const th = document.createElement("th");
-        th.textContent = col;
-        th.style.borderBottom = "1px solid rgba(31,41,55,0.9)";
-        th.style.padding = "0.15rem 0.3rem";
-        th.style.fontSize = "0.7rem";
-        th.style.textAlign = "left";
-        previewTable.appendChild(headerTr);
-        headerTr.appendChild(th);
-      });
-
-      let cards = [];
-      dataRows.forEach((rowArr, rowIndex) => {
-        const rowObj = {};
-        header.forEach((col, colIndex) => {
-          rowObj[col] = rowArr[colIndex] ?? "";
-        });
-
-        const tr = document.createElement("tr");
-        rowArr.forEach(cell => {
-          const td = document.createElement("td");
-          td.textContent = cell;
-          td.style.padding = "0.15rem 0.3rem";
-          td.style.borderBottom = "1px solid rgba(15,23,42,0.6)";
-          td.style.fontSize = "0.7rem";
-          tr.appendChild(td);
-        });
-        previewTable.appendChild(tr);
-
-        const card = mapRowToCard(rowObj);
-        cards.push(card);
-      });
-
-      Dom.bulkPreview.innerHTML = "";
-      Dom.bulkPreview.appendChild(previewTable);
-      Dom.bulkStatus.textContent = `Parsed ${dataRows.length} rows into ${cards.length} tentative cards.`;
-
-      return cards;
-    }
-
-    function handleBulkParse() {
-      parseBulkInput();
-    }
-
-    function handleBulkImport() {
-      const cards = parseBulkInput();
-      if (!cards.length) {
-        Dom.bulkStatus.textContent = "Nothing to import.";
-        return;
-      }
-
-      cards.forEach(card => {
-        upsertCard(card);
-      });
-
-      Dom.bulkStatus.textContent = `Imported/updated ${cards.length} cards into the library.`;
-      renderCardLibraryList();
-      renderSinglePreview();
-    }
-
-    /************************************************************
-     * Precon helpers & renderers
-     ************************************************************/
-    function refreshPreconCardSelect() {
-      const sel = Dom.preconCardSelect;
-      if (!sel) return;
-
-      const previous = sel.value;
-      sel.innerHTML = "";
-      const placeholder = document.createElement("option");
-      placeholder.value = "";
-      placeholder.textContent = "– Select Card –";
-      sel.appendChild(placeholder);
-
-      const cards = AppState.cards.slice().sort((a, b) =>
-        (a.name || "").localeCompare(b.name || "")
-      );
-
-      cards.forEach(card => {
-        const opt = document.createElement("option");
-        opt.value = card.id;
-        const bits = [];
-        if (card.name) bits.push(card.name);
-        if (card.type) bits.push(`[${card.type}]`);
-        if (card.setName) bits.push(card.setName);
-        if (card.cardNumber) bits.push(card.cardNumber);
-        opt.textContent = bits.join(" ");
-        sel.appendChild(opt);
-      });
-
-      if (previous && [...sel.options].some(o => o.value === previous)) {
-        sel.value = previous;
-      } else {
-        sel.value = "";
-      }
-    }
-
-    function renderPreconCards() {
-      const listEl = Dom.preconCardsList;
-      listEl.innerHTML = "";
-
-      const map = AppState.currentPreconCards || {};
-      const entries = Object.entries(map);
-
-      if (!entries.length) {
-        listEl.innerHTML = `<div style="padding:0.4rem;font-size:0.75rem;opacity:0.8;">
-          No cards in this precon yet. Choose a card from the dropdown above and add it.
-        </div>`;
-        return;
-      }
-
-      const container = document.createElement("div");
-
-      entries.forEach(([cardId, count]) => {
-        const row = document.createElement("div");
-        row.className = "library-item";
-
-        const cardObj = AppState.cards.find(c => c.id === cardId);
-        const name = cardObj ? cardObj.name : cardId;
-        const meta = [];
-
-        if (cardObj) {
-          if (cardObj.type) meta.push(cardObj.type);
-          if (cardObj.setName || cardObj.cardNumber) {
-            meta.push(`${cardObj.setName || "SET ?"} ${cardObj.cardNumber || ""}`.trim());
-          }
-        }
-
-        const main = document.createElement("div");
-        main.className = "library-item-main";
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "name";
-        nameSpan.textContent = `${count}x ${name}`;
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "meta";
-        metaSpan.textContent = meta.join(" • ");
-
-        main.appendChild(nameSpan);
-        main.appendChild(metaSpan);
-
-        const right = document.createElement("div");
-        right.className = "library-item-tags";
-
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn small secondary";
-        btn.textContent = "Remove";
-        btn.addEventListener("click", () => {
-          delete AppState.currentPreconCards[cardId];
-          renderPreconCards();
-        });
-
-        right.appendChild(btn);
-
-        row.appendChild(main);
-        row.appendChild(right);
-        container.appendChild(row);
-      });
-
-      listEl.appendChild(container);
-    }
-
-    function clearPreconEditor() {
-      AppState.selectedPreconId = null;
-      AppState.currentPreconCards = {};
-      Dom.preconNameInput.value = "";
-      Dom.preconNotesInput.value = "";
-      renderPreconCards();
-    }
-
-    function fillPreconEditor(precon) {
-      AppState.selectedPreconId = precon.id;
-      AppState.currentPreconCards = { ...(precon.cards || {}) };
-      Dom.preconNameInput.value = precon.name || "";
-      Dom.preconNotesInput.value = precon.notes || "";
-      renderPreconCards();
-    }
-
-    function renderPrecons() {
-      const listEl = Dom.preconList;
-      listEl.innerHTML = "";
-
-      const precons = AppState.precons || [];
-
-      if (!precons.length) {
-        listEl.innerHTML = `<div style="padding:0.4rem;font-size:0.75rem;opacity:0.8;">
-          No precons yet. Click "New Precon" to create one.
-        </div>`;
-        clearPreconEditor();
-        return;
-      }
-
-      const container = document.createElement("div");
-      precons.forEach(precon => {
-        const row = document.createElement("div");
-        row.className = "library-item";
-        if (precon.id === AppState.selectedPreconId) {
-          row.classList.add("active");
-        }
-
-        const main = document.createElement("div");
-        main.className = "library-item-main";
-
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "name";
-        nameSpan.textContent = precon.name || "(Untitled Precon)";
-
-        const count = precon.cards
-          ? (Array.isArray(precon.cards)
-              ? precon.cards.reduce((n, c) => n + (c.count || 0), 0)
-              : Object.values(precon.cards).reduce((n, c) => n + c, 0))
-          : 0;
-
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "meta";
-        metaSpan.textContent = `${count} cards`;
-
-        main.appendChild(nameSpan);
-        main.appendChild(metaSpan);
-        row.appendChild(main);
-
-        row.addEventListener("click", () => {
-          fillPreconEditor(precon);
-          renderPrecons();
-          Dom.preconsStatus.textContent = `Loaded precon "${precon.name || precon.id}"`;
-        });
-
-        container.appendChild(row);
-      });
-
-      listEl.appendChild(container);
-
-      if (!AppState.selectedPreconId && precons[0]) {
-        fillPreconEditor(precons[0]);
-        renderPrecons();
-      }
-    }
-
-    /************************************************************
-     * Precon actions
-     ************************************************************/
-    function collectPreconFromInputs() {
-      const name = Dom.preconNameInput.value.trim();
-      const notes = Dom.preconNotesInput.value.trim();
-      const id = AppState.selectedPreconId || ("precon-" + Date.now());
-
-      return {
-        id,
-        name: name || "(Untitled Precon)",
-        notes,
-        cards: { ...(AppState.currentPreconCards || {}) }
-      };
-    }
-
-    function handlePreconNew() {
-      clearPreconEditor();
-      Dom.preconsStatus.textContent = "New precon started. Set a name and add cards.";
-    }
-
-    async function handlePreconDelete() {
-      if (!AppState.selectedPreconId) {
-        Dom.preconsStatus.textContent = "No precon selected to delete.";
-        return;
-      }
-      const precon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
-      const name = precon ? precon.name : AppState.selectedPreconId;
-
-      const ok = await confirmAction(
-        "Delete Precon",
-        `Are you sure you want to delete "${name}"?`
-      );
-      if (!ok) return;
-
-      AppState.precons = AppState.precons.filter(p => p.id !== AppState.selectedPreconId);
-      saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
-      clearPreconEditor();
-      renderPrecons();
-      Dom.preconsStatus.textContent = `Deleted precon "${name}".`;
-    }
-
-    function handlePreconSave() {
-      const precon = collectPreconFromInputs();
-      const idx = AppState.precons.findIndex(p => p.id === precon.id);
-      if (idx === -1) {
-        AppState.precons.push(precon);
-      } else {
-        AppState.precons[idx] = precon;
-      }
-      AppState.selectedPreconId = precon.id;
-      saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
-      renderPrecons();
-      Dom.preconsStatus.textContent = `Saved precon "${precon.name}".`;
-    }
-
-    function handlePreconAddCard() {
-      const cardId = Dom.preconCardSelect.value;
-      const countVal = Number(Dom.preconCardCountInput.value || "0");
-      if (!cardId) {
-        Dom.preconsStatus.textContent = "Select a card from the dropdown first.";
-        return;
-      }
-      if (!countVal || countVal < 1) {
-        Dom.preconsStatus.textContent = "Count must be at least 1.";
-        return;
-      }
-      if (!AppState.currentPreconCards) AppState.currentPreconCards = {};
-      AppState.currentPreconCards[cardId] = countVal;
-      renderPreconCards();
-      Dom.preconsStatus.textContent = "Card added/updated in this precon.";
-    }
-
-    /************************************************************
-     * Navigation & Initialization
-     ************************************************************/
-    function showSection(which) {
-      Dom.singleSection.classList.toggle("active", which === "single");
-      Dom.bulkSection.classList.toggle("active", which === "bulk");
-      Dom.preconsSection.classList.toggle("active", which === "precons");
-      Dom.helpSection.classList.toggle("active", which === "help");
-
-      Dom.navSingleBtn.classList.toggle("active", which === "single");
-      Dom.navBulkBtn.classList.toggle("active", which === "bulk");
-      Dom.navPreconsBtn.classList.toggle("active", which === "precons");
-      Dom.navHelpBtn.classList.toggle("active", which === "help");
-    }
-
-    function initNav() {
-      Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
-      Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
-      Dom.navPreconsBtn.addEventListener("click", () => showSection("precons"));
-      Dom.navHelpBtn.addEventListener("click", () => showSection("help"));
-    }
-
-    function initSingleEditor() {
-      Dom.cardLibrarySearchInput.addEventListener("input", renderCardLibraryList);
-
-      [
-        Dom.cardNameInput,
-        Dom.cardTypeInput,
-        Dom.cardSetNameInput,
-        Dom.cardNumberInput,
-        Dom.cardRarityInput,
-        Dom.cardVehicleTypesInput,
-        Dom.cardTagsInput,
-        Dom.cardImageUrlInput,
-        Dom.cardNotesInput,
-        Dom.modBasePartInput,
-        Dom.vehiclePitCostInput,
-        Dom.modL1Input,
-        Dom.modL2Input,
-        Dom.modL3Input,
-        Dom.modL4Input,
-        Dom.vehicleHpConInput
-      ].forEach(el => {
-        el.addEventListener("input", renderSinglePreview);
-        el.addEventListener("change", renderSinglePreview);
-      });
-
-      Dom.cardTypeInput.addEventListener("change", () => {
-        updateTypeFieldVisibility();
-        renderSinglePreview();
-      });
-
-      Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
-      Dom.singleNewBtn.addEventListener("click", handleSingleNew);
-      Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
-
-      Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
-      Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
-      Dom.printSetSelect.addEventListener("change", () => {
-        if (Dom.printSetSelect.value === "CUSTOM") {
-          Dom.printCustomSetInput.focus();
-        }
-      });
-
-      updateTypeFieldVisibility();
-
-      Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
-        downloadJson(getCardsForExport(), "drive-card.json");
-      });
-    }
-
-    function initBulk() {
-      Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
-      Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
-    }
-
-    function initPrecons() {
-      if (Dom.preconNewBtn) {
-        Dom.preconNewBtn.addEventListener("click", handlePreconNew);
-      }
-      if (Dom.preconSaveBtn) {
-        Dom.preconSaveBtn.addEventListener("click", handlePreconSave);
-      }
-      if (Dom.preconDeleteBtn) {
-        Dom.preconDeleteBtn.addEventListener("click", handlePreconDelete);
-      }
-      if (Dom.preconAddCardBtn) {
-        Dom.preconAddCardBtn.addEventListener("click", handlePreconAddCard);
-      }
-
-      Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
-        downloadJson(AppState.precons, "drive-precons.json");
-      });
-    }
-
-    function initModal() {
-      Dom.modalBackdrop.addEventListener("click", (e) => {
-        if (e.target === Dom.modalBackdrop) {
-          Dom.modalBackdrop.classList.remove("active");
-        }
-      });
-    }
-
-    function downloadJson(data, filename) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    async function loadCards() {
-      const localBackup = loadFromLocalStorage(STORAGE_KEYS.CARDS, null);
-      try {
-        const res = await fetch("drive-card.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch drive-card.json");
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("drive-card.json is not an array.");
-        AppState.cards = data.map(normalizeCardShape);
-        saveToLocalStorage(STORAGE_KEYS.CARDS, AppState.cards);
-        return;
-      } catch (e) {
-        console.warn("Could not fetch drive-card.json, falling back to localStorage:", e);
-      }
-
-      if (localBackup && Array.isArray(localBackup)) {
-        AppState.cards = localBackup.map(normalizeCardShape);
-      } else {
-        AppState.cards = [];
-      }
-    }
-
-    async function loadPrecons() {
-      const localBackup = loadFromLocalStorage(STORAGE_KEYS.PRECONS, null);
-      try {
-        const res = await fetch("drive-precons.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
-        const raw = await res.json();
-
-        let precons = [];
-        if (Array.isArray(raw)) {
-          precons = raw;
-        } else if (raw && Array.isArray(raw.precons)) {
-          precons = raw.precons;
-        } else if (raw && typeof raw === "object") {
-          precons = [raw];
-        } else {
-          throw new Error("Invalid precon JSON shape.");
-        }
-
-        AppState.precons = precons;
-        saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
-        renderPrecons();
-        return;
-      } catch (e) {
-        console.warn("Could not fetch drive-precons.json, falling back to localStorage:", e);
-      }
-
-      if (localBackup && Array.isArray(localBackup)) {
-        AppState.precons = localBackup;
-      } else {
-        AppState.precons = [];
-      }
-      renderPrecons();
-    }
-
-    /************************************************************
-     * Global Download Button
-     ************************************************************/
-    Dom.downloadCardsJsonBtn.addEventListener("click", () => {
-      downloadJson(getCardsForExport(), "drive-card.json");
-    });
-
-    /************************************************************
-     * Kick everything off
-     ************************************************************/
-    (async function init() {
-      initNav();
-      initSingleEditor();
-      initBulk();
-      initPrecons();
-      initModal();
-
-      await loadCards();
-      refreshPreconCardSelect();
-      renderSinglePreview();
-      renderCardLibraryList();
-      await loadPrecons();
-
-      showSection("single");
-    })();
-  </script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
