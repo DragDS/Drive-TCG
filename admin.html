@@ -485,7 +485,7 @@
       </p>
 
       <div class="layout-main">
-        <!-- LEFT: Basic card fields -->
+        <!-- LEFT: Basic card fields + prints -->
         <div>
           <h3>Card Basics</h3>
           <div class="field-grid">
@@ -513,11 +513,11 @@
               </select>
             </div>
             <div class="field">
-              <label for="cardSetNameInput">Set Name (display)</label>
-              <input id="cardSetNameInput" type="text" placeholder="Set 1 – 1…2…3…Race!" />
+              <label for="cardSetNameInput">Set Name (display / primary print)</label>
+              <input id="cardSetNameInput" type="text" placeholder="SET 1" />
             </div>
             <div class="field">
-              <label for="cardNumberInput">Card Number (within set)</label>
+              <label for="cardNumberInput">Card Number (primary print)</label>
               <input id="cardNumberInput" type="text" placeholder="01-001" />
             </div>
             <div class="field">
@@ -536,6 +536,41 @@
               <label for="cardImageUrlInput">Image URL</label>
               <input id="cardImageUrlInput" type="text" placeholder="images/Set1/DANNYS_GTS-4.png" />
             </div>
+          </div>
+
+          <h3>Prints (Sets / Card Numbers)</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="printSetSelect">Set</label>
+              <select id="printSetSelect">
+                <option value="">– Select –</option>
+                <option value="SET 1">SET 1</option>
+                <option value="SET 2">SET 2</option>
+                <option value="SET 3">SET 3</option>
+                <option value="SET 4">SET 4</option>
+                <option value="SET 5">SET 5</option>
+                <option value="CUSTOM">Custom…</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="printCustomSetInput">Custom Set Name</label>
+              <input id="printCustomSetInput" type="text" placeholder="Father's Day Mini, Promo…" />
+            </div>
+            <div class="field">
+              <label for="printCardNumberInput">Card Number (for this Set)</label>
+              <input id="printCardNumberInput" type="text" placeholder="01-001" />
+            </div>
+          </div>
+          <div class="button-row">
+            <button id="printSetPrimaryBtn" class="button small" type="button">
+              Set Print
+            </button>
+            <button id="printClearAllBtn" class="button secondary small" type="button">
+              Clear All Prints for this Card
+            </button>
+          </div>
+          <div id="cardPrintsList" class="bulk-summary-box" style="margin-top:0.3rem;">
+            <span class="small-note">No prints configured yet.</span>
           </div>
 
           <h3>Rules Text</h3>
@@ -558,7 +593,7 @@
           </div>
         </div>
 
-        <!-- MIDDLE: Type-specific extras + preview -->
+        <!-- MIDDLE: Type-specific extras + preview + library -->
         <div>
           <h3>Type-Specific Fields</h3>
           <div class="field-grid">
@@ -643,7 +678,7 @@
           </div>
         </div>
 
-        <!-- RIGHT: reserved for future type-specific helpers -->
+        <!-- RIGHT: Notes -->
         <div class="single-layout-right">
           <h3>Notes</h3>
           <p class="small-note">
@@ -884,6 +919,8 @@
       cards: [],
       cardsById: {},
       selectedLibraryCardId: null,
+      currentSinglePrints: [],
+
       bulkRows: [],
       bulkSelectedRowIds: new Set(),
       bulkFilters: {
@@ -891,6 +928,7 @@
         type: "",
         set: ""
       },
+
       precons: [],
       selectedPreconId: null
     };
@@ -922,6 +960,13 @@
       modL4Input: document.getElementById("modL4Input"),
       vehicleHpConInput: document.getElementById("vehicleHpConInput"),
       cardNotesInput: document.getElementById("cardNotesInput"),
+
+      printSetSelect: document.getElementById("printSetSelect"),
+      printCustomSetInput: document.getElementById("printCustomSetInput"),
+      printCardNumberInput: document.getElementById("printCardNumberInput"),
+      cardPrintsList: document.getElementById("cardPrintsList"),
+      printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
+      printClearAllBtn: document.getElementById("printClearAllBtn"),
 
       singleNewBtn: document.getElementById("singleNewBtn"),
       singleSaveBtn: document.getElementById("singleSaveBtn"),
@@ -1037,6 +1082,45 @@
       return clean;
     }
 
+    const CardData = {
+      getVehicleTypes(card) {
+        if (!card) return [];
+        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) {
+          return card.vehicleTypes;
+        }
+        const e = card.extra || {};
+        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) {
+          return e.vehicleTypes;
+        }
+        if (e.vehicleType) return [e.vehicleType];
+        return [];
+      },
+      getModStats(card) {
+        if (!card || card.type !== "Mod") return "";
+        const e = card.extra || {};
+        const parts = [];
+        if (e.modBasePart) parts.push(`Base: ${e.modBasePart}`);
+        const levels = [];
+        if (e.modLevel1) levels.push(`L1 ${e.modLevel1}`);
+        if (e.modLevel2) levels.push(`L2 ${e.modLevel2}`);
+        if (e.modLevel3) levels.push(`L3 ${e.modLevel3}`);
+        if (e.modLevel4) levels.push(`L4 ${e.modLevel4}`);
+        if (levels.length) parts.push(levels.join(" / "));
+        return parts.join(" | ");
+      },
+      getVehicleStats(card) {
+        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) {
+          return "";
+        }
+        const e = card.extra || {};
+        const parts = [];
+        if (e.hp !== undefined || e.con !== undefined) {
+          parts.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
+        }
+        return parts.join(" | ");
+      }
+    };
+
     function renderSinglePreview() {
       const previewEl = Dom.singlePreview;
       previewEl.innerHTML = "";
@@ -1081,7 +1165,7 @@
       const rowVehicles = document.createElement("div");
       rowVehicles.className = "card-preview-row";
       rowVehicles.innerHTML =
-        `<span class="card-preview-label">Vehicle Types:</span><span>${(card.vehicleTypes || []).join(", ") || "–"}</span>`;
+        `<span class="card-preview-label">Vehicle Types:</span><span>${CardData.getVehicleTypes(card).join(", ") || "–"}</span>`;
 
       const rowTags = document.createElement("div");
       rowTags.className = "card-preview-row";
@@ -1143,7 +1227,6 @@
       const hpConStr = Dom.vehicleHpConInput.value.trim();
       const hpCon = parseHpCon(hpConStr);
 
-      // Build extra object only from structured fields
       let extra = {};
 
       if (type === "Mod") {
@@ -1159,6 +1242,25 @@
         extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
       }
 
+      // Build prints from currentSinglePrints + primary fields
+      let prints = Array.isArray(AppState.currentSinglePrints)
+        ? AppState.currentSinglePrints.map(p => ({
+            setId: (p.setId || "").trim(),
+            cardNumber: (p.cardNumber || "").trim()
+          }))
+        : [];
+
+      const primarySetId = setName;
+      const primaryCardNumber = cardNumber;
+
+      if (primarySetId || primaryCardNumber) {
+        if (!prints.length) {
+          prints.push({ setId: primarySetId, cardNumber: primaryCardNumber });
+        } else {
+          prints[0] = { setId: primarySetId, cardNumber: primaryCardNumber };
+        }
+      }
+
       const card = {
         id: id || (requireId ? "" : "card-" + Math.random().toString(36).slice(2)),
         name,
@@ -1170,7 +1272,8 @@
         notes,
         imageUrl,
         extra,
-        vehicleTypes: vehTypes
+        vehicleTypes: vehTypes,
+        prints
       };
       return card;
     }
@@ -1198,47 +1301,109 @@
         e.hp !== undefined || e.con !== undefined ? `${e.hp || ""}/${e.con || ""}` : "";
       Dom.vehicleHpConInput.value = hpConStr;
 
+      // Set up prints
+      let prints = Array.isArray(card.prints) ? card.prints.slice() : [];
+      if (!prints.length && (card.setName || card.cardNumber)) {
+        prints.push({
+          setId: card.setName || "",
+          cardNumber: card.cardNumber || ""
+        });
+      }
+      AppState.currentSinglePrints = prints;
+      renderSinglePrints();
+
       renderSinglePreview();
     }
 
-    const CardData = {
-      getVehicleTypes(card) {
-        if (!card) return [];
-        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) {
-          return card.vehicleTypes;
-        }
-        const e = card.extra || {};
-        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) {
-          return e.vehicleTypes;
-        }
-        if (e.vehicleType) return [e.vehicleType];
-        return [];
-      },
-      getModStats(card) {
-        if (!card || card.type !== "Mod") return "";
-        const e = card.extra || {};
-        const parts = [];
-        if (e.modBasePart) parts.push(`Base: ${e.modBasePart}`);
-        const levels = [];
-        if (e.modLevel1) levels.push(`L1 ${e.modLevel1}`);
-        if (e.modLevel2) levels.push(`L2 ${e.modLevel2}`);
-        if (e.modLevel3) levels.push(`L3 ${e.modLevel3}`);
-        if (e.modLevel4) levels.push(`L4 ${e.modLevel4}`);
-        if (levels.length) parts.push(levels.join(" / "));
-        return parts.join(" | ");
-      },
-      getVehicleStats(card) {
-        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) {
-          return "";
-        }
-        const e = card.extra || {};
-        const parts = [];
-        if (e.hp !== undefined || e.con !== undefined) {
-          parts.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
-        }
-        return parts.join(" | ");
+    function renderSinglePrints() {
+      const listEl = Dom.cardPrintsList;
+      const prints = AppState.currentSinglePrints || [];
+      listEl.innerHTML = "";
+
+      if (!prints.length) {
+        listEl.innerHTML = "<span class='small-note'>No prints configured yet.</span>";
+        return;
       }
-    };
+
+      const ul = document.createElement("ul");
+      ul.className = "small-note";
+
+      prints.forEach((p, idx) => {
+        const li = document.createElement("li");
+        const labelParts = [];
+        labelParts.push(p.setId || "(no set)");
+        if (p.cardNumber) labelParts.push(`– ${p.cardNumber}`);
+        if (idx === 0) labelParts.push("(primary)");
+        const label = labelParts.join(" ");
+
+        const span = document.createElement("span");
+        span.textContent = label;
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "button secondary small";
+        btn.style.marginLeft = "0.4rem";
+        btn.textContent = "Remove";
+        btn.addEventListener("click", () => {
+          AppState.currentSinglePrints.splice(idx, 1);
+          renderSinglePrints();
+        });
+
+        li.appendChild(span);
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+
+      listEl.appendChild(ul);
+    }
+
+    function resolvePrintSetId() {
+      const sel = Dom.printSetSelect.value;
+      if (sel === "CUSTOM") {
+        return Dom.printCustomSetInput.value.trim();
+      }
+      return sel || "";
+    }
+
+    function handleSetPrintPrimary() {
+      const setId = resolvePrintSetId();
+      const cardNumber = Dom.printCardNumberInput.value.trim();
+
+      if (!setId) {
+        Dom.singleStatus.textContent = "Choose a set from the dropdown or enter a custom set.";
+        Dom.singleStatus.className = "status small-note err";
+        return;
+      }
+
+      let prints = Array.isArray(AppState.currentSinglePrints)
+        ? AppState.currentSinglePrints.slice()
+        : [];
+
+      // Remove existing entry with same setId
+      prints = prints.filter(p => (p.setId || "") !== setId);
+
+      // New primary print goes to the front
+      prints.unshift({ setId, cardNumber });
+
+      AppState.currentSinglePrints = prints;
+
+      // Mirror into primary fields
+      Dom.cardSetNameInput.value = setId;
+      Dom.cardNumberInput.value = cardNumber;
+
+      Dom.singleStatus.textContent = `Primary printing set to ${setId}${cardNumber ? " – " + cardNumber : ""}.`;
+      Dom.singleStatus.className = "status small-note ok";
+
+      renderSinglePrints();
+      renderSinglePreview();
+    }
+
+    function handleClearAllPrints() {
+      if (!AppState.currentSinglePrints.length) return;
+      if (!confirm("Clear all prints for this card?")) return;
+      AppState.currentSinglePrints = [];
+      renderSinglePrints();
+    }
 
     async function loadCards() {
       AppState.cards = [];
@@ -1352,8 +1517,13 @@
       Dom.modL3Input.value = "";
       Dom.modL4Input.value = "";
       Dom.vehicleHpConInput.value = "";
+      Dom.printSetSelect.value = "";
+      Dom.printCustomSetInput.value = "";
+      Dom.printCardNumberInput.value = "";
       Dom.singleStatus.textContent = "";
       AppState.selectedLibraryCardId = null;
+      AppState.currentSinglePrints = [];
+      renderSinglePrints();
       renderSinglePreview();
       renderCardLibraryList();
     }
@@ -1481,6 +1651,14 @@
       Dom.singleNewBtn.addEventListener("click", handleSingleNew);
       Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
 
+      Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
+      Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
+      Dom.printSetSelect.addEventListener("change", () => {
+        if (Dom.printSetSelect.value === "CUSTOM") {
+          Dom.printCustomSetInput.focus();
+        }
+      });
+
       Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
         downloadJson("drive-card.json", AppState.cards.map(cardToJson));
       });
@@ -1565,6 +1743,11 @@
         extra.con = hpCon.con !== undefined ? hpCon.con : extra.con;
       }
 
+      const prints = [];
+      if (setName || cardNumber) {
+        prints.push({ setId: setName, cardNumber });
+      }
+
       return {
         id: "tmp-" + Math.random().toString(36).slice(2),
         name,
@@ -1576,7 +1759,8 @@
         tags,
         imageUrl,
         notes,
-        extra
+        extra,
+        prints
       };
     }
 
