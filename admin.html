@@ -386,6 +386,7 @@
       font-size: 0.8rem;
     }
 
+    /* Old precon-card styles kept in case you reference them later */
     .precon-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
@@ -417,6 +418,14 @@
     }
     .precon-card li {
       margin-bottom: 0.1rem;
+    }
+
+    /* New precon editor layout */
+    .precon-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 2.4fr);
+      gap: 0.75rem;
+      align-items: flex-start;
     }
 
     .modal-backdrop {
@@ -460,6 +469,9 @@
         grid-template-columns: minmax(0,1fr);
       }
       .bulk-layout {
+        grid-template-columns: minmax(0,1fr);
+      }
+      .precon-layout {
         grid-template-columns: minmax(0,1fr);
       }
     }
@@ -732,18 +744,84 @@
         <div class="panel">
           <h2><span class="icon">🧩</span> Preconstructed Decks</h2>
           <p style="font-size:0.8rem;opacity:0.9;">
-            Define and export preconstructed decks using cards from the library. This reads from
-            <code>drive-precons.json</code> and lets you export updates.
+            Create and edit preconstructed decks using cards from the library. Changes are stored locally
+            until you download <code>drive-precons.json</code>.
           </p>
 
-          <div class="precon-grid" id="preconGrid"></div>
+          <div class="precon-layout">
+            <!-- Left: Precon list -->
+            <div>
+              <h3 class="section-title">
+                <span class="icon">📋</span> Precon List
+              </h3>
+              <div id="preconList" class="library-list" style="max-height:280px;"></div>
 
-          <div class="btn-row">
-            <button id="downloadPreconsJsonBtn" class="btn small secondary" type="button">
-              <span class="icon">⬇️</span> Download drive-precons.json
-            </button>
+              <div class="btn-row">
+                <button id="preconNewBtn" class="btn secondary" type="button">
+                  <span class="icon">✨</span> New Precon
+                </button>
+                <button id="preconDeleteBtn" class="btn danger" type="button">
+                  <span class="icon">🗑️</span> Delete Precon
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Precon editor -->
+            <div>
+              <h3 class="section-title">
+                <span class="icon">✏️</span> Precon Editor
+              </h3>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="preconNameInput">Precon Name</label>
+                  <input id="preconNameInput" type="text" placeholder="Danny's Garage" />
+                </div>
+                <div class="field">
+                  <label for="preconNotesInput">Notes</label>
+                  <textarea id="preconNotesInput" rows="2" placeholder="Starter deck, theme notes, etc."></textarea>
+                </div>
+              </div>
+
+              <h4 class="section-title" style="margin-top:0.75rem;">
+                <span class="icon">🃏</span> Cards in Deck
+              </h4>
+
+              <div class="field-grid">
+                <div class="field">
+                  <label for="preconCardSelect">Card from Library</label>
+                  <select id="preconCardSelect">
+                    <option value="">– Select Card –</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="preconCardCountInput">Count</label>
+                  <input id="preconCardCountInput" type="number" min="1" value="1" />
+                </div>
+                <div class="field">
+                  <label>&nbsp;</label>
+                  <button id="preconAddCardBtn" class="btn small secondary" type="button">
+                    <span class="icon">➕</span> Add / Update Card
+                  </button>
+                </div>
+              </div>
+
+              <div id="preconCardsList"
+                   class="library-list"
+                   style="max-height:210px;margin-top:0.5rem;"></div>
+
+              <div class="btn-row">
+                <button id="preconSaveBtn" class="btn primary" type="button">
+                  <span class="icon">💾</span> Save Precon
+                </button>
+                <button id="downloadPreconsJsonBtn" class="btn small secondary" type="button">
+                  <span class="icon">⬇️</span> Download drive-precons.json
+                </button>
+              </div>
+
+              <div id="preconsStatus" class="status-line"></div>
+            </div>
           </div>
-          <div id="preconsStatus" class="status-line"></div>
         </div>
       </section>
 
@@ -827,7 +905,9 @@
       cards: [],
       selectedCardId: null,
       currentSinglePrints: [],
-      precons: []
+      precons: [],
+      selectedPreconId: null,
+      currentPreconCards: {}
     };
 
     const Dom = {
@@ -884,7 +964,16 @@
       bulkPreview: document.getElementById("bulkPreview"),
       bulkStatus: document.getElementById("bulkStatus"),
 
-      preconGrid: document.getElementById("preconGrid"),
+      preconList: document.getElementById("preconList"),
+      preconNameInput: document.getElementById("preconNameInput"),
+      preconNotesInput: document.getElementById("preconNotesInput"),
+      preconCardsList: document.getElementById("preconCardsList"),
+      preconCardSelect: document.getElementById("preconCardSelect"),
+      preconCardCountInput: document.getElementById("preconCardCountInput"),
+      preconAddCardBtn: document.getElementById("preconAddCardBtn"),
+      preconNewBtn: document.getElementById("preconNewBtn"),
+      preconSaveBtn: document.getElementById("preconSaveBtn"),
+      preconDeleteBtn: document.getElementById("preconDeleteBtn"),
       preconsStatus: document.getElementById("preconsStatus"),
 
       downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
@@ -960,15 +1049,10 @@
 
     /**
      * Normalize a raw card object from JSON or bulk import into the internal shape.
-     * - Accepts old prints: [{ setId, cardNumber }]
-     * - Accepts new prints: [{ setName, cardNumber }]
-     * - If no prints array but setName/cardNumber fields exist, synthesizes one.
-     * - Ensures card.setName/cardNumber are aligned with the first print.
      */
     function normalizeCardShape(raw) {
       const base = raw || {};
 
-      // Vehicle types & tags
       const vehicleTypes = Array.isArray(base.vehicleTypes)
         ? base.vehicleTypes
         : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
@@ -981,7 +1065,6 @@
         ? { ...base.extra }
         : {};
 
-      // Normalize prints
       const printsRaw = Array.isArray(base.prints) ? base.prints : [];
 
       let prints = printsRaw
@@ -991,7 +1074,6 @@
         }))
         .filter(p => p.setName || p.cardNumber);
 
-      // Try to infer from root fields if needed
       let setName = (base.setName || base.setId || "").trim();
       let cardNumber = (base.cardNumber || base.cardNo || "").trim();
 
@@ -999,7 +1081,6 @@
         prints = [{ setName, cardNumber }];
       }
 
-      // If root fields are empty but we have prints, sync them from the first print
       if (!setName && prints[0]) setName = prints[0].setName || "";
       if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
 
@@ -1019,7 +1100,6 @@
       };
     }
 
-    // When exporting to drive-card.json, convert prints back to { setId, cardNumber }
     function serializeCardForExport(card) {
       const clean = JSON.parse(JSON.stringify(card));
       if (Array.isArray(clean.prints)) {
@@ -1806,67 +1886,254 @@
     }
 
     /************************************************************
-     * Precons (simple view)
+     * Precon helpers & renderers
      ************************************************************/
-    function renderPrecons() {
-      const grid = Dom.preconGrid;
-      grid.innerHTML = "";
+    function refreshPreconCardSelect() {
+      const sel = Dom.preconCardSelect;
+      if (!sel) return;
 
-      if (!AppState.precons.length) {
-        // default placeholders if no JSON present
-        AppState.precons = [
-          {
-            id: "precon_junkyard_starter",
-            name: "Junkyard Starter",
-            description: "Ray's junkyard-themed starter deck with mixed vehicle types.",
-            cards: []
-          },
-          {
-            id: "precon_set1_demo",
-            name: "Set 1 Demo Deck",
-            description: "Mixed DRIVE demo deck focusing on Set 1 commons.",
-            cards: []
-          }
-        ];
+      const previous = sel.value;
+      sel.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "– Select Card –";
+      sel.appendChild(placeholder);
+
+      const cards = AppState.cards.slice().sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "")
+      );
+
+      cards.forEach(card => {
+        const opt = document.createElement("option");
+        opt.value = card.id;
+        const bits = [];
+        if (card.name) bits.push(card.name);
+        if (card.type) bits.push(`[${card.type}]`);
+        if (card.setName) bits.push(card.setName);
+        if (card.cardNumber) bits.push(card.cardNumber);
+        opt.textContent = bits.join(" ");
+        sel.appendChild(opt);
+      });
+
+      if (previous && [...sel.options].some(o => o.value === previous)) {
+        sel.value = previous;
+      } else {
+        sel.value = "";
+      }
+    }
+
+    function renderPreconCards() {
+      const listEl = Dom.preconCardsList;
+      listEl.innerHTML = "";
+
+      const map = AppState.currentPreconCards || {};
+      const entries = Object.entries(map);
+
+      if (!entries.length) {
+        listEl.innerHTML = `<div style="padding:0.4rem;font-size:0.75rem;opacity:0.8;">
+          No cards in this precon yet. Choose a card from the dropdown above and add it.
+        </div>`;
+        return;
       }
 
-      AppState.precons.forEach(precon => {
-        const card = document.createElement("div");
-        card.className = "precon-card";
+      const container = document.createElement("div");
 
-        const h3 = document.createElement("h3");
-        h3.textContent = precon.name;
-        const pill = document.createElement("span");
-        pill.className = "pill";
-        pill.textContent = `${precon.cards ? precon.cards.length : 0} cards`;
-        h3.appendChild(pill);
+      entries.forEach(([cardId, count]) => {
+        const row = document.createElement("div");
+        row.className = "library-item";
 
-        const desc = document.createElement("p");
-        desc.style.margin = "0.15rem 0 0.4rem";
-        desc.style.opacity = "0.85";
-        desc.textContent = precon.description || "";
+        const cardObj = AppState.cards.find(c => c.id === cardId);
+        const name = cardObj ? cardObj.name : cardId;
+        const meta = [];
 
-        const list = document.createElement("ul");
-        if (!precon.cards || !precon.cards.length) {
-          const li = document.createElement("li");
-          li.textContent = "No cards yet – edit this precon in JSON.";
-          list.appendChild(li);
-        } else {
-          precon.cards.forEach(entry => {
-            const li = document.createElement("li");
-            const cardObj = AppState.cards.find(c => c.id === entry.cardId);
-            const name = cardObj ? cardObj.name : entry.cardId;
-            li.textContent = `${entry.count || 0}x ${name}`;
-            list.appendChild(li);
-          });
+        if (cardObj) {
+          if (cardObj.type) meta.push(cardObj.type);
+          if (cardObj.setName || cardObj.cardNumber) {
+            meta.push(`${cardObj.setName || "SET ?"} ${cardObj.cardNumber || ""}`.trim());
+          }
         }
 
-        card.appendChild(h3);
-        card.appendChild(desc);
-        card.appendChild(list);
+        const main = document.createElement("div");
+        main.className = "library-item-main";
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "name";
+        nameSpan.textContent = `${count}x ${name}`;
+        const metaSpan = document.createElement("span");
+        metaSpan.className = "meta";
+        metaSpan.textContent = meta.join(" • ");
 
-        grid.appendChild(card);
+        main.appendChild(nameSpan);
+        main.appendChild(metaSpan);
+
+        const right = document.createElement("div");
+        right.className = "library-item-tags";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn small secondary";
+        btn.textContent = "Remove";
+        btn.addEventListener("click", () => {
+          delete AppState.currentPreconCards[cardId];
+          renderPreconCards();
+        });
+
+        right.appendChild(btn);
+
+        row.appendChild(main);
+        row.appendChild(right);
+        container.appendChild(row);
       });
+
+      listEl.appendChild(container);
+    }
+
+    function clearPreconEditor() {
+      AppState.selectedPreconId = null;
+      AppState.currentPreconCards = {};
+      Dom.preconNameInput.value = "";
+      Dom.preconNotesInput.value = "";
+      renderPreconCards();
+    }
+
+    function fillPreconEditor(precon) {
+      AppState.selectedPreconId = precon.id;
+      AppState.currentPreconCards = { ...(precon.cards || {}) };
+      Dom.preconNameInput.value = precon.name || "";
+      Dom.preconNotesInput.value = precon.notes || "";
+      renderPreconCards();
+    }
+
+    function renderPrecons() {
+      const listEl = Dom.preconList;
+      listEl.innerHTML = "";
+
+      const precons = AppState.precons || [];
+
+      if (!precons.length) {
+        listEl.innerHTML = `<div style="padding:0.4rem;font-size:0.75rem;opacity:0.8;">
+          No precons yet. Click "New Precon" to create one.
+        </div>`;
+        clearPreconEditor();
+        return;
+      }
+
+      const container = document.createElement("div");
+      precons.forEach(precon => {
+        const row = document.createElement("div");
+        row.className = "library-item";
+        if (precon.id === AppState.selectedPreconId) {
+          row.classList.add("active");
+        }
+
+        const main = document.createElement("div");
+        main.className = "library-item-main";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "name";
+        nameSpan.textContent = precon.name || "(Untitled Precon)";
+
+        const count = precon.cards
+          ? (Array.isArray(precon.cards)
+              ? precon.cards.reduce((n, c) => n + (c.count || 0), 0)
+              : Object.values(precon.cards).reduce((n, c) => n + c, 0))
+          : 0;
+
+        const metaSpan = document.createElement("span");
+        metaSpan.className = "meta";
+        metaSpan.textContent = `${count} cards`;
+
+        main.appendChild(nameSpan);
+        main.appendChild(metaSpan);
+        row.appendChild(main);
+
+        row.addEventListener("click", () => {
+          fillPreconEditor(precon);
+          renderPrecons();
+          Dom.preconsStatus.textContent = `Loaded precon "${precon.name || precon.id}"`;
+        });
+
+        container.appendChild(row);
+      });
+
+      listEl.appendChild(container);
+
+      if (!AppState.selectedPreconId && precons[0]) {
+        fillPreconEditor(precons[0]);
+        renderPrecons();
+      }
+    }
+
+    /************************************************************
+     * Precon actions
+     ************************************************************/
+    function collectPreconFromInputs() {
+      const name = Dom.preconNameInput.value.trim();
+      const notes = Dom.preconNotesInput.value.trim();
+      const id = AppState.selectedPreconId || ("precon-" + Date.now());
+
+      return {
+        id,
+        name: name || "(Untitled Precon)",
+        notes,
+        cards: { ...(AppState.currentPreconCards || {}) }
+      };
+    }
+
+    function handlePreconNew() {
+      clearPreconEditor();
+      Dom.preconsStatus.textContent = "New precon started. Set a name and add cards.";
+    }
+
+    async function handlePreconDelete() {
+      if (!AppState.selectedPreconId) {
+        Dom.preconsStatus.textContent = "No precon selected to delete.";
+        return;
+      }
+      const precon = AppState.precons.find(p => p.id === AppState.selectedPreconId);
+      const name = precon ? precon.name : AppState.selectedPreconId;
+
+      const ok = await confirmAction(
+        "Delete Precon",
+        `Are you sure you want to delete "${name}"?`
+      );
+      if (!ok) return;
+
+      AppState.precons = AppState.precons.filter(p => p.id !== AppState.selectedPreconId);
+      saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
+      clearPreconEditor();
+      renderPrecons();
+      Dom.preconsStatus.textContent = `Deleted precon "${name}".`;
+    }
+
+    function handlePreconSave() {
+      const precon = collectPreconFromInputs();
+      const idx = AppState.precons.findIndex(p => p.id === precon.id);
+      if (idx === -1) {
+        AppState.precons.push(precon);
+      } else {
+        AppState.precons[idx] = precon;
+      }
+      AppState.selectedPreconId = precon.id;
+      saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
+      renderPrecons();
+      Dom.preconsStatus.textContent = `Saved precon "${precon.name}".`;
+    }
+
+    function handlePreconAddCard() {
+      const cardId = Dom.preconCardSelect.value;
+      const countVal = Number(Dom.preconCardCountInput.value || "0");
+      if (!cardId) {
+        Dom.preconsStatus.textContent = "Select a card from the dropdown first.";
+        return;
+      }
+      if (!countVal || countVal < 1) {
+        Dom.preconsStatus.textContent = "Count must be at least 1.";
+        return;
+      }
+      if (!AppState.currentPreconCards) AppState.currentPreconCards = {};
+      AppState.currentPreconCards[cardId] = countVal;
+      renderPreconCards();
+      Dom.preconsStatus.textContent = "Card added/updated in this precon.";
     }
 
     /************************************************************
@@ -1946,6 +2213,19 @@
     }
 
     function initPrecons() {
+      if (Dom.preconNewBtn) {
+        Dom.preconNewBtn.addEventListener("click", handlePreconNew);
+      }
+      if (Dom.preconSaveBtn) {
+        Dom.preconSaveBtn.addEventListener("click", handlePreconSave);
+      }
+      if (Dom.preconDeleteBtn) {
+        Dom.preconDeleteBtn.addEventListener("click", handlePreconDelete);
+      }
+      if (Dom.preconAddCardBtn) {
+        Dom.preconAddCardBtn.addEventListener("click", handlePreconAddCard);
+      }
+
       Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
         downloadJson(AppState.precons, "drive-precons.json");
       });
@@ -1970,7 +2250,6 @@
     }
 
     async function loadCards() {
-      // Try remote drive-card.json first
       const localBackup = loadFromLocalStorage(STORAGE_KEYS.CARDS, null);
       try {
         const res = await fetch("drive-card.json", { cache: "no-store" });
@@ -1996,9 +2275,20 @@
       try {
         const res = await fetch("drive-precons.json", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch drive-precons.json");
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error("drive-precons.json is not an array.");
-        AppState.precons = data;
+        const raw = await res.json();
+
+        let precons = [];
+        if (Array.isArray(raw)) {
+          precons = raw;
+        } else if (raw && Array.isArray(raw.precons)) {
+          precons = raw.precons;
+        } else if (raw && typeof raw === "object") {
+          precons = [raw];
+        } else {
+          throw new Error("Invalid precon JSON shape.");
+        }
+
+        AppState.precons = precons;
         saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
         renderPrecons();
         return;
@@ -2032,6 +2322,7 @@
       initModal();
 
       await loadCards();
+      refreshPreconCardSelect();
       renderSinglePreview();
       renderCardLibraryList();
       await loadPrecons();
