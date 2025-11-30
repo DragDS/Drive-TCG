@@ -231,52 +231,38 @@
   },
   {
     "id": "card-vm2p77gewgn",
-    "name": "KNOX LUNAR",
+    "name": "Knox Lunar",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-083",
-    "notes": "-",
+    "rarity": "Rare",
     "tags": [],
+    "notes": "-",
+    "imageUrl": "images/set1/knox_lunar.png",
     "extra": {
       "hp": 6,
-      "con": 4,
-      "pitCost": 1
+      "con": 4
     },
-    "imageUrl": "images/set1/knox_lunar.png",
     "vehicleTypes": [
       "Drag"
-    ],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-083"
-      }
     ]
   },
   {
     "id": "card-i3ai0lxrcyq",
-    "name": "KNOX SUPER SPORT",
+    "name": "Knox Super Sport",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-084",
-    "notes": "-",
+    "rarity": "Rare",
     "tags": [],
+    "notes": "-",
+    "imageUrl": "images/set1/knox_super_sport.png",
     "extra": {
       "hp": 7,
-      "con": 3,
-      "pitCost": 1
+      "con": 3
     },
-    "imageUrl": "images/set1/knox_super_sport.png",
     "vehicleTypes": [
       "Drag"
-    ],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-084"
-      }
     ]
   },
   {
@@ -381,7 +367,7 @@
   },
   {
     "id": "card-lfoksm5y2j",
-    "name": "DRAG RACING ENTHUSIAST",
+    "name": "Drag Racing Enthusiast",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-055",
@@ -390,17 +376,11 @@
     "notes": "TYPE: DRAG\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL HP IS GREATER THAN 10.\n+6/0",
     "imageUrl": "images/set1/drag_racing_enthusiast.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-055"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
     "id": "card-vzdztcajw3",
-    "name": "DRIFT RACING ENTHUSIAST",
+    "name": "Drit Racing Enthusiast",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-056",
@@ -409,17 +389,11 @@
     "notes": "TYPE: DRIFT\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL CON IS GREATER THAN 10.\n+0/6",
     "imageUrl": "images/set1/drift_racing_enthusiast.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-056"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
     "id": "card-94z2rdo2vei",
-    "name": "FANATIC",
+    "name": "Fanatic",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-057",
@@ -428,17 +402,11 @@
     "notes": "TYPE: ALL \nWHILE IN THE RACE, WHENEVER YOU DRAW A CARD. DRAW 2 CARDS THEN DISCARD 1 OF THOSE CARDS.",
     "imageUrl": "images/set1/fanatic.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-057"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
     "id": "card-dcyo3wk4kl7",
-    "name": "GEARHEAD",
+    "name": "Gearhead",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-058",
@@ -447,17 +415,11 @@
     "notes": "TYPE: ALL\nWHILE IN THE RACE, YOU MAY LOOK AT THE TOP CARD OF YOUR GARAGE.",
     "imageUrl": "images/set1/gearhead.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-058"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
     "id": "card-oor990owzo8",
-    "name": "OLD TIMER",
+    "name": "Old Timer",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-059",
@@ -466,17 +428,11 @@
     "notes": "TYPE: ALL\nWHILE IN THE RACE, YOU MAY REMOVE A MOD FROM THE VEHICLE THIS CARD IS EQUIPPED TO, IF YOU DO DRAW A CARD.",
     "imageUrl": "images/set1/old_timer.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-059"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
     "id": "card-3lz56egdskh",
-    "name": "YOUNGSTER",
+    "name": "Youngster",
     "type": "Driver",
     "setName": "SET 1",
     "cardNumber": "01-060",
@@ -485,17 +441,11 @@
     "notes": "TYPE: ALL\nWHILE IN THE PIT, YOU MAY SWITCH THE EQUIPPED VEHICLE AND YOUR VEHICLE IN THE RACE WITHOUT PAYING A PIT COST.",
     "imageUrl": "images/set1/youngster.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-060"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "ABANDONDED",
+    "id": "card-2pg1y1in2et",
+    "name": "Abandonded",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-064",
@@ -504,17 +454,11 @@
     "notes": "MODS WITH BASE PART: TIRE ARE 0/0.",
     "imageUrl": "images/set1/abandoned.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-064"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "HARD TURN",
+    "id": "card-ozgbh9v452d",
+    "name": "Hard Turn",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-067",
@@ -523,17 +467,11 @@
     "notes": "AT THE START OF A PLAYERS TURN, THAT PLAYER REMOVES A MOD THEY OWN.",
     "imageUrl": "images/set1/hard_turn.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-067"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "HEAVY FOG",
+    "id": "card-2pjhj384qf3",
+    "name": "Heavy Fog",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-068",
@@ -542,17 +480,11 @@
     "notes": "DRIVER TRAITS DO NOT AFFECT HP/CON.",
     "imageUrl": "images/set1/heavy_fog.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-068"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "MIDNIGHT RUN",
+    "id": "card-qthm2m19d6",
+    "name": "Midnight Run",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-070",
@@ -561,17 +493,11 @@
     "notes": "-3/-3 IF A PLAYER DOES NOT PLAY A CREW DURING THEIR TURN.",
     "imageUrl": "images/set1/midnight_run.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-070"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "SUDDEN TURN",
+    "id": "card-f22wkvk09oe",
+    "name": "Sudden Turn",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-072",
@@ -580,112 +506,37 @@
     "notes": "-6/-1",
     "imageUrl": "images/set1/sudden_turn.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-072"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "CRUISE",
+    "id": "card-e4a4q2olxof",
+    "name": "Rolling Start",
     "type": "Condition",
-    "setName": "SET 1 & 4",
-    "cardNumber": "01-065",
-    "rarity": "COMMON",
-    "tags": [],
-    "notes": "-3/-3 EXCEPT TO NAMED VEHICLES.",
-    "imageUrl": "images/set1/cruise.png",
-    "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1 & 4",
-        "cardNumber": "01-065"
-      }
-    ]
-  },
-  {
-    "id": null,
-    "name": "ROLLING START",
-    "type": "Condition",
-    "setName": "SET 1 & 4",
+    "setName": "SET 1",
     "cardNumber": "01-071",
     "rarity": "COMMON",
     "tags": [],
     "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
     "imageUrl": "images/set1/rolling_start.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1 & 4",
-        "cardNumber": "01-071"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "DOWN HILL",
+    "id": "card-enxnw3emc5v",
+    "name": "Down Hill",
     "type": "Condition",
-    "setName": "SET 1 & 5",
+    "setName": "SET 1",
     "cardNumber": "01-066",
     "rarity": "COMMON",
     "tags": [],
     "notes": "VEHICLE'S BASE CON IS ZERO.",
     "imageUrl": "images/set1/down_hill.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1 & 5",
-        "cardNumber": "01-066"
-      }
-    ]
+    "vehicleTypes": []
   },
   {
-    "id": null,
-    "name": "UP HILL",
-    "type": "Condition",
-    "setName": "SET 1 & 5",
-    "cardNumber": "01-073",
-    "rarity": "COMMON",
-    "tags": [],
-    "notes": "VEHICLE'S BASE HP IS ZERO.",
-    "imageUrl": "images/set1/up_hill.png",
-    "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1 & 5",
-        "cardNumber": "01-073"
-      }
-    ]
-  },
-  {
-    "id": "card-5zrlzno3ouy",
-    "name": "ROLLING START",
-    "type": "Condition",
-    "setName": "SET 1",
-    "cardNumber": "01-071",
-    "rarity": "COMMON",
-    "tags": [],
-    "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
-    "imageUrl": "images/set1/rolling_start.png",
-    "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-071"
-      }
-    ]
-  },
-  {
-    "id": "card-zanhid13vf7",
-    "name": "UP HILL",
+    "id": "card-r9hjbcy63gh",
+    "name": "Up Hill",
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-073",
@@ -694,12 +545,19 @@
     "notes": "VEHICLE'S BASE HP IS ZERO.",
     "imageUrl": "images/set1/up_hill.png",
     "extra": {},
-    "vehicleTypes": [],
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-073"
-      }
-    ]
+    "vehicleTypes": []
+  },
+  {
+    "id": "card-p4b7fg3w9r",
+    "name": "Cruise",
+    "type": "Condition",
+    "setName": "SET 1",
+    "cardNumber": "01-065",
+    "rarity": "COMMON",
+    "tags": [],
+    "notes": "-3/-3 EXCEPT TO NAMED VEHICLES.",
+    "imageUrl": "images/set1/cruise.png",
+    "extra": {},
+    "vehicleTypes": []
   }
 ]
