@@ -94,13 +94,6 @@
 
     .app-header-main {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 14px;
-    }
-
-    .app-header-main {
-      display: flex;
       justify-content: space-between;
       gap: 12px;
       align-items: center;
@@ -887,7 +880,7 @@
     }
 
     .bulk-editor {
-      min-height: 280px;
+      min-height: 180px;
       font-family: var(--font-mono);
       font-size: 11px;
       line-height: 1.4;
@@ -908,7 +901,7 @@
       padding: 7px 8px;
       max-height: 260px;
       overflow: auto;
-      white-space: normal; /* changed from 'pre' to allow structured rows */
+      white-space: pre;
     }
 
     .precon-grid {
@@ -1242,7 +1235,7 @@
         </header>
 
         <div class="panel-body">
-          <!-- SINGLE CARD SECTION -->
+          <!-- SINGLE CARD SECTION (unchanged logic) -->
           <section id="singleSection" class="section active">
             <div class="form-layout">
               <div class="field-card">
@@ -1455,16 +1448,16 @@
             </div>
           </section>
 
-          <!-- BULK SECTION (new multi-step flow) -->
+          <!-- BULK IMPORT SECTION (3-step + file upload) -->
           <section id="bulkSection" class="section">
             <div class="bulk-layout">
-              <!-- STEP 1: Source data & parsing -->
+              <!-- STEP 1: SOURCE & PARSE -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Bulk Import · Step 1</div>
                     <div class="field-card-subtitle">
-                      Paste CSV/TSV here to create or update multiple cards at once, then parse into a preview list.
+                      Paste CSV/TSV or load a file, then parse into normalized card rows.
                     </div>
                   </div>
                   <div class="badge">
@@ -1478,7 +1471,24 @@
                     <span>Raw Data</span>
                     <span class="hint">Each line is one card; first row can be a header.</span>
                   </label>
-                  <textarea id="bulkInput" class="input bulk-editor" placeholder="Paste CSV/TSV data here..."></textarea>
+                  <textarea
+                    id="bulkInput"
+                    class="input bulk-editor"
+                    placeholder="Paste CSV/TSV data here, or choose a file below..."
+                  ></textarea>
+                </div>
+
+                <!-- File import (CSV / TSV / XLSX) -->
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+                  <input
+                    id="bulkFileInput"
+                    type="file"
+                    accept=".csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    style="font-size:11px;"
+                  />
+                  <span class="hint">
+                    Choose a CSV/TSV/TXT or XLSX file. The first sheet will be converted into rows here.
+                  </span>
                 </div>
 
                 <div class="field-grid" style="margin-top: 6px;">
@@ -1510,19 +1520,27 @@
 
                 <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
                   <button id="bulkParseBtn" class="btn primary small" type="button">
-                    Parse Text
+                    Step 1: Parse Text / File
                   </button>
                 </div>
                 <div id="bulkStatus" class="bulk-status">Waiting for data…</div>
+
+                <div class="field" style="margin-top:6px;">
+                  <label class="field-label">
+                    <span>Step 1 Preview</span>
+                    <span class="hint">Shows the first few parsed rows.</span>
+                  </label>
+                  <pre id="bulkPreview" class="bulk-preview"></pre>
+                </div>
               </div>
 
-              <!-- STEP 2 & 3: Selection + final preview/import -->
+              <!-- STEP 2 & 3: SELECT + IMPORT -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Bulk Review · Steps 2 &amp; 3</div>
+                    <div class="field-card-title">Bulk Import · Step 2 &amp; 3</div>
                     <div class="field-card-subtitle">
-                      Filter and select parsed cards (Step 2), then confirm the final selection before importing (Step 3).
+                      Filter and select which parsed cards to import, then confirm import.
                     </div>
                   </div>
                   <div class="badge">
@@ -1531,50 +1549,50 @@
                   </div>
                 </div>
 
-                <!-- Step 2: filter & select -->
+                <!-- STEP 2: SELECTION -->
                 <div class="field">
                   <label class="field-label">
-                    <span>Step 2: Filter &amp; Select Cards</span>
-                    <span class="hint">Use the search box to narrow, then toggle checkboxes.</span>
+                    <span>Step 2 · Select Cards</span>
+                    <span class="hint">Filter by name/type and toggle selections.</span>
                   </label>
-                  <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
-                    <input
-                      id="bulkFilterInput"
-                      class="input input-mono"
-                      type="text"
-                      placeholder="Filter by name, type, set, number, or tags..."
-                      style="flex:1 1 160px;"
-                    />
-                    <button id="bulkSelectAllBtn" class="btn small" type="button">Select All</button>
-                    <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Clear</button>
-                  </div>
+                  <input
+                    id="bulkFilterInput"
+                    class="input input-mono"
+                    type="text"
+                    placeholder="Filter parsed cards by name, type, or set…"
+                  />
                 </div>
 
-                <div id="bulkSelectionList" class="bulk-preview">
-                  <!-- Rows of parsed cards with checkboxes will render here -->
+                <div style="display:flex;align-items:center;gap:6px;margin:4px 0 6px;">
+                  <button id="bulkSelectAllBtn" class="btn small" type="button">Select All</button>
+                  <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Deselect All</button>
                 </div>
 
-                <!-- Step 3: selected summary + import -->
-                <div style="margin-top:8px;">
+                <ul
+                  id="bulkSelectionList"
+                  class="prints-list"
+                  style="max-height: 140px; margin-top: 0;"
+                ></ul>
+
+                <!-- STEP 3: PREVIEW & IMPORT -->
+                <div class="field" style="margin-top:8px;">
                   <label class="field-label">
-                    <span>Step 3: Selected Summary</span>
-                    <span class="hint">Shows only the cards that will be imported.</span>
+                    <span>Step 3 · Selected Preview</span>
+                    <span class="hint">Review what will be merged into the library.</span>
                   </label>
-                  <div id="bulkSelectedPreview" class="bulk-preview" style="max-height:110px;">
-                    <!-- Summary of selected cards will render here -->
-                  </div>
+                  <pre id="bulkSelectedPreview" class="bulk-preview"></pre>
                 </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px;">
+                <div style="display:flex;justify-content:flex-end;margin-top:6px;">
                   <button id="bulkImportBtn" class="btn secondary small" type="button">
-                    Import Selected Cards
+                    Step 3: Import Selected Cards
                   </button>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- PRECONS SECTION (unchanged) -->
+          <!-- PRECONS SECTION (unchanged from your logic) -->
           <section id="preconsSection" class="section">
             <div class="field-card">
               <div class="field-card-label">
@@ -1604,7 +1622,7 @@
             </div>
           </section>
 
-          <!-- HELP SECTION (unchanged from your version) -->
+          <!-- HELP SECTION (unchanged content) -->
           <section id="helpSection" class="section">
             <div class="help-grid">
               <div class="field-card">
@@ -1637,24 +1655,16 @@
 
                   <h3>Bulk Import</h3>
                   <p>
-                    The Bulk tab supports pasting CSV/TSV-like data. It respects headers loosely (ignoring case, spacing, etc.).
-                  </p>
-                  <p>
-                    Basic example:
-                  </p>
-                  <pre><code>Name,Type,Set,CardNumber,Rarity,VehicleType,Tags,ImageUrl,Notes
-LUCKY CHARM,Crew,Set 1,001,Common,,Charm,/img/cards/lucky_charm.png,Basic starter charm
-DRAG RACING ENTHUSIAST,Driver,Set 1,056,Rare,Drag,"Sponsor, Holiday",/img/cards/drag_racing_enthusiast.png,Special seasonal driver</code></pre>
-
-                  <p>
-                    When you click <strong>Parse Text</strong>, the admin:
+                    The Bulk tab now works in three steps:
                   </p>
                   <ul>
-                    <li>Auto-detects delimiter (tab, comma, semicolon, or pipe) unless explicitly specified.</li>
-                    <li>Maps header columns like <code>Name</code>, <code>Type</code>, <code>Set</code>, and so on.</li>
-                    <li>Converts each row into a normalized card object.</li>
-                    <li>Lets you filter &amp; select specific rows to import.</li>
+                    <li><strong>Step 1:</strong> Paste or load a CSV/TSV/XLSX file and parse it.</li>
+                    <li><strong>Step 2:</strong> Filter and select which parsed cards you want.</li>
+                    <li><strong>Step 3:</strong> Review the selected cards and import them into the library.</li>
                   </ul>
+                  <p>
+                    XLSX import uses the first sheet and converts it to CSV in-memory.
+                  </p>
 
                   <h3>Precons</h3>
                   <p>
@@ -1776,6 +1786,8 @@ DRAG RACING ENTHUSIAST,Driver,Set 1,056,Rare,Drag,"Sponsor, Holiday",/img/cards/
     </div>
   </div>
 
+  <!-- XLSX library for .xlsx bulk import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>
