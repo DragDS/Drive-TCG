@@ -1,5 +1,5 @@
 // bulk.js
-// Bulk import: parsing, preview, and importing into AppState.cards.
+// Bulk import: parsing, selection, preview, and importing into AppState.cards.
 
 import { AppState } from "./state.js";
 import { Dom } from "./dom.js";
@@ -13,13 +13,13 @@ import {
 } from "./single.js";
 
 /************************************************************
- * Module-level state for bulk flow
+ * Module-level state for bulk import
  ************************************************************/
-let parsedCards = [];
-let selectedCardIds = new Set();
+let parsedCards = [];           // All cards parsed from text/file
+let selectedCardIds = new Set(); // IDs of cards chosen for import
 
 /************************************************************
- * Delimiter helpers
+ * Delimiter + header helpers
  ************************************************************/
 function detectDelimiter(value) {
   const counts = {
@@ -48,9 +48,6 @@ function splitLine(line, delimiter) {
   return [line];
 }
 
-/************************************************************
- * Row → card mapping
- ************************************************************/
 function normalizeHeader(str) {
   return (str || "")
     .toLowerCase()
@@ -58,6 +55,9 @@ function normalizeHeader(str) {
     .replace(/\W+/g, "");
 }
 
+/************************************************************
+ * Map a CSV/TSV row into a normalized card
+ ************************************************************/
 function mapRowToCard(headers, row) {
   const norm = {};
   headers.forEach((h, i) => {
@@ -110,9 +110,10 @@ function mapRowToCard(headers, row) {
 
   if (type === "Vehicle" || type === "Named Vehicle") {
     const hpConStr = get("hpcon", "hp/con", "hp", "hitpoints");
-    const hpCon = hpConStr.includes("/")
+    const hpCon = hpConStr && hpConStr.includes("/")
       ? parseHpCon(hpConStr)
-      : { hp: Number(hpConStr) || undefined };
+      : { hp: hpConStr ? Number(hpConStr) || undefined : undefined };
+
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
     const pitStr = get("pitcost", "pit", "pitpoints");
@@ -147,129 +148,13 @@ function mapRowToCard(headers, row) {
 }
 
 /************************************************************
- * Rendering for Step 2 & 3
- ************************************************************/
-function getFilteredParsedCards() {
-  const filter = (Dom.bulkFilterInput?.value || "").toLowerCase();
-  if (!filter) return parsedCards;
-
-  return parsedCards.filter(c => {
-    const name = (c.name || "").toLowerCase();
-    const type = (c.type || "").toLowerCase();
-    const setName = (c.setName || "").toLowerCase();
-    const num = (c.cardNumber || "").toLowerCase();
-    const tags = (Array.isArray(c.tags) ? c.tags.join(" ") : "").toLowerCase();
-    return (
-      name.includes(filter) ||
-      type.includes(filter) ||
-      setName.includes(filter) ||
-      num.includes(filter) ||
-      tags.includes(filter)
-    );
-  });
-}
-
-function renderBulkSelectionList() {
-  const container = Dom.bulkSelectionList;
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  if (!parsedCards.length) {
-    container.textContent = "No parsed cards yet. Paste text and click “Parse Text”.";
-    return;
-  }
-
-  const filtered = getFilteredParsedCards();
-  if (!filtered.length) {
-    container.textContent = "No cards match the current filter.";
-    return;
-  }
-
-  const frag = document.createDocumentFragment();
-
-  filtered.forEach(card => {
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-    row.style.justifyContent = "space-between";
-    row.style.gap = "6px";
-    row.style.padding = "2px 0";
-
-    const label = document.createElement("label");
-    label.style.display = "flex";
-    label.style.alignItems = "center";
-    label.style.gap = "6px";
-    label.style.cursor = "pointer";
-    label.style.flex = "1";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = selectedCardIds.has(card.id);
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        selectedCardIds.add(card.id);
-      } else {
-        selectedCardIds.delete(card.id);
-      }
-      renderBulkSelectedPreview();
-    });
-
-    const summary = document.createElement("span");
-    summary.textContent =
-      `${card.type || "Type ?"} | ` +
-      `${card.name || "(no name)"} | ` +
-      `${card.setName || "Set ?"} #${card.cardNumber || "###"}`;
-
-    label.appendChild(checkbox);
-    label.appendChild(summary);
-
-    row.appendChild(label);
-    frag.appendChild(row);
-  });
-
-  container.appendChild(frag);
-}
-
-function renderBulkSelectedPreview() {
-  const box = Dom.bulkSelectedPreview;
-  if (!box) return;
-
-  box.innerHTML = "";
-
-  if (!parsedCards.length) {
-    box.textContent = "Nothing parsed yet.";
-    return;
-  }
-
-  const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
-  if (!selected.length) {
-    box.textContent = "No cards selected.";
-    return;
-  }
-
-  const lines = selected.slice(0, 20).map(c => {
-    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
-  });
-
-  const text =
-    lines.join("\n") +
-    (selected.length > 20 ? `\n...and ${selected.length - 20} more.` : "");
-
-  const pre = document.createElement("pre");
-  pre.style.margin = "0";
-  pre.textContent = text;
-
-  box.appendChild(pre);
-}
-
-/************************************************************
- * Step 1: Parse
+ * STEP 1: Parse text from textarea (or file)
  ************************************************************/
 function handleBulkParse() {
   const raw = Dom.bulkInput.value || "";
   if (!raw.trim()) {
     Dom.bulkStatus.textContent = "No data to parse.";
+    Dom.bulkPreview.textContent = "";
     parsedCards = [];
     selectedCardIds.clear();
     renderBulkSelectionList();
@@ -286,6 +171,7 @@ function handleBulkParse() {
   const lines = raw.split(/\r?\n/).filter(line => line.trim());
   if (!lines.length) {
     Dom.bulkStatus.textContent = "No non-empty lines found.";
+    Dom.bulkPreview.textContent = "";
     parsedCards = [];
     selectedCardIds.clear();
     renderBulkSelectionList();
@@ -297,40 +183,150 @@ function handleBulkParse() {
   const headerCells = splitLine(headerLine, delimiter);
   const dataLines = Dom.bulkHasHeaderCheckbox.checked ? lines.slice(1) : lines;
 
-  const cards = dataLines.map(line => {
-    const cells = splitLine(line, delimiter);
-    return mapRowToCard(headerCells, cells);
+  parsedCards = dataLines
+    .map(line => {
+      const cells = splitLine(line, delimiter);
+      return mapRowToCard(headerCells, cells);
+    })
+    .filter(c => c && (c.name || c.type || c.setName || c.cardNumber));
+
+  if (!parsedCards.length) {
+    Dom.bulkStatus.textContent = "Parsed 0 usable rows.";
+    Dom.bulkPreview.textContent = "";
+    selectedCardIds.clear();
+    renderBulkSelectionList();
+    renderBulkSelectedPreview();
+    return;
+  }
+
+  // Pre-select everything by default
+  selectedCardIds = new Set(parsedCards.map(c => c.id));
+
+  // Step 1 preview
+  const previewLines = parsedCards.slice(0, 20).map(c => {
+    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
   });
 
-  parsedCards = cards;
-  selectedCardIds = new Set(cards.map(c => c.id)); // default: all selected
+  Dom.bulkPreview.textContent =
+    previewLines.join("\n") +
+    (parsedCards.length > 20 ? `\n...and ${parsedCards.length - 20} more.` : "");
+
+  Dom.bulkStatus.textContent = `Parsed ${parsedCards.length} cards. Use Step 2 to choose which to import.`;
 
   renderBulkSelectionList();
   renderBulkSelectedPreview();
-
-  Dom.bulkStatus.textContent =
-    `Parsed ${cards.length} cards. All selected by default – refine in Step 2.`;
 }
 
 /************************************************************
- * Import: Step 3
+ * STEP 2: Selection list rendering & controls
  ************************************************************/
-function handleBulkImport() {
+function renderBulkSelectionList() {
+  const list = Dom.bulkSelectionList;
+  if (!list) return;
+  list.innerHTML = "";
+
   if (!parsedCards.length) {
-    Dom.bulkStatus.textContent = "Nothing parsed yet. Click “Parse Text” first.";
+    const li = document.createElement("li");
+    li.textContent = "No parsed cards yet. Run Step 1 first.";
+    list.appendChild(li);
+    return;
+  }
+
+  const filter = (Dom.bulkFilterInput?.value || "").toLowerCase();
+
+  const filtered = parsedCards.filter(c => {
+    const name = (c.name || "").toLowerCase();
+    const type = (c.type || "").toLowerCase();
+    const setName = (c.setName || "").toLowerCase();
+    if (!filter) return true;
+    return (
+      name.includes(filter) ||
+      type.includes(filter) ||
+      setName.includes(filter)
+    );
+  });
+
+  if (!filtered.length) {
+    const li = document.createElement("li");
+    li.textContent = "No cards match the current filter.";
+    list.appendChild(li);
+    return;
+  }
+
+  filtered.forEach(card => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.alignItems = "center";
+    li.style.gap = "6px";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedCardIds.has(card.id);
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        selectedCardIds.add(card.id);
+      } else {
+        selectedCardIds.delete(card.id);
+      }
+      renderBulkSelectedPreview();
+    });
+
+    const label = document.createElement("span");
+    label.style.fontSize = "11px";
+    label.textContent = `${card.type || "Type ?"} | ${card.name || "(no name)"} | ${card.setName || "Set ?"} #${card.cardNumber || "###"}`;
+
+    li.appendChild(checkbox);
+    li.appendChild(label);
+    list.appendChild(li);
+  });
+}
+
+/************************************************************
+ * STEP 3: Selected preview & import
+ ************************************************************/
+function renderBulkSelectedPreview() {
+  const out = Dom.bulkSelectedPreview;
+  if (!out) return;
+
+  if (!parsedCards.length) {
+    out.textContent = "No parsed cards yet.";
     return;
   }
 
   const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
+
   if (!selected.length) {
-    Dom.bulkStatus.textContent = "No cards selected to import.";
+    out.textContent = "No cards selected for import.";
+    return;
+  }
+
+  const lines = selected.slice(0, 40).map(c => {
+    return `• ${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
+  });
+
+  out.textContent =
+    `${selected.length} card(s) selected for import:\n` +
+    lines.join("\n") +
+    (selected.length > 40 ? `\n...and ${selected.length - 40} more.` : "");
+}
+
+function handleBulkImport() {
+  if (!parsedCards.length) {
+    Dom.bulkStatus.textContent = "Nothing parsed yet. Run Step 1 first.";
+    return;
+  }
+
+  const toImport = parsedCards.filter(c => selectedCardIds.has(c.id));
+  if (!toImport.length) {
+    Dom.bulkStatus.textContent = "No cards selected to import (Step 2).";
     return;
   }
 
   let added = 0;
   let updated = 0;
 
-  selected.forEach(card => {
+  toImport.forEach(card => {
     const idx = AppState.cards.findIndex(c => c.id === card.id);
     if (idx >= 0) {
       AppState.cards[idx] = card;
@@ -342,22 +338,81 @@ function handleBulkImport() {
   });
 
   Dom.bulkStatus.textContent =
-    `Imported ${selected.length} cards (${added} added, ${updated} updated).`;
+    `Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`;
 
-  // Clear local bulk state
+  // Clear parsed state (but keep any text the user pasted in case they want to tweak and reparse)
   parsedCards = [];
   selectedCardIds.clear();
-  Dom.bulkInput.value = "";
+  Dom.bulkPreview.textContent = "";
+  Dom.bulkSelectedPreview.textContent = "";
   if (Dom.bulkSelectionList) Dom.bulkSelectionList.innerHTML = "";
-  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.innerHTML = "";
-  if (Dom.bulkFilterInput) Dom.bulkFilterInput.value = "";
 
-  // Re-render library and preview
+  // Re-render library and preview in Single tab
   refreshSingleUi();
 }
 
 /************************************************************
- * Init wiring
+ * File loading (CSV / TSV / TXT / XLSX)
+ ************************************************************/
+function setBulkInputAndParse(text) {
+  Dom.bulkInput.value = text || "";
+  handleBulkParse();
+}
+
+function handleBulkFileChange(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const name = (file.name || "").toLowerCase();
+  const isXlsx = name.endsWith(".xlsx");
+
+  // Non-XLSX: read as plain text
+  if (!isXlsx) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target.result || "";
+      setBulkInputAndParse(text);
+    };
+    reader.onerror = () => {
+      Dom.bulkStatus.textContent = "Could not read file.";
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  // XLSX: requires global XLSX from SheetJS
+  if (typeof XLSX === "undefined") {
+    Dom.bulkStatus.textContent =
+      "XLSX file selected, but XLSX library is not loaded. Check the XLSX script tag in admin.html.";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = e.target.result;
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheetName = workbook.SheetNames[0];
+      if (!firstSheetName) {
+        Dom.bulkStatus.textContent = "No sheets found in XLSX file.";
+        return;
+      }
+      const sheet = workbook.Sheets[firstSheetName];
+      const csv = XLSX.utils.sheet_to_csv(sheet);
+      setBulkInputAndParse(csv);
+    } catch (err) {
+      console.error(err);
+      Dom.bulkStatus.textContent = "Failed to parse XLSX file.";
+    }
+  };
+  reader.onerror = () => {
+    Dom.bulkStatus.textContent = "Could not read XLSX file.";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/************************************************************
+ * Public init
  ************************************************************/
 export function initBulk() {
   Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
@@ -385,7 +440,11 @@ export function initBulk() {
     });
   }
 
-  // Initial empty render for cleanliness
+  if (Dom.bulkFileInput) {
+    Dom.bulkFileInput.addEventListener("change", handleBulkFileChange);
+  }
+
+  // Initial empty render
   renderBulkSelectionList();
   renderBulkSelectedPreview();
 }
