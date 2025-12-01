@@ -15,35 +15,38 @@
       --accent-strong: #ff8356;
       --accent-glow: 0 0 18px rgba(255,107,58,0.4);
       --accent-muted: #fcb99d;
-      --accent-dark: #302018;
-      --accent-border: rgba(255,178,135,0.4);
-      --danger: #ff4b6b;
-      --danger-soft: rgba(255,75,107,0.12);
-      --danger-border: rgba(255,75,107,0.4);
-      --text-main: #f5f5f9;
-      --text-soft: #c4c4d4;
-      --text-mute: #82829a;
-      --text-dim: #5f6079;
-      --text-key: #fff5d5;
-      --pill-bg: rgba(255,255,255,0.04);
-      --pill-border: rgba(255,255,255,0.12);
-      --shadow-soft: 0 0 0 1px rgba(255,255,255,0.03), 0 18px 50px rgba(0,0,0,0.7);
-      --shadow-strong: 0 0 0 1px rgba(255,255,255,0.05), 0 22px 55px rgba(0,0,0,0.85);
-      --shadow-inner: inset 0 0 0 1px rgba(255,255,255,0.03);
-      --input-bg: #090910;
-      --input-border: rgba(255,255,255,0.18);
-      --input-border-soft: rgba(255,255,255,0.08);
-      --input-border-strong: rgba(255,255,255,0.25);
-      --input-placeholder: #5f6079;
-      --radius-lg: 16px;
-      --radius-md: 10px;
-      --radius-pill: 999px;
-      --nav-pill-bg: rgba(255,255,255,0.02);
-      --nav-pill-border: rgba(255,255,255,0.12);
-      --nav-pill-active-bg: rgba(255,107,58,0.15);
-      --nav-pill-active-border: rgba(255,178,135,0.8);
-      --scroll-thumb: rgba(255,255,255,0.12);
-      --scroll-track: rgba(255,255,255,0.02);
+      --accent-pill: linear-gradient(135deg, #ff6b3a, #ffa63f);
+      --accent-pill-soft: linear-gradient(135deg, rgba(255,107,58,0.12), rgba(255,166,63,0.06));
+      --accent-pill-border: rgba(255,166,63,0.5);
+      --text-main: #f6f7ff;
+      --text-soft: #b5b9d9;
+      --text-softer: #8b8fad;
+      --danger: #ff4b6a;
+      --danger-soft: rgba(255,75,106,0.16);
+      --danger-border: rgba(255,75,106,0.5);
+      --ok: #3fe0a8;
+      --ok-soft: rgba(63,224,168,0.12);
+      --ok-border: rgba(63,224,168,0.45);
+      --warn: #ffce4b;
+      --warn-soft: rgba(255,206,75,0.14);
+      --warn-border: rgba(255,206,75,0.5);
+      --input-bg: #101322;
+      --input-border: rgba(235,240,255,0.12);
+      --input-border-focus: rgba(255,166,63,0.85);
+      --input-shadow-focus: 0 0 0 1px rgba(255,166,63,0.3);
+      --chip-bg: rgba(255,255,255,0.06);
+      --chip-bg-key: rgba(255,166,63,0.16);
+      --chip-border: rgba(255,255,255,0.18);
+      --chip-border-key: rgba(255,166,63,0.8);
+      --pill-bg: rgba(0,0,0,0.4);
+      --outline-soft: rgba(255,255,255,0.06);
+      --outline-strong: rgba(255,255,255,0.2);
+      --shadow-soft: 0 18px 40px rgba(0,0,0,0.85);
+      --shadow-heavy: 0 26px 70px rgba(0,0,0,0.95);
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+                   "Courier New", monospace;
     }
 
     * {
@@ -53,11 +56,12 @@
     html, body {
       margin: 0;
       padding: 0;
-      background: radial-gradient(circle at top, #1c1c3a 0, #050509 55%);
+      background: radial-gradient(circle at top left, #181828 0, #050509 60%);
       color: var(--text-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+      font-family: var(--font-sans);
       font-size: 14px;
-      min-height: 100%;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     body {
@@ -78,248 +82,261 @@
     .app-header {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
+      padding: 12px 14px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 60%),
+        linear-gradient(135deg, #181a24, #080915);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: var(--shadow-soft);
     }
 
-    .badge-row {
+    .app-header-main {
       display: flex;
-      align-items: center;
+      justify-content: space-between;
       gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
     }
 
-    .logo-pill {
-      display: inline-flex;
+    .app-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .logo-row {
+      display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+    }
+
+    .drive-pill {
       padding: 4px 10px;
       border-radius: 999px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 14px 40px rgba(0,0,0,0.8);
-    }
-
-    .logo-pill-main {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 11px;
-      border-radius: 999px;
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.32), 0 18px 45px rgba(0,0,0,0.9);
-    }
-
-    .logo-pill-main span:first-child {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #f69f55, #ff6b3a);
-      color: #130b06;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.2), 0 0 14px rgba(255,107,58,0.4);
-    }
-
-    .logo-pill-main span:last-child {
-      font-weight: 600;
-      font-size: 13px;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .logo-pill-subtitle {
-      opacity: 0.8;
-      font-size: 11px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.18);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .badge-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: radial-gradient(circle at center, #7dff7d, #2ed477);
-      box-shadow: 0 0 10px rgba(57,255,139,0.7);
-    }
-
-    .badge-dot.warn {
-      background: radial-gradient(circle at center, #ffcd57, #ff9a1a);
-      box-shadow: 0 0 10px rgba(255,184,77,0.7);
-    }
-
-    .label-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.02);
       border: 1px solid rgba(255,255,255,0.16);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      background: rgba(0,0,0,0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--accent-glow);
     }
 
-    .label-pill.warn {
-      border-color: rgba(255,178,135,0.8);
+    .drive-pill span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
       color: var(--accent-muted);
     }
 
-    .label-pill.ok {
-      border-color: rgba(118,255,189,0.7);
-      color: #a7ffd6;
+    .drive-pill strong {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--accent-strong);
+    }
+
+    .app-title {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .app-title-main {
+      font-size: 18px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .app-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .app-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
     }
 
     .pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 3px 10px;
+      padding: 3px 9px;
       border-radius: 999px;
-      background: var(--pill-bg);
-      border: 1px solid var(--pill-border);
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .pill.key {
-      border-color: rgba(255,242,174,0.55);
-      color: var(--text-key);
-      background: radial-gradient(circle at top, rgba(255,242,174,0.18), rgba(0,0,0,0.4));
-    }
-
-    .pill .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.45);
-    }
-
-    .nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .nav-pill-group {
-      display: inline-flex;
-      padding: 2px;
-      gap: 2px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-      border: 1px solid rgba(255,255,255,0.22);
-      box-shadow: 0 14px 40px rgba(0,0,0,0.9);
-    }
-
-    .nav-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 12px;
-      font-weight: 500;
-      letter-spacing: 0.08em;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 10px;
       text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.16s ease;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
     }
 
-    .nav-pill span.bullet {
+    .pill-ok {
+      border-color: var(--ok-border);
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .pill-warn {
+      border-color: var(--warn-border);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .pill-dot, .pill-dot-danger {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.08);
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 8px rgba(63,224,168,0.8);
     }
 
-    .nav-pill.active {
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
-      border-color: var(--nav-pill-active-border);
+    .pill-dot-danger {
+      background: var(--danger);
+      box-shadow: 0 0 8px rgba(255,75,106,0.8);
+    }
+
+    .app-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(8,8,16,0.9);
       color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    }
+
+    .btn.small {
+      padding: 4px 10px;
+      font-size: 10px;
+    }
+
+    .btn.primary {
+      background: var(--accent-pill);
+      border-color: var(--accent-pill-border);
+      color: #190b05;
       box-shadow: var(--accent-glow);
     }
 
-    .nav-pill.active span.bullet {
-      border-color: rgba(255,242,174,0.7);
-      background: radial-gradient(circle at center, #fff5d5, #f3b97b);
-      box-shadow: 0 0 8px rgba(255,242,174,0.7);
+    .btn.secondary {
+      background: rgba(255,255,255,0.04);
     }
 
-    .nav-pill:hover:not(.active) {
-      background: var(--nav-pill-bg);
-      border-color: var(--nav-pill-border);
-      color: var(--text-main);
+    .btn.danger {
+      background: var(--danger-soft);
+      border-color: var(--danger-border);
+      color: var(--danger);
     }
 
-    .app-main-grid {
-      display: grid;
-      grid-template-columns: minmax(0,2.3fr) minmax(0,1.8fr);
+    .btn.green {
+      background: var(--ok-soft);
+      border-color: var(--ok-border);
+      color: var(--ok);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,0.32);
+      background: rgba(26,28,42,0.95);
+    }
+
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #ff8c48, #ffd84f);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-style: dashed;
+      border-color: rgba(255,255,255,0.24);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      border-color: var(--danger-border);
+      color: var(--danger);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(5,5,10,0.9);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      box-shadow: var(--accent-glow);
+    }
+
+    .app-main {
+      display: flex;
+      flex-direction: column;
       gap: 12px;
-      align-items: flex-start;
     }
 
     .panel {
-      background: radial-gradient(circle at top left, #191a2b, #0b0c12 50%, #050509 100%);
-      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 55%),
+        linear-gradient(145deg, #151726, #080814);
+      border-radius: 18px;
+      border: 1px solid var(--border-strong);
       box-shadow: var(--shadow-soft);
-      border: 1px solid rgba(255,255,255,0.12);
       overflow: hidden;
-      position: relative;
-    }
-
-    .panel-main {
-      box-shadow: var(--shadow-strong);
     }
 
     .panel-subtle {
-      background: linear-gradient(145deg, rgba(5,5,11,0.95), rgba(8,9,17,0.98));
-      border-color: rgba(255,255,255,0.06);
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%);
-      opacity: 0.7;
-      pointer-events: none;
-      mix-blend-mode: screen;
-    }
-
-    .panel > * {
-      position: relative;
-      z-index: 1;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 55%),
+        linear-gradient(145deg, #10111b, #070711);
+      border-color: var(--border-subtle);
     }
 
     .panel-header {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
       display: flex;
       justify-content: space-between;
+      gap: 10px;
       align-items: center;
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+      flex-wrap: wrap;
     }
 
     .panel-header-main {
@@ -332,134 +349,80 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
+      font-size: 11px;
       text-transform: uppercase;
-      font-size: 12px;
+      letter-spacing: 0.18em;
     }
 
     .panel-title-pill {
-      font-size: 10px;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.06);
-      color: var(--text-soft);
+      background: var(--accent-pill-soft);
+      border: 1px solid var(--accent-pill-border);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-muted);
     }
 
     .panel-subtitle {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-soft);
     }
 
     .panel-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .panel-body {
-      padding: 12px 14px 14px;
+      padding: 10px 12px 12px;
     }
 
-    .meta-pills {
+    .nav-tabs {
       display: flex;
-      align-items: center;
-      gap: 10px;
       flex-wrap: wrap;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
       gap: 6px;
-      padding: 3px 10px;
+      padding: 3px;
       border-radius: 999px;
-      background: var(--pill-bg);
-      border: 1px solid var(--pill-border);
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .pill.key {
-      border-color: rgba(255,242,174,0.55);
-      color: var(--text-key);
-      background: radial-gradient(circle at top, rgba(255,242,174,0.18), rgba(0,0,0,0.4));
-    }
-
-    .pill .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.45);
-    }
-
-    .tabs-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 6px;
-    }
-
-    .tabs {
-      display: inline-flex;
-      gap: 4px;
-      padding: 2px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(4,4,10,0.75);
+      border: 1px solid rgba(255,255,255,0.12);
     }
 
     .nav-tab {
       position: relative;
+      border: none;
+      background: transparent;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-softer);
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-soft);
-      font-size: 11px;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
       cursor: pointer;
-      transition: all 0.16s ease;
+      transition: color 0.14s ease, background 0.14s ease, transform 0.05s ease;
     }
 
-    .nav-tab span.bullet {
+    .nav-tab .bullet {
       width: 6px;
       height: 6px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.4);
-      background: rgba(255,255,255,0.07);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.16);
     }
 
     .nav-tab.active {
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.18), rgba(255,255,255,0.04));
-      border-color: var(--accent-border);
-      color: var(--text-main);
+      background: rgba(255,255,255,0.06);
+      color: var(--accent-muted);
+    }
+
+    .nav-tab.active .bullet {
+      background: var(--accent-strong);
       box-shadow: var(--accent-glow);
-    }
-
-    .nav-tab.active span.bullet {
-      border-color: rgba(255,242,174,0.7);
-      background: radial-gradient(circle at center, #fff5d5, #f3b97b);
-      box-shadow: 0 0 8px rgba(255,242,174,0.7);
-    }
-
-    .nav-tab:hover:not(.active) {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(255,255,255,0.2);
-      color: var(--text-main);
-    }
-
-    .tabs-caption {
-      font-size: 11px;
-      color: var(--text-soft);
     }
 
     .section {
@@ -472,35 +435,35 @@
 
     .form-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.4fr);
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
       gap: 10px;
-      align-items: flex-start;
     }
 
     .field-card {
-      background: radial-gradient(circle at top, #191a2b, #0b0c12 50%, #050509 100%);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-inner);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
+        linear-gradient(150deg, rgba(7,8,16,0.96), rgba(8,9,20,0.98));
+      border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.12);
-      padding: 10px 10px 9px;
+      padding: 10px 11px 9px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .field-card-label {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
       margin-bottom: 4px;
     }
 
     .field-card-title {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.09em;
+      font-size: 12px;
       text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 2px;
     }
 
     .field-card-subtitle {
@@ -508,272 +471,237 @@
       color: var(--text-soft);
     }
 
+    .field-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
     .field-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
+      gap: 8px 10px;
+    }
+
+    .field-grid.full {
+      grid-template-columns: minmax(0, 1fr);
     }
 
     .field {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
     }
 
     .field-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-soft);
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      font-size: 11px;
-      color: var(--text-soft);
+      gap: 6px;
     }
 
-    .field-label span.hint {
+    .field-required::after {
+      content: "•";
+      margin-left: 4px;
+      color: var(--accent);
+    }
+
+    .hint {
       font-size: 10px;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      color: var(--text-softer);
     }
 
-    .input,
-    .textarea,
-    select {
-      width: 100%;
-      padding: 4px 6px;
-      border-radius: 6px;
-      border: 1px solid var(--input-border-soft);
-      background: var(--input-bg);
-      color: var(--text-main);
+    .input, textarea, select {
+      font-family: var(--font-sans);
       font-size: 12px;
+      color: var(--text-main);
+      background: var(--input-bg);
+      border-radius: 10px;
+      border: 1px solid var(--input-border);
+      padding: 5px 8px;
       outline: none;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.9);
-      transition: border-color 0.14s ease, box-shadow 0.14s ease;
-    }
-
-    .input::placeholder,
-    .textarea::placeholder {
-      color: var(--input-placeholder);
-    }
-
-    select {
-      cursor: pointer;
-    }
-
-    .input-mono {
-      font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-    }
-
-    .textarea {
-      min-height: 60px;
-      resize: vertical;
-      line-height: 1.4;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
     }
 
     .input:focus,
-    .textarea:focus,
+    textarea:focus,
     select:focus {
-      border-color: var(--input-border-strong);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.15), 0 0 0 1px rgba(0,0,0,0.9);
+      border-color: var(--input-border-focus);
+      box-shadow: var(--input-shadow-focus);
+      background: #15182a;
     }
 
-    .input:disabled,
-    .textarea:disabled,
-    select:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+    }
+
+    .input-mono {
+      font-family: var(--font-mono);
+      font-size: 11px;
     }
 
     .tag-row {
-      font-size: 11px;
-      color: var(--text-dim);
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      margin-top: 2px;
-    }
-
-    .tag-row .tip {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .tag-row .count {
-      font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
       align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--text-softer);
       margin-top: 4px;
     }
 
-    .btn {
-      border-radius: 999px;
-      padding: 4px 10px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-      color: var(--text-main);
-      font-size: 11px;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      cursor: pointer;
+    .pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.8);
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+      border: 1px solid rgba(255,255,255,0.16);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-soft);
     }
 
-    .btn.small {
+    .pill.ok {
+      border-color: var(--ok-border);
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .pill.warn {
+      border-color: var(--warn-border);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .label-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
       padding: 3px 8px;
       font-size: 10px;
-    }
-
-    .btn-ghost {
-      background: rgba(255,255,255,0.02);
-      border-color: rgba(255,255,255,0.12);
-      box-shadow: none;
-    }
-
-    .btn-green,
-    .btn.green {
-      border-color: rgba(118,255,189,0.75);
-      background: linear-gradient(135deg, #4ddf9a, #76ffbd);
-      color: #02140e;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 14px 34px rgba(71,255,186,0.6);
-    }
-
-    .btn-danger,
-    .btn.btn-danger {
-      border-color: var(--danger-border);
-      background: linear-gradient(135deg, #ff4b6b, #ff8f9f);
-      color: #190307;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 14px 34px rgba(255,75,107,0.6);
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-
-    .btn span.hotkey {
-      opacity: 0.7;
-      font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
-      font-size: 10px;
-    }
-
-    .btn + .btn {
-      margin-left: 2px;
-    }
-
-    .status-line {
-      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(8,8,16,0.8);
       color: var(--text-soft);
-      margin-top: 4px;
     }
 
-    .status-line strong {
+    .label-pill.ok {
+      border-color: var(--ok-border);
+      background: var(--ok-soft);
+      color: var(--ok);
+    }
+
+    .label-pill.warn {
+      border-color: var(--warn-border);
+      background: var(--warn-soft);
+      color: var(--warn);
+    }
+
+    .label-pill.info {
+      border-color: rgba(119,167,255,0.45);
+      background: rgba(119,167,255,0.12);
+      color: #b6c9ff;
+    }
+
+    .label-pill.danger {
+      border-color: var(--danger-border);
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .chip.key {
+      background: var(--chip-bg-key);
+      border-color: var(--chip-border-key);
       color: var(--accent-muted);
     }
 
-    .preview-pane {
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255,255,255,0.12);
-      background: radial-gradient(circle at top, rgba(255,255,255,0.09), rgba(0,0,0,0.7));
-      padding: 8px;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.7);
-      min-height: 220px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .chip + .chip {
+      margin-left: 4px;
     }
 
     .card-preview {
-      background: radial-gradient(circle at top, #26273a, #080812 60%, #050509 100%);
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.18);
-      padding: 10px 10px 8px;
-      box-shadow: 0 18px 40px rgba(0,0,0,0.9);
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-preview::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
+      gap: 6px;
+      border-radius: 16px;
+      padding: 10px 11px;
       background:
-        radial-gradient(circle at 12% 0%, rgba(255,255,255,0.2), transparent 55%),
-        radial-gradient(circle at 100% 0%, rgba(255,255,255,0.12), transparent 50%);
-      opacity: 0.6;
-      mix-blend-mode: screen;
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 58%),
+        linear-gradient(145deg, #151726, #05060d);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9);
     }
 
     .card-preview-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 6px;
+      align-items: baseline;
+      gap: 8px;
     }
 
     .card-preview-header h2 {
+      font-size: 15px;
       margin: 0;
-      font-size: 14px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
     }
 
     .meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
       flex-wrap: wrap;
+      gap: 4px;
       font-size: 11px;
-    }
-
-    .meta-left,
-    .meta-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
+      color: var(--text-soft);
     }
 
     .card-preview-body {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr);
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
       gap: 8px;
-      align-items: flex-start;
+      align-items: stretch;
     }
 
     .card-preview-img {
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: radial-gradient(circle at top, rgba(255,255,255,0.12), rgba(0,0,0,0.85));
-      min-height: 120px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.4);
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-      font-size: 11px;
-      color: var(--text-soft);
-      text-align: center;
       padding: 6px;
+      font-size: 11px;
+      text-align: center;
+      color: var(--text-softer);
     }
 
     .card-preview-img img {
       max-width: 100%;
+      border-radius: 10px;
       display: block;
     }
 
@@ -781,34 +709,42 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
-      font-size: 11px;
-    }
-
-    .card-preview-footer {
-      font-size: 11px;
-      color: var(--text-soft);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
     }
 
     .notes-area {
-      border-radius: 8px;
-      border: 1px dashed rgba(255,255,255,0.18);
-      padding: 4px 6px;
-      min-height: 54px;
-      background: rgba(0,0,0,0.35);
+      border-radius: 10px;
+      padding: 6px 8px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 11px;
+      color: var(--text-main);
+      min-height: 52px;
       white-space: pre-wrap;
+    }
+
+    .card-preview-footer {
+      border-top: 1px dashed rgba(255,255,255,0.18);
+      padding-top: 6px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .card-preview-footer .chip {
+      margin-top: 2px;
+    }
+
+    .single-status {
+      font-size: 11px;
+      color: var(--text-softer);
+      margin-top: 4px;
     }
 
     .library-panel {
       margin-top: 8px;
-      border-radius: var(--radius-md);
+      border-radius: 12px;
+      padding: 8px;
+      background: rgba(0,0,0,0.5);
       border: 1px solid rgba(255,255,255,0.12);
-      background: radial-gradient(circle at top, rgba(255,255,255,0.06), rgba(0,0,0,0.9));
-      padding: 8px 8px 6px;
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -819,29 +755,46 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
+    }
+
+    .library-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .library-title {
       font-size: 11px;
-      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .library-count {
+      font-size: 10px;
+      color: var(--text-softer);
+    }
+
+    .library-search {
+      min-width: 180px;
     }
 
     .library-list {
       list-style: none;
       margin: 0;
       padding: 0;
-      max-height: 180px;
+      max-height: 240px;
       overflow: auto;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.7);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
+                  linear-gradient(160deg, rgba(5,5,12,0.95), rgba(4,4,10,0.98));
     }
 
     .library-item {
-      padding: 5px 7px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 5px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      transition: background 0.12s ease, transform 0.05s ease;
     }
 
     .library-item:last-child {
@@ -849,292 +802,282 @@
     }
 
     .library-item:hover {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255,255,255,0.05);
+      transform: translateY(-1px);
     }
 
     .library-item .header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 8px;
+      align-items: baseline;
+      gap: 6px;
     }
 
     .library-item .title {
       font-size: 12px;
-      font-weight: 500;
     }
 
     .library-item .chips {
-      display: inline-flex;
+      display: flex;
       flex-wrap: wrap;
-      gap: 4px;
-      justify-content: flex-end;
+      gap: 3px;
     }
 
     .library-item .sub {
-      font-size: 11px;
-      color: var(--text-soft);
+      font-size: 10px;
+      color: var(--text-softer);
+      margin-top: 2px;
     }
 
     .prints-row {
       display: flex;
+      flex-direction: column;
       gap: 6px;
+      margin-top: 6px;
+    }
+
+    .prints-controls {
+      display: grid;
+      grid-template-columns: 1.1fr 0.7fr auto;
+      gap: 6px;
+    }
+
+    .prints-actions {
+      display: flex;
       flex-wrap: wrap;
+      gap: 6px;
       align-items: center;
-      margin-top: 4px;
-      font-size: 11px;
+      font-size: 10px;
+      color: var(--text-softer);
     }
 
     .prints-list {
       list-style: none;
       margin: 0;
-      padding: 0;
-      max-height: 90px;
-      overflow: auto;
-      border-radius: 8px;
-      border: 1px dashed rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.6);
+      padding: 4px 6px 4px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
       font-size: 11px;
+      max-height: 100px;
+      overflow: auto;
     }
 
     .prints-list li {
-      padding: 4px 6px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 2px 0;
       cursor: pointer;
     }
 
-    .prints-list li:last-child {
+    .prints-list li:hover {
+      text-decoration: line-through;
+      color: var(--danger);
+    }
+
+    .bulk-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .bulk-editor {
+      min-height: 280px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .bulk-status {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    .bulk-preview {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(0,0,0,0.52);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 7px 8px;
+      max-height: 260px;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    .precon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .precon-card {
+      border-radius: 14px;
+      padding: 9px 10px 10px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 58%),
+        linear-gradient(155deg, rgba(5,5,12,0.96), rgba(5,6,16,0.98));
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .precon-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .precon-title {
+      font-size: 13px;
+    }
+
+    .precon-meta {
+      font-size: 10px;
+      color: var(--text-softer);
+    }
+
+    .precon-list {
+      list-style: none;
+      margin: 4px 0 0;
+      padding: 0;
+      max-height: 150px;
+      overflow: auto;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.46);
+      font-size: 11px;
+    }
+
+    .precon-list li {
+      padding: 2px 7px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .precon-list li:last-child {
       border-bottom: none;
     }
 
-    .prints-list li:hover {
-      background: rgba(255,255,255,0.06);
+    .precon-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 10px;
+      color: var(--text-softer);
     }
 
-    .prints-controls {
+    .precon-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      opacity: 0.85;
+    }
+
+    .precon-badges {
       display: flex;
       flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .precon-controls {
+      display: flex;
+      align-items: center;
       gap: 6px;
-      align-items: flex-end;
       margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    .precon-controls select,
+    .precon-controls input {
+      font-size: 11px;
+      height: 24px;
+    }
+
+    .precon-controls input[type="number"] {
+      width: 52px;
     }
 
     .help-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 10px;
-      align-items: flex-start;
-    }
-
-    .help-section {
-      font-size: 12px;
-      color: var(--text-soft);
-      line-height: 1.4;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
     }
 
     .help-section h3 {
-      margin: 0;
-      font-size: 13px;
-      letter-spacing: 0.08em;
+      font-size: 12px;
       text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin: 6px 0 4px;
     }
 
-    .help-section pre {
-      margin: 0;
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid rgba(255,255,255,0.18);
+    .help-section p {
       font-size: 11px;
-      color: var(--text-main);
-      overflow-x: auto;
-      white-space: pre;
+      color: var(--text-soft);
+      margin: 4px 0;
+    }
+
+    .help-section ul {
+      margin: 4px 0;
+      padding-left: 18px;
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .help-section li + li {
+      margin-top: 2px;
     }
 
     .help-note {
+      border-radius: 10px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.48);
+      padding: 6px 8px;
       font-size: 11px;
       color: var(--text-soft);
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px dashed rgba(255,255,255,0.14);
+      margin-top: 6px;
     }
 
     .help-note strong {
       color: var(--accent-muted);
     }
 
-    .precon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .precon-card {
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: radial-gradient(circle at top, rgba(255,255,255,0.08), rgba(0,0,0,0.9));
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-    }
-
-    .precon-card h3 {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin: 0;
-      font-size: 13px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .precon-card ul {
-      margin: 0;
-      padding-left: 18px;
+    .help-section code {
+      font-family: var(--font-mono);
       font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .precon-card li {
-      margin: 1px 0;
-    }
-
-    .suggestion-box {
-      margin-top: 8px;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.7);
-      border: 1px dashed rgba(255,255,255,0.16);
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .suggestion-box h4 {
-      margin: 0 0 4px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .suggestion-box ol {
-      margin: 0;
-      padding-left: 18px;
-    }
-
-    .suggestion-box li {
-      margin: 2px 0;
-    }
-
-    .meta-line {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .meta-line code {
-      font-family: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      background: rgba(0,0,0,0.8);
-      padding: 2px 4px;
-      border-radius: 4px;
-      border: 1px solid rgba(255,255,255,0.16);
-    }
-
-    .meta-line .pill {
-      font-size: 10px;
-    }
-
-    .scroll-y {
-      max-height: 240px;
-      overflow-y: auto;
-    }
-
-    .scroll-y::-webkit-scrollbar,
-    .library-list::-webkit-scrollbar,
-    .prints-list::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .scroll-y::-webkit-scrollbar-track,
-    .library-list::-webkit-scrollbar-track,
-    .prints-list::-webkit-scrollbar-track {
-      background: var(--scroll-track);
+      background: rgba(255,255,255,0.08);
+      padding: 1px 5px;
       border-radius: 999px;
     }
 
-    .scroll-y::-webkit-scrollbar-thumb,
-    .library-list::-webkit-scrollbar-thumb,
-    .prints-list::-webkit-scrollbar-thumb {
-      background: var(--scroll-thumb);
-      border-radius: 999px;
+    .help-section pre {
+      background: rgba(0,0,0,0.65);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 6px 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      white-space: pre;
+      overflow: auto;
+      max-height: 260px;
     }
 
-    .scroll-y::-webkit-scrollbar-thumb:hover,
-    .library-list::-webkit-scrollbar-thumb:hover,
-    .prints-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(255,255,255,0.2);
-    }
-
-    @media (max-width: 1024px) {
-      .app-main-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .form-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .card-preview-body {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .help-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .panel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .panel-actions {
-        align-self: stretch;
-        justify-content: flex-start;
-      }
-
-      .nav-row {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .nav-pill-group {
-        width: 100%;
-        justify-content: space-between;
-      }
+    .help-section pre code {
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
     }
 
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(2,2,6,0.8);
+      background: radial-gradient(circle at top, rgba(0,0,0,0.9), rgba(0,0,0,0.92));
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 30;
+      z-index: 40;
     }
 
     .modal-backdrop.active {
@@ -1142,20 +1085,27 @@
     }
 
     .modal {
-      background: radial-gradient(circle at top, #202238, #050509 70%);
-      border-radius: 14px;
-      padding: 10px 12px 10px;
-      border: 1px solid rgba(255,255,255,0.26);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.95);
-      max-width: 360px;
-      width: 100%;
-      color: var(--text-main);
+      width: min(360px, 92vw);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%),
+                  linear-gradient(145deg, #141726, #070814);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.95);
+      padding: 12px 14px 10px;
+      transform: translateY(6px);
+      opacity: 0;
+      transition: all 0.18s ease-out;
+    }
+
+    .modal-backdrop.active .modal {
+      transform: translateY(0);
+      opacity: 1;
     }
 
     .modal-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 8px;
       margin-bottom: 6px;
     }
@@ -1163,14 +1113,14 @@
     .modal-header h3 {
       margin: 0;
       font-size: 13px;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
     }
 
     .modal-body {
       font-size: 12px;
       color: var(--text-soft);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .modal-footer {
@@ -1178,80 +1128,109 @@
       justify-content: flex-end;
       gap: 6px;
     }
+
+    @media (max-width: 980px) {
+      .form-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .bulk-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-header-main {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .app-actions {
+        justify-content: flex-start;
+      }
+      .library-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .library-search {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div class="badge-row">
-        <div class="logo-pill-main">
-          <span>DRIVE TCG</span>
-          <span>Admin Toolkit</span>
-        </div>
-        <div class="logo-pill-subtitle">
-          Editing <code>drive-card.json</code> and <code>drive-precons.json</code> directly in your browser.
-        </div>
-      </div>
-
-      <div class="nav-row">
-        <div class="nav-pill-group">
-          <button id="navSingleBtn" class="nav-pill active">
-            <span class="bullet"></span>
-            Single Card
-          </button>
-          <button id="navBulkBtn" class="nav-pill">
-            <span class="bullet"></span>
-            Bulk Import
-          </button>
-          <button id="navPreconsBtn" class="nav-pill">
-            <span class="bullet"></span>
-            Precons
-          </button>
-          <button id="navHelpBtn" class="nav-pill">
-            <span class="bullet"></span>
-            Help
-          </button>
+      <div class="app-header-main">
+        <div class="app-title-block">
+          <div class="logo-row">
+            <div class="drive-pill">
+              <span>Drive TCG</span>
+              <strong>Admin</strong>
+            </div>
+          </div>
+          <div class="app-title">
+            <div class="app-title-main">Admin Toolkit</div>
+            <div class="app-subtitle">
+              Editing <strong>drive-card.json</strong> and <strong>drive-precons.json</strong> directly in your browser.
+            </div>
+          </div>
         </div>
 
-        <div class="meta-pills">
-          <span class="pill">
-            <span class="dot"></span>
-            <span>Single-file JSON · No server</span>
-          </span>
-          <span class="pill key">
-            <span class="dot"></span>
-            <span>Changes are live in memory</span>
-          </span>
-          <button id="downloadCardsJsonBtn" class="btn small btn-green" type="button">
-            <span>Export Card JSON</span>
-          </button>
-          <button id="downloadPreconsJsonBtn" class="btn small btn-ghost" type="button">
-            <span>Export Precon JSON</span>
-          </button>
+        <div class="app-meta">
+          <div class="meta-pills">
+            <div class="pill">
+              <span class="pill-dot"></span>
+              <span>Single-file JSON · No server</span>
+            </div>
+            <div class="pill pill-ok">
+              <span>Changes are live in memory</span>
+            </div>
+            <div class="pill pill-warn">
+              <span>Use <strong>Export JSON</strong> to save your edits</span>
+            </div>
+          </div>
+          <div class="app-actions">
+            <button id="downloadCardsJsonBtn" class="btn secondary small">
+              Export Card JSON
+            </button>
+            <button id="downloadPreconsJsonBtn" class="btn secondary small">
+              Export Precon JSON
+            </button>
+          </div>
         </div>
       </div>
     </header>
 
-    <main class="app-main-grid">
-      <section class="panel panel-main">
+    <main class="app-main">
+      <section class="panel panel-subtle">
         <header class="panel-header">
           <div class="panel-header-main">
             <div class="panel-title">
-              <span>Card &amp; Deck Editor</span>
-              <span class="panel-title-pill">Workspace</span>
+              <span>Workspace</span>
+              <span class="panel-title-pill">Card &amp; Deck Editor</span>
             </div>
             <div class="panel-subtitle">
-              Use the tabs to switch between
-              <strong>Single Card</strong>,
-              <strong>Bulk Import</strong>, and
-              <strong>Precon Decks</strong>.
+              Use the tabs to switch between <strong>Single Card</strong>, <strong>Bulk Import</strong>, and <strong>Precon Decks</strong>.
             </div>
           </div>
           <div class="panel-actions">
-            <span class="label-pill ok">
-              <span class="badge-dot"></span>
-              <span>Json-backed</span>
-            </span>
+            <nav class="nav-tabs">
+              <button id="navSingleBtn" class="nav-tab active">
+                <span class="bullet"></span>
+                Single Card
+              </button>
+              <button id="navBulkBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Bulk Import
+              </button>
+              <button id="navPreconsBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Precons
+              </button>
+              <button id="navHelpBtn" class="nav-tab">
+                <span class="bullet"></span>
+                Help
+              </button>
+            </nav>
           </div>
         </header>
 
@@ -1275,22 +1254,19 @@
                 <div class="field-grid">
                   <div class="field">
                     <label class="field-label">
-                      <span>Card Name</span>
-                      <span class="hint">Required</span>
+                      <span class="field-required">Card Name</span>
+                      <span class="hint">e.g. LUCKY CHARM, JUNKYARD DOG</span>
                     </label>
-                    <input id="cardNameInput" class="input" type="text" placeholder="e.g. Lucky Charm, Junkyard Dog" />
-                    <div class="tag-row">
-                      <span class="tip">Use clear, punchy names. This is what players will remember.</span>
-                    </div>
+                    <input id="cardNameInput" class="input" type="text" placeholder="e.g. LUCKY CHARM, JUNKYARD DOG" />
                   </div>
 
                   <div class="field">
                     <label class="field-label">
-                      <span>Card Type</span>
+                      <span class="field-required">Type</span>
                       <span class="hint">Crew / Driver / Mod / Vehicle / Track / Condition</span>
                     </label>
                     <select id="cardTypeInput" class="input">
-                      <option value="">Select Type…</option>
+                      <option value="">Select a type…</option>
                       <option value="Crew">Crew</option>
                       <option value="Driver">Driver</option>
                       <option value="Named Driver">Named Driver</option>
@@ -1299,23 +1275,21 @@
                       <option value="Named Vehicle">Named Vehicle</option>
                       <option value="Track">Track</option>
                       <option value="Condition">Condition</option>
+                      <option value="Misc">Misc</option>
                     </select>
                   </div>
 
                   <div class="field">
                     <label class="field-label">
-                      <span>Set Name</span>
+                      <span class="field-required">Set Name</span>
                       <span class="hint">Displayed set, e.g. Set 1, Set 2, etc.</span>
                     </label>
                     <input id="cardSetNameInput" class="input input-mono" type="text" placeholder="e.g. Set 1, Set 2, Father's Day" />
-                    <div class="tag-row">
-                      <span class="tip">Used for display and quick grouping by set.</span>
-                    </div>
                   </div>
 
                   <div class="field">
                     <label class="field-label">
-                      <span>Card Number</span>
+                      <span class="field-required">Card Number</span>
                       <span class="hint">Numeric or alphanumeric</span>
                     </label>
                     <input id="cardNumberInput" class="input input-mono" type="text" placeholder="e.g. 001, 02, FD-03" />
@@ -1334,18 +1308,15 @@
                       <span>Image URL</span>
                       <span class="hint">Path or URL to art</span>
                     </label>
-                    <input id="cardImageUrlInput" class="input input-mono" type="text" placeholder="e.g. ./img/cards/lucky_charm.png" />
+                    <input id="cardImageUrlInput" class="input input-mono" type="text" placeholder="e.g. /img/cards/lucky_charm.png" />
                   </div>
 
-                  <div class="field">
+                  <div class="field" data-for-types="Vehicle,Named Vehicle">
                     <label class="field-label">
                       <span>Vehicle Types</span>
-                      <span class="hint">Comma-separated: Drag, Drift, Off-road, Rally</span>
+                      <span class="hint">Comma-separated: Drag, Drift, Off-Road, Rally</span>
                     </label>
                     <input id="cardVehicleTypesInput" class="input input-mono" type="text" placeholder="e.g. Drag, Drift" />
-                    <div class="tag-row">
-                      <span class="tip">Used to filter vehicles and synergy for Tracks/Conditions.</span>
-                    </div>
                   </div>
 
                   <div class="field">
@@ -1354,40 +1325,14 @@
                       <span class="hint">Comma-separated keywords</span>
                     </label>
                     <input id="cardTagsInput" class="input input-mono" type="text" placeholder="e.g. Junkyard, Sponsor, Holiday" />
-                    <div class="tag-row">
-                      <span class="tip">Searchable tags for deckbuilding and referencing.</span>
-                    </div>
                   </div>
-                </div>
 
-                <div class="field-grid" style="margin-top: 6px;">
                   <div class="field" data-for-types="Mod">
                     <label class="field-label">
                       <span>Mod Base Part</span>
-                      <span class="hint">Mod-only</span>
+                      <span class="hint">Used to filter vehicles and synergy for Tracks/Conditions.</span>
                     </label>
                     <input id="modBasePartInput" class="input input-mono" type="text" placeholder="Headers, Engine, Brakes" />
-                    <div class="field-grid" style="margin-top: 4px; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 4px;">
-                      <div class="field">
-                        <label class="field-label"><span>Lvl 1</span></label>
-                        <input id="modL1Input" class="input input-mono" type="text" placeholder="e.g. 2/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>Lvl 2</span></label>
-                        <input id="modL2Input" class="input input-mono" type="text" placeholder="e.g. 3/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>Lvl 3</span></label>
-                        <input id="modL3Input" class="input input-mono" type="text" placeholder="e.g. 4/3" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>Lvl 4</span></label>
-                        <input id="modL4Input" class="input input-mono" type="text" placeholder="e.g. 5/3" />
-                      </div>
-                    </div>
-                    <div class="tag-row">
-                      <span class="tip">Enter Level stats as HP/CON (e.g. 2/2). Empty levels are ignored.</span>
-                    </div>
                   </div>
 
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
@@ -1395,7 +1340,7 @@
                       <span>Vehicle Stats</span>
                       <span class="hint">Vehicle-only</span>
                     </label>
-                    <div class="field-grid" style="grid-template-columns: minmax(0,1.2fr) minmax(0,0.8fr); gap: 4px;">
+                    <div class="field-grid">
                       <div class="field">
                         <label class="field-label">
                           <span>HP / CON</span>
@@ -1417,167 +1362,168 @@
                   </div>
                 </div>
 
-                <div class="field" style="margin-top: 6px;">
+                <div class="field">
                   <label class="field-label">
                     <span>Card Notes / Rules Text</span>
                     <span class="hint">Use full rules text; preview appears on the right.</span>
                   </label>
-                  <textarea id="cardNotesInput" class="textarea" placeholder="Enter the card's full rules text, flavor, or reminder text here."></textarea>
+                  <textarea id="cardNotesInput" class="input input-mono" placeholder="Enter the card's full rules text, flavor, or reminder text"></textarea>
                 </div>
 
-                <div class="btn-row">
-                  <button id="singleSaveBtn" class="btn btn-green" type="button">
-                    <span>Save / Update Card</span>
-                    <span class="hotkey">Ctrl+S</span>
-                  </button>
-                  <button id="singleNewBtn" class="btn btn-ghost small" type="button">
-                    <span>New Card</span>
-                  </button>
-                  <button id="singleDeleteBtn" class="btn btn-danger small" type="button">
-                    <span>Delete Card</span>
-                  </button>
-                  <button id="downloadCardsJsonBtn_single" class="btn small" type="button">
-                    <span>Export Card JSON</span>
-                  </button>
+                <div class="field-card-footer">
+                  <div class="tag-row">
+                    <span class="hint">ID is auto-assigned for new cards. For existing cards, the ID is used to match updates.</span>
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center;">
+                    <input id="cardIdInput" class="input input-mono" type="text" placeholder="(auto)" style="max-width: 180px;" />
+                    <button id="singleSaveBtn" class="btn primary small" type="button">Save / Update Card</button>
+                    <button id="singleNewBtn" class="btn small btn-ghost" type="button">New Card</button>
+                    <button id="singleDeleteBtn" class="btn small btn-danger" type="button">Delete Card</button>
+                  </div>
                 </div>
 
-                <div class="status-line" id="singleStatus">
-                  Ready.
-                </div>
+                <div class="single-status" id="singleStatus">Ready.</div>
               </div>
 
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Live Preview</div>
+                    <div class="field-card-title">Live Preview &amp; Prints</div>
                     <div class="field-card-subtitle">
-                      A simple on-admin preview of the currently edited card.
+                      Shows a structured view of the card plus all associated prints.
                     </div>
                   </div>
                 </div>
 
-                <div class="preview-pane">
-                  <div id="singlePreview"></div>
+                <div id="singlePreview" class="card-preview">
+                  <!-- Filled by JS -->
+                </div>
+
+                <div class="prints-row">
+                  <div class="prints-controls">
+                    <select id="printSetSelect" class="input input-mono">
+                      <option value="">Select a set…</option>
+                      <option value="Set 1">Set 1</option>
+                      <option value="Set 2">Set 2</option>
+                      <option value="Set 3">Set 3</option>
+                      <option value="Set 4">Set 4</option>
+                      <option value="Set 5">Set 5</option>
+                      <option value="Set 6">Set 6</option>
+                      <option value="CUSTOM">Custom…</option>
+                    </select>
+                    <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name" />
+                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="# number" />
+                  </div>
+
+                  <div class="prints-actions">
+                    <button id="printSetPrimaryBtn" class="btn small" type="button">Set Last As Primary ★</button>
+                    <button id="printClearAllBtn" class="btn small btn-ghost" type="button">Clear Prints</button>
+                    <span class="hint">Click a print in the list below to remove it.</span>
+                  </div>
+
+                  <ul id="printsList" class="prints-list"></ul>
                 </div>
 
                 <div class="library-panel">
                   <div class="library-header">
-                    <span>Card Library</span>
-                    <span id="libraryCount" class="count-pill">0 cards</span>
-                  </div>
-                  <div class="field-grid">
-                    <div class="field">
-                      <label class="field-label">
-                        <span>Search Library</span>
-                      </label>
-                      <input id="cardLibrarySearchInput" class="input input-mono" type="text" placeholder="Filter by name, type, or tag…" />
+                    <div class="library-header-left">
+                      <div class="library-title">Card Library</div>
+                      <div id="libraryCount" class="library-count">0 cards</div>
                     </div>
-                    <div class="field">
-                      <label class="field-label">
-                        <span>Print Controls</span>
-                      </label>
-                      <div class="prints-controls">
-                        <select id="printSetSelect" class="input input-mono" style="flex: 1 1 auto;">
-                          <option value="">Set from Card</option>
-                          <option value="SET 1">SET 1</option>
-                          <option value="SET 2">SET 2</option>
-                          <option value="Father's Day">Father's Day</option>
-                          <option value="CUSTOM">Custom…</option>
-                        </select>
-                        <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name…" />
-                        <input id="printCardNumberInput" class="input input-mono" type="text" style="width:80px;" placeholder="#" />
-                        <button id="printSetPrimaryBtn" class="btn btn-ghost small" type="button">Set Primary</button>
-                        <button id="printClearAllBtn" class="btn btn-ghost small" type="button">Clear Prints</button>
-                      </div>
-                    </div>
+                    <input id="cardLibrarySearchInput" class="input input-mono library-search" type="text" placeholder="Filter by name, type, or tags…" />
                   </div>
+                  <ul id="cardLibraryList" class="library-list"></ul>
+                </div>
 
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Prints for this Card</span>
-                      <span class="hint">Click a print to remove it</span>
-                    </label>
-                    <ul id="printsList" class="prints-list"></ul>
+                <div class="field-card-footer">
+                  <div class="tag-row">
+                    <span class="hint">Use the library to quickly locate cards to edit.</span>
                   </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Library</span>
-                      <span class="hint">Click a card to load it into the editor</span>
-                    </label>
-                    <ul id="cardLibraryList" class="library-list"></ul>
-                  </div>
+                  <button id="downloadCardsJsonBtn_single" class="btn secondary small" type="button">
+                    Export Card JSON
+                  </button>
                 </div>
               </div>
             </div>
           </section>
 
           <section id="bulkSection" class="section">
-            <div class="field-card">
-              <div class="field-card-label">
-                <div>
-                  <div class="field-card-title">Bulk Import</div>
-                  <div class="field-card-subtitle">
-                    Paste TSV / CSV / text data to import multiple cards at once.
+            <div class="bulk-layout">
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Bulk Text Import</div>
+                    <div class="field-card-subtitle">
+                      Paste CSV/TSV here to create or update multiple cards at once.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Header-aware</span>
                   </div>
                 </div>
-                <div class="badge">
-                  <span class="badge-dot"></span>
-                  <span>Parsing Tools</span>
-                </div>
-              </div>
-
-              <div class="field">
-                <label class="field-label">
-                  <span>Raw Bulk Data</span>
-                  <span class="hint">TSV / CSV / pipe-separated</span>
-                </label>
-                <textarea id="bulkInput" class="textarea" placeholder="Paste TSV/CSV here…"></textarea>
-              </div>
-
-              <div class="field-grid">
-                <div class="field">
-                  <label class="field-label">
-                    <span>Delimiter</span>
-                  </label>
-                  <select id="bulkDelimiterSelect" class="input input-mono">
-                    <option value="auto">Auto-detect</option>
-                    <option value="tab">Tab</option>
-                    <option value="comma">Comma (,)</option>
-                    <option value="semicolon">Semicolon (;)</option>
-                    <option value="pipe">Pipe (|)</option>
-                  </select>
-                </div>
 
                 <div class="field">
                   <label class="field-label">
-                    <span>Header Row</span>
+                    <span>Raw Data</span>
+                    <span class="hint">Each line is one card; first row can be a header.</span>
                   </label>
-                  <div class="tag-row">
-                    <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-soft);">
-                      <input id="bulkHasHeaderCheckbox" type="checkbox" checked style="accent-color:#ff6b3a;" />
-                      <span>First row contains column headers</span>
+                  <textarea id="bulkInput" class="input bulk-editor" placeholder="Paste CSV/TSV data here..."></textarea>
+                </div>
+
+                <div class="field-grid" style="margin-top: 6px;">
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Delimiter</span>
                     </label>
+                    <select id="bulkDelimiterSelect" class="input input-mono">
+                      <option value="auto">Auto-detect</option>
+                      <option value="comma">Comma (,)</option>
+                      <option value="tab">Tab (↹)</option>
+                      <option value="semicolon">Semicolon (;)</option>
+                      <option value="pipe">Pipe (|)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Header &amp; Mapping</span>
+                    </label>
+                    <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-soft);">
+                      <label>
+                        <input id="bulkHasHeaderCheckbox" type="checkbox" checked />
+                        <span>First row is header</span>
+                      </label>
+                      <span class="label-pill info">Column names are loosely matched (case &amp; spacing ignored).</span>
+                    </div>
                   </div>
                 </div>
+
+                <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+                  <button id="bulkParseBtn" class="btn primary small" type="button">
+                    Parse Text
+                  </button>
+                  <button id="bulkImportBtn" class="btn secondary small" type="button">
+                    Import Parsed Cards
+                  </button>
+                </div>
+                <div id="bulkStatus" class="bulk-status">Waiting for data…</div>
               </div>
 
-              <div class="btn-row">
-                <button id="bulkParseBtn" class="btn small" type="button">
-                  <span>Parse Text</span>
-                </button>
-                <button id="bulkImportBtn" class="btn small btn-green" type="button">
-                  <span>Import Parsed Cards</span>
-                </button>
-              </div>
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Bulk Preview</div>
+                    <div class="field-card-subtitle">
+                      Shows a summary of parsed rows before they are merged into the library.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Non-destructive</span>
+                  </div>
+                </div>
 
-              <div class="field" style="margin-top: 6px;">
-                <label class="field-label">
-                  <span>Preview</span>
-                  <span class="hint">First 20 lines</span>
-                </label>
-                <pre id="bulkPreview" class="textarea" style="min-height: 120px;"></pre>
-                <div id="bulkStatus" class="status-line">No data parsed yet.</div>
+                <pre id="bulkPreview" class="bulk-preview"></pre>
               </div>
             </div>
           </section>
@@ -1591,21 +1537,21 @@
                     Read-only view of <code>drive-precons.json</code>. Use your editor for heavy changes, or export to update.
                   </div>
                 </div>
-                <span class="pill">
-                  <span class="dot"></span>
+                <div class="badge">
+                  <span class="badge-dot"></span>
                   <span>JSON-backed</span>
-                </span>
+                </div>
               </div>
 
-              <div class="field">
-                <div id="preconsStatus" class="status-line">Loading precons…</div>
-              </div>
-
+              <p id="preconsStatus" style="font-size:11px;color:var(--text-soft);margin:0 0 4px;">Loading precons…</p>
               <div id="preconGrid" class="precon-grid"></div>
 
-              <div class="btn-row" style="margin-top: 8px;">
-                <button id="downloadPreconsJsonBtn" class="btn small" type="button">
-                  <span>Export Precon JSON</span>
+              <div class="field-card-footer">
+                <div class="tag-row">
+                  <span class="hint">Precons display counts and card names resolved from the current card library.</span>
+                </div>
+                <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">
+                  Export Precon JSON
                 </button>
               </div>
             </div>
@@ -1627,27 +1573,54 @@
                   </div>
                 </div>
                 <div class="help-section">
-                  <h3>Editing Workflow</h3>
+                  <h3>Single Card Editor</h3>
                   <p>
-                    The admin loads the card and precon files into memory. You can edit them freely here without touching the
-                    files on disk until you click one of the <strong>Export JSON</strong> buttons.
+                    The Single Card tab lets you edit one card at a time. The preview on the right updates as you type.
                   </p>
                   <ul>
-                    <li><strong>Single Card</strong> updates or creates individual cards in the in-memory library.</li>
-                    <li><strong>Bulk Import</strong> parses pasted text and turns rows into cards.</li>
-                    <li><strong>Precons</strong> gives you a quick read-only summary of preconstructed decks.</li>
+                    <li><strong>Save / Update Card</strong> will add or update the card in the in-memory library.</li>
+                    <li><strong>New Card</strong> clears the form so you can create a fresh entry.</li>
+                    <li><strong>Delete Card</strong> removes the selected card from the library.</li>
                   </ul>
                   <p>
-                    When you are satisfied with changes, click <strong>Export Card JSON</strong> and
-                    <strong>Export Precon JSON</strong> to download fresh copies of
-                    <code>drive-card.json</code> and <code>drive-precons.json</code>.
-                    Commit those back into your repo.
+                    Use the <strong>Card Library</strong> list below the editor to filter and select existing cards.
+                    Click any card to load it into the editor for changes.
                   </p>
 
-                  <div class="help-note">
-                    <strong>Tip:</strong>
-                    This tool does not talk to a server. Everything happens in your browser, backed by localStorage and JSON files.
-                  </div>
+                  <h3>Bulk Import</h3>
+                  <p>
+                    The Bulk tab supports pasting CSV/TSV-like data. It respects headers loosely (ignoring case, spacing, etc.).
+                  </p>
+                  <p>
+                    Basic example:
+                  </p>
+                  <pre><code>Name,Type,Set,CardNumber,Rarity,VehicleType,Tags,ImageUrl,Notes
+LUCKY CHARM,Crew,Set 1,001,Common,,Charm,/img/cards/lucky_charm.png,Basic starter charm
+DRAG RACING ENTHUSIAST,Driver,Set 1,056,Rare,Drag,"Sponsor, Holiday",/img/cards/drag_racing_enthusiast.png,Special seasonal driver</code></pre>
+
+                  <p>
+                    When you click <strong>Parse Text</strong>, the admin:
+                  </p>
+                  <ul>
+                    <li>Auto-detects delimiter (tab, comma, semicolon, or pipe) unless explicitly specified.</li>
+                    <li>Maps header columns like <code>Name</code>, <code>Type</code>, <code>Set</code>, and so on.</li>
+                    <li>Converts each row into a normalized card object.</li>
+                    <li>Shows a preview so you can confirm before importing.</li>
+                  </ul>
+
+                  <h3>Precons</h3>
+                  <p>
+                    The Precons tab shows a summary of each preconstructed deck defined in <code>drive-precons.json</code>.
+                    Each deck displays:
+                  </p>
+                  <ul>
+                    <li>Deck name and description.</li>
+                    <li>List of card IDs plus counts, resolved against the current card library when possible.</li>
+                  </ul>
+                  <p>
+                    Use your code editor to change the JSON, then refresh this page, or export a new JSON from here using the
+                    <strong>Export Precon JSON</strong> button.
+                  </p>
                 </div>
               </div>
 
@@ -1659,41 +1632,36 @@
                       Reference for the shape of <code>drive-card.json</code> and <code>drive-precons.json</code>.
                     </div>
                   </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>For reference only</span>
-                  </div>
+                  <div class="label-pill info">Kept in sync with the admin logic.</div>
                 </div>
-                <div class="help-section scroll-y">
-                  <h3><code>drive-card.json</code></h3>
-                  <p>A simplified example of a card entry (actual file is an array of these):</p>
+                <div class="help-section">
+                  <h3>Card JSON</h3>
                   <pre><code>[
   {
-    "id": "card_lucky_charm",
-    "name": "LUCKY CHARM, JUNKYARD DOG",
+    "id": "card_xxx",
+    "name": "LUCKY CHARM",
     "type": "Crew",
     "setName": "Set 1",
-    "cardNumber": "01-056",
+    "cardNumber": "001",
     "rarity": "Common",
-    "vehicleTypes": ["Drag", "Drift"],
-    "tags": ["Junkyard", "Sponsor", "Holiday"],
-    "imageUrl": "./img/cards/lucky_charm.png",
-    "notes": "Full rules text here...",
+    "vehicleTypes": [],
+    "tags": ["Charm"],
+    "imageUrl": "/img/cards/lucky_charm.png",
+    "notes": "Rules text goes here.",
     "extra": {
-      "modBasePart": "",
-      "modLevel1": "",
-      "hp": 2,
-      "con": 2,
-      "pitCost": 1
+      "modBasePart": "Headers",
+      "modLevel1": "1/2",
+      "modLevel2": "2/2",
+      "modLevel3": "3/3",
+      "modLevel4": "5/3"
     },
     "prints": [
-      { "setName": "SET 1", "cardNumber": "01-056", "isPrimary": true }
+      { "setId": "Set 1", "cardNumber": "001" }
     ]
   }
 ]</code></pre>
 
-                  <h3><code>drive-precons.json</code></h3>
-                  <p>Each preconstructed deck references cards by ID:</p>
+                  <h3>Precon JSON</h3>
                   <pre><code>[
   {
     "id": "precon_junkyard_intro",
@@ -1713,40 +1681,34 @@
                   </div>
                 </div>
               </div>
+
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Local Backup &amp; Tools</div>
+                    <div class="field-card-subtitle">
+                      The admin will try to load <code>drive-card.json</code> and <code>drive-precons.json</code>, and fall back to <code>localStorage</code> backups if needed.
+                    </div>
+                  </div>
+                  <div class="label-pill ok">Auto-load from JSON when possible</div>
+                </div>
+                <div class="help-section">
+                  <div class="help-note">
+                    <strong>Workflow suggestion:</strong>
+                    <ol style="margin:4px 0 0;padding-left:18px;font-size:11px;">
+                      <li>Open this admin and let it load <code>drive-card.json</code> and <code>drive-precons.json</code>.</li>
+                      <li>Use <strong>Single</strong> and <strong>Bulk</strong> tabs to edit or create cards.</li>
+                      <li>Check precons under <strong>Precons</strong> to verify deck contents are correct.</li>
+                      <li>Click <strong>Export Card JSON</strong> and <strong>Export Precon JSON</strong> to download updated files.</li>
+                      <li>Replace the JSON files in your repo with the exported ones and commit.</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
             </div>
-          <div class="panel panel-subtle">
-        <header class="panel-header">
-          <div class="panel-header-main">
-            <div class="panel-title">
-              <span>Local Backup &amp; Tools</span>
-              <span class="panel-title-pill">Safe Editing</span>
-            </div>
-            <div class="panel-subtitle">
-              The admin will try to load <strong>drive-card.json</strong> &amp; <strong>drive-precons.json</strong>, and fall back to
-              <strong>localStorage</strong> backups if needed.
-            </div>
-          </div>
-          <div class="panel-actions">
-            <span class="label-pill ok">Auto-load from JSON when possible</span>
-          </div>
-        </header>
-        <div class="panel-body">
-          <div class="help-note">
-            <strong>Workflow suggestion:</strong>
-            <ol style="margin:4px 0 0;padding-left:18px;font-size:11px;">
-              <li>Open this admin and let it load <code>drive-card.json</code> and <code>drive-precons.json</code>.</li>
-              <li>Use <strong>Single</strong> and <strong>Bulk</strong> tabs to edit or create cards.</li>
-              <li>Check precons under <strong>Precons</strong> to verify deck contents are correct.</li>
-              <li>Click <strong>Export Card JSON</strong> and <strong>Export Precon JSON</strong> to download updated files.</li>
-              <li>Replace the JSON files in your repo with the exported ones and commit.</li>
-            </ol>
-          </div>
-        </div>
-      </div></section>
+          </section>
         </div>
       </section>
-
-      
     </main>
   </div>
 
