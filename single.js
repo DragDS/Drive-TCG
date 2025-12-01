@@ -313,4 +313,494 @@ function renderSinglePreview() {
   notesDiv.textContent = card.notes || "Card notes and rules text will appear here.";
   textWrap.appendChild(notesDiv);
 
-  body.appe
+  body.appendChild(imgWrap);
+  body.appendChild(textWrap);
+
+  const footer = document.createElement("div");
+  footer.className = "card-preview-footer";
+  const printsInfo = document.createElement("div");
+  printsInfo.className = "meta-row";
+  const printsLabel = document.createElement("span");
+  printsLabel.textContent = "Prints:";
+  printsInfo.appendChild(printsLabel);
+
+  if (prints.length) {
+    prints.forEach(p => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      const primaryMark = p.isPrimary ? "★ " : "";
+      chip.textContent = `${primaryMark}${p.setName || p.setId || "SET ?"} #${p.cardNumber || "###"}`;
+      printsInfo.appendChild(chip);
+    });
+  } else {
+    const noneSpan = document.createElement("span");
+    noneSpan.className = "chip";
+    noneSpan.textContent = "No prints defined yet.";
+    printsInfo.appendChild(noneSpan);
+  }
+
+  footer.appendChild(printsInfo);
+
+  frame.appendChild(header);
+  frame.appendChild(metaLine);
+  frame.appendChild(body);
+  frame.appendChild(footer);
+
+  container.appendChild(frame);
+}
+
+function renderCardLibraryList() {
+  if (!Dom.cardLibraryList || !Dom.cardLibrarySearchInput || !Dom.libraryCount) return;
+
+  const list = Dom.cardLibraryList;
+  const search = (Dom.cardLibrarySearchInput.value || "").toLowerCase();
+  list.innerHTML = "";
+
+  const filtered = AppState.cards.filter(c => {
+    const name = (c.name || "").toLowerCase();
+    const type = (c.type || "").toLowerCase();
+    const tags = (Array.isArray(c.tags) ? c.tags.join(" ") : String(c.tags || "")).toLowerCase();
+    return !search || name.includes(search) || type.includes(search) || tags.includes(search);
+  });
+
+  Dom.libraryCount.textContent = `${filtered.length} cards`;
+
+  filtered.sort((a, b) => {
+    const setA = (a.setName || "").localeCompare(b.setName || "");
+    if (setA !== 0) return setA;
+    const numA = (a.cardNumber || "").localeCompare(b.cardNumber || "", undefined, { numeric: true });
+    if (numA !== 0) return numA;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+
+  filtered.forEach(card => {
+    const li = document.createElement("li");
+    li.className = "library-item";
+
+    const header = document.createElement("div");
+    header.className = "header";
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = card.name || "(no name)";
+    header.appendChild(title);
+
+    const chips = document.createElement("div");
+    chips.className = "chips";
+
+    if (card.type) {
+      const tChip = document.createElement("span");
+      tChip.className = "chip";
+      tChip.textContent = card.type;
+      chips.appendChild(tChip);
+    }
+
+    if (card.rarity) {
+      const rChip = document.createElement("span");
+      rChip.className = "chip";
+      rChip.textContent = card.rarity;
+      chips.appendChild(rChip);
+    }
+
+    if (card.setName || card.cardNumber) {
+      const pChip = document.createElement("span");
+      pChip.className = "chip key";
+      pChip.textContent = `${card.setName || "Set ?"} • ${card.cardNumber || "###"}`;
+      chips.appendChild(pChip);
+    }
+
+    header.appendChild(chips);
+    li.appendChild(header);
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    const vt = Array.isArray(card.vehicleTypes) ? card.vehicleTypes.join(", ") : "";
+    const tg = Array.isArray(card.tags) ? card.tags.join(", ") : "";
+    sub.textContent = [vt, tg].filter(Boolean).join(" • ");
+    li.appendChild(sub);
+
+    li.addEventListener("click", () => {
+      fillSingleCardInputs(card);
+    });
+
+    list.appendChild(li);
+  });
+}
+
+/************************************************************
+ * Prints Management (within Single Editor)
+ ************************************************************/
+function renderPrintsList() {
+  if (!Dom.printsList) return;
+
+  const list = Dom.printsList;
+  list.innerHTML = "";
+
+  if (!AppState.currentSinglePrints.length) {
+    const li = document.createElement("li");
+    li.textContent = "No prints defined yet.";
+    list.appendChild(li);
+    return;
+  }
+
+  AppState.currentSinglePrints.forEach((p, idx) => {
+    const li = document.createElement("li");
+    const primaryMark = p.isPrimary ? "★ " : "";
+    li.textContent = `${primaryMark}${p.setName || "Set ?"} #${p.cardNumber || "###"}`;
+
+    li.addEventListener("click", () => {
+      AppState.currentSinglePrints.splice(idx, 1);
+      if (!AppState.currentSinglePrints.some(pr => pr.isPrimary) && AppState.currentSinglePrints[0]) {
+        AppState.currentSinglePrints[0].isPrimary = true;
+      }
+      renderPrintsList();
+      renderSinglePreview();
+    });
+
+    list.appendChild(li);
+  });
+}
+
+function handleSetPrintPrimary() {
+  if (!AppState.currentSinglePrints.length) return;
+  const idx = Math.max(0, AppState.currentSinglePrints.length - 1);
+  AppState.currentSinglePrints = AppState.currentSinglePrints.map((p, i) => ({
+    ...p,
+    isPrimary: i === idx
+  }));
+  renderPrintsList();
+  renderSinglePreview();
+}
+
+function handleClearAllPrints() {
+  AppState.currentSinglePrints = [];
+  renderPrintsList();
+  renderSinglePreview();
+}
+
+function handlePrintAdd() {
+  if (!Dom.printSetSelect || !Dom.printCardNumberInput) return;
+
+  const selected = Dom.printSetSelect.value;
+  let setName = "";
+  if (selected === "CUSTOM") {
+    setName = getTrimmedValue(Dom.printCustomSetInput);
+  } else {
+    setName = selected || "";
+  }
+  const cardNumber = getTrimmedValue(Dom.printCardNumberInput);
+
+  if (!setName && !cardNumber) {
+    alert("Please provide at least a Set or Card Number for the print.");
+    return;
+  }
+
+  const isFirst = AppState.currentSinglePrints.length === 0;
+  AppState.currentSinglePrints.push({
+    setName,
+    cardNumber,
+    isPrimary: isFirst
+  });
+  renderPrintsList();
+  renderSinglePreview();
+}
+
+/************************************************************
+ * Single Card Editor: Collect & Fill
+ ************************************************************/
+function collectSingleCardFromInputs() {
+  const type = getTrimmedValue(Dom.cardTypeInput);
+  const name = getTrimmedValue(Dom.cardNameInput);
+  const setName = getTrimmedValue(Dom.cardSetNameInput);
+  const cardNumber = getTrimmedValue(Dom.cardNumberInput);
+  const rarity = getTrimmedValue(Dom.cardRarityInput);
+
+  const vehicleTypes = parseVehicleTypes(getTrimmedValue(Dom.cardVehicleTypesInput));
+  const tags = parseTags(getTrimmedValue(Dom.cardTagsInput));
+
+  const extra = {};
+  if (type === "Mod") {
+    extra.modBasePart = getTrimmedValue(Dom.modBasePartInput) || "";
+    extra.modLevel1 = getTrimmedValue(Dom.modL1Input) || "";
+    extra.modLevel2 = getTrimmedValue(Dom.modL2Input) || "";
+    extra.modLevel3 = getTrimmedValue(Dom.modL3Input) || "";
+    extra.modLevel4 = getTrimmedValue(Dom.modL4Input) || "";
+  } else if (type === "Vehicle" || type === "Named Vehicle") {
+    const hpCon = parseHpCon(getTrimmedValue(Dom.vehicleHpConInput));
+    extra.hp = hpCon.hp;
+    extra.con = hpCon.con;
+    const pitVal = getTrimmedValue(Dom.vehiclePitCostInput);
+    extra.pitCost = pitVal ? Number(pitVal) : undefined;
+  }
+
+  const prints = AppState.currentSinglePrints.length
+    ? AppState.currentSinglePrints
+    : (setName || cardNumber
+      ? [{
+        setName,
+        cardNumber
+      }]
+      : []);
+
+  const card = {
+    id: getTrimmedValue(Dom.cardIdInput) || generateId(),
+    name,
+    type,
+    setName,
+    cardNumber,
+    rarity,
+    vehicleTypes,
+    tags,
+    imageUrl: getTrimmedValue(Dom.cardImageUrlInput),
+    notes: getTrimmedValue(Dom.cardNotesInput),
+    extra,
+    prints
+  };
+
+  return normalizeCardShape(card);
+}
+
+function fillSingleCardInputs(card) {
+  const c = normalizeCardShape(card);
+
+  setValue(Dom.cardIdInput, c.id || "");
+  setValue(Dom.cardNameInput, c.name || "");
+  setValue(Dom.cardTypeInput, c.type || "");
+  setValue(Dom.cardSetNameInput, c.setName || "");
+  setValue(Dom.cardNumberInput, c.cardNumber || "");
+  setValue(Dom.cardRarityInput, c.rarity || "");
+
+  setValue(Dom.cardVehicleTypesInput, (c.vehicleTypes || []).join(", "));
+  setValue(Dom.cardTagsInput, (c.tags || []).join(", "));
+  setValue(Dom.cardImageUrlInput, c.imageUrl || "");
+  setValue(Dom.cardNotesInput, c.notes || "");
+
+  if (c.type === "Mod") {
+    setValue(Dom.modBasePartInput, c.extra.modBasePart || "");
+    setValue(Dom.modL1Input, c.extra.modLevel1 || "");
+    setValue(Dom.modL2Input, c.extra.modLevel2 || "");
+    setValue(Dom.modL3Input, c.extra.modLevel3 || "");
+    setValue(Dom.modL4Input, c.extra.modLevel4 || "");
+  } else {
+    setValue(Dom.modBasePartInput, "");
+    setValue(Dom.modL1Input, "");
+    setValue(Dom.modL2Input, "");
+    setValue(Dom.modL3Input, "");
+    setValue(Dom.modL4Input, "");
+  }
+
+  if (c.type === "Vehicle" || c.type === "Named Vehicle") {
+    setValue(Dom.vehicleHpConInput, formatHpCon(c.extra));
+    setValue(
+      Dom.vehiclePitCostInput,
+      (c.extra.pitCost !== undefined && c.extra.pitCost !== null)
+        ? String(c.extra.pitCost)
+        : ""
+    );
+  } else {
+    setValue(Dom.vehicleHpConInput, "");
+    setValue(Dom.vehiclePitCostInput, "");
+  }
+
+  AppState.currentSinglePrints = Array.isArray(c.prints) ? c.prints.map(p => ({ ...p })) : [];
+  if (AppState.currentSinglePrints.length && !AppState.currentSinglePrints.some(p => p.isPrimary)) {
+    AppState.currentSinglePrints[0].isPrimary = true;
+  }
+  renderPrintsList();
+  updateTypeFieldVisibility();
+  renderSinglePreview();
+}
+
+/************************************************************
+ * Single Card Editor: Save / New / Delete
+ ************************************************************/
+async function handleSingleSave() {
+  const card = collectSingleCardFromInputs();
+  const existingIndex = AppState.cards.findIndex(c => c.id === card.id);
+
+  if (existingIndex >= 0) {
+    AppState.cards[existingIndex] = card;
+    if (Dom.singleStatus) {
+      Dom.singleStatus.textContent = `Updated card: ${card.name} (${card.id})`;
+    }
+  } else {
+    AppState.cards.push(card);
+    if (Dom.singleStatus) {
+      Dom.singleStatus.textContent = `Added new card: ${card.name} (${card.id})`;
+    }
+  }
+
+  renderCardLibraryList();
+  renderSinglePreview();
+}
+
+async function handleSingleNew() {
+  setValue(Dom.cardIdInput, "");
+  setValue(Dom.cardNameInput, "");
+  setValue(Dom.cardTypeInput, "Crew");
+  setValue(Dom.cardSetNameInput, "");
+  setValue(Dom.cardNumberInput, "");
+  setValue(Dom.cardRarityInput, "Common");
+  setValue(Dom.cardVehicleTypesInput, "");
+  setValue(Dom.cardTagsInput, "");
+  setValue(Dom.cardImageUrlInput, "");
+  setValue(Dom.cardNotesInput, "");
+  setValue(Dom.modBasePartInput, "");
+  setValue(Dom.modL1Input, "");
+  setValue(Dom.modL2Input, "");
+  setValue(Dom.modL3Input, "");
+  setValue(Dom.modL4Input, "");
+  setValue(Dom.vehicleHpConInput, "");
+  setValue(Dom.vehiclePitCostInput, "");
+
+  AppState.currentSinglePrints = [];
+  if (Dom.singleStatus) {
+    Dom.singleStatus.textContent = "Ready to create a new card.";
+  }
+  updateTypeFieldVisibility();
+  renderPrintsList();
+  renderSinglePreview();
+}
+
+function confirmAction(title, body) {
+  return new Promise(resolve => {
+    if (!Dom.modalTitle || !Dom.modalBody || !Dom.modalBackdrop ||
+        !Dom.modalCancelBtn || !Dom.modalConfirmBtn) {
+      const ok = window.confirm(`${title}\n\n${body}`);
+      resolve(ok);
+      return;
+    }
+
+    Dom.modalTitle.textContent = title;
+    Dom.modalBody.textContent = body;
+    Dom.modalBackdrop.classList.add("active");
+
+    function cleanup(result) {
+      Dom.modalBackdrop.classList.remove("active");
+      Dom.modalCancelBtn.removeEventListener("click", onCancel);
+      Dom.modalConfirmBtn.removeEventListener("click", onConfirm);
+      resolve(result);
+    }
+
+    function onCancel() { cleanup(false); }
+    function onConfirm() { cleanup(true); }
+
+    Dom.modalCancelBtn.addEventListener("click", onCancel);
+    Dom.modalConfirmBtn.addEventListener("click", onConfirm);
+  });
+}
+
+async function handleSingleDelete() {
+  const id = getTrimmedValue(Dom.cardIdInput);
+  if (!id) {
+    if (Dom.singleStatus) {
+      Dom.singleStatus.textContent = "No card selected to delete.";
+    }
+    return;
+  }
+
+  const card = AppState.cards.find(c => c.id === id);
+  const name = card ? card.name : id;
+
+  const ok = await confirmAction(
+    "Delete Card",
+    `Are you sure you want to delete "${name}"? This cannot be undone.`
+  );
+
+  if (!ok) {
+    if (Dom.singleStatus) {
+      Dom.singleStatus.textContent = "Delete cancelled.";
+    }
+    return;
+  }
+
+  AppState.cards = AppState.cards.filter(c => c.id !== id);
+  if (Dom.singleStatus) {
+    Dom.singleStatus.textContent = `Deleted card: ${name}`;
+  }
+  await handleSingleNew();
+  renderCardLibraryList();
+}
+
+/************************************************************
+ * Public Init + refresh hook
+ ************************************************************/
+
+export function initSingle() {
+  updateTypeFieldVisibility();
+  renderPrintsList();
+  renderSinglePreview();
+
+  if (Dom.cardTypeInput) {
+    Dom.cardTypeInput.addEventListener("change", () => {
+      updateTypeFieldVisibility();
+      renderSinglePreview();
+    });
+  }
+
+  const previewInputs = [
+    Dom.cardNameInput,
+    Dom.cardSetNameInput,
+    Dom.cardNumberInput,
+    Dom.cardRarityInput,
+    Dom.cardVehicleTypesInput,
+    Dom.cardTagsInput,
+    Dom.cardImageUrlInput,
+    Dom.cardNotesInput,
+    Dom.modBasePartInput,
+    Dom.vehiclePitCostInput,
+    Dom.modL1Input,
+    Dom.modL2Input,
+    Dom.modL3Input,
+    Dom.modL4Input,
+    Dom.vehicleHpConInput
+  ].filter(Boolean);
+
+  previewInputs.forEach(el => {
+    el.addEventListener("input", renderSinglePreview);
+    el.addEventListener("change", renderSinglePreview);
+  });
+
+  if (Dom.cardLibrarySearchInput) {
+    Dom.cardLibrarySearchInput.addEventListener("input", renderCardLibraryList);
+  }
+
+  if (Dom.printSetPrimaryBtn) {
+    Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
+  }
+  if (Dom.printClearAllBtn) {
+    Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
+  }
+  if (Dom.printSetSelect) {
+    Dom.printSetSelect.addEventListener("change", () => {
+      if (Dom.printSetSelect.value === "CUSTOM" && Dom.printCustomSetInput) {
+        Dom.printCustomSetInput.focus();
+      }
+    });
+  }
+  if (Dom.printCardNumberInput) {
+    Dom.printCardNumberInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handlePrintAdd();
+      }
+    });
+  }
+
+  if (Dom.singleSaveBtn) {
+    Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
+  }
+  if (Dom.singleNewBtn) {
+    Dom.singleNewBtn.addEventListener("click", handleSingleNew);
+  }
+  if (Dom.singleDeleteBtn) {
+    Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
+  }
+}
+
+/**
+ * Called after cards have changed (e.g. after loadCards or bulk import).
+ */
+export function refreshSingleUi() {
+  renderSinglePreview();
+  renderCardLibraryList();
+}
