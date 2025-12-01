@@ -50,6 +50,7 @@ export const Dom = {
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
+  bulkFileInput: document.getElementById("bulkFileInput"),
   bulkInput: document.getElementById("bulkInput"),
   bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
   bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
