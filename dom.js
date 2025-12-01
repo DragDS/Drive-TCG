@@ -50,14 +50,19 @@ export const Dom = {
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
-  bulkFileInput: document.getElementById("bulkFileInput"),
+  // Bulk import (multi-step)
   bulkInput: document.getElementById("bulkInput"),
   bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
   bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
   bulkParseBtn: document.getElementById("bulkParseBtn"),
   bulkImportBtn: document.getElementById("bulkImportBtn"),
-  bulkPreview: document.getElementById("bulkPreview"),
   bulkStatus: document.getElementById("bulkStatus"),
+
+  bulkFilterInput: document.getElementById("bulkFilterInput"),
+  bulkSelectAllBtn: document.getElementById("bulkSelectAllBtn"),
+  bulkDeselectAllBtn: document.getElementById("bulkDeselectAllBtn"),
+  bulkSelectionList: document.getElementById("bulkSelectionList"),
+  bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
 
   preconGrid: document.getElementById("preconGrid"),
   preconsStatus: document.getElementById("preconsStatus"),
