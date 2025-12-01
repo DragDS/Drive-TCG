@@ -101,7 +101,9 @@ function mapRowToCard(headers, row) {
 
   if (type === "Vehicle" || type === "Named Vehicle") {
     const hpConStr = get("hpcon", "hp/con", "hp", "hitpoints");
-    const hpCon = hpConStr.includes("/") ? parseHpCon(hpConStr) : { hp: Number(hpConStr) || undefined };
+    const hpCon = hpConStr.includes("/")
+      ? parseHpCon(hpConStr)
+      : { hp: Number(hpConStr) || undefined };
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
     const pitStr = get("pitcost", "pit", "pitpoints");
@@ -136,6 +138,12 @@ function mapRowToCard(headers, row) {
 }
 
 function handleBulkParse() {
+  if (!Dom.bulkInput || !Dom.bulkDelimiterSelect || !Dom.bulkHasHeaderCheckbox ||
+      !Dom.bulkPreview || !Dom.bulkStatus) {
+    console.warn("[Bulk] DOM elements missing; cannot parse.");
+    return;
+  }
+
   const raw = Dom.bulkInput.value || "";
   if (!raw.trim()) {
     Dom.bulkStatus.textContent = "No data to parse.";
@@ -169,12 +177,19 @@ function handleBulkParse() {
     return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
   });
 
-  Dom.bulkPreview.textContent = previewLines.join("\n") + (cards.length > 20 ? `\n...and ${cards.length - 20} more.` : "");
+  Dom.bulkPreview.textContent =
+    previewLines.join("\n") +
+    (cards.length > 20 ? `\n...and ${cards.length - 20} more.` : "");
   Dom.bulkPreview.dataset.parsedCards = JSON.stringify(cards);
   Dom.bulkStatus.textContent = `Parsed ${cards.length} cards. Ready to import.`;
 }
 
 function handleBulkImport() {
+  if (!Dom.bulkPreview || !Dom.bulkStatus || !Dom.bulkInput) {
+    console.warn("[Bulk] DOM elements missing; cannot import.");
+    return;
+  }
+
   const parsed = Dom.bulkPreview.dataset.parsedCards;
   if (!parsed) {
     Dom.bulkStatus.textContent = "Nothing parsed yet. Click 'Parse Text' first.";
@@ -213,6 +228,10 @@ function handleBulkImport() {
 }
 
 export function initBulk() {
-  Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
-  Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+  if (Dom.bulkParseBtn) {
+    Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
+  }
+  if (Dom.bulkImportBtn) {
+    Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+  }
 }
