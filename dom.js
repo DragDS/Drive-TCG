@@ -2,16 +2,19 @@
 // Centralized DOM element lookups for DRIVE admin.
 
 export const Dom = {
+  // Nav
   navSingleBtn: document.getElementById("navSingleBtn"),
   navBulkBtn: document.getElementById("navBulkBtn"),
   navPreconsBtn: document.getElementById("navPreconsBtn"),
   navHelpBtn: document.getElementById("navHelpBtn"),
 
+  // Sections
   singleSection: document.getElementById("singleSection"),
   bulkSection: document.getElementById("bulkSection"),
   preconsSection: document.getElementById("preconsSection"),
   helpSection: document.getElementById("helpSection"),
 
+  // Single card form
   cardIdInput: document.getElementById("cardIdInput"),
   cardNameInput: document.getElementById("cardNameInput"),
   cardTypeInput: document.getElementById("cardTypeInput"),
@@ -50,13 +53,15 @@ export const Dom = {
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
-  // Bulk import (multi-step)
+  // Bulk import (3-step)
   bulkInput: document.getElementById("bulkInput"),
   bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
   bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
   bulkParseBtn: document.getElementById("bulkParseBtn"),
   bulkImportBtn: document.getElementById("bulkImportBtn"),
+  bulkPreview: document.getElementById("bulkPreview"),
   bulkStatus: document.getElementById("bulkStatus"),
+  bulkFileInput: document.getElementById("bulkFileInput"),
 
   bulkFilterInput: document.getElementById("bulkFilterInput"),
   bulkSelectAllBtn: document.getElementById("bulkSelectAllBtn"),
@@ -64,13 +69,16 @@ export const Dom = {
   bulkSelectionList: document.getElementById("bulkSelectionList"),
   bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
 
+  // Precons
   preconGrid: document.getElementById("preconGrid"),
   preconsStatus: document.getElementById("preconsStatus"),
 
+  // Global export buttons
   downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
   downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
   downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
 
+  // Modal
   modalBackdrop: document.getElementById("modalBackdrop"),
   modalTitle: document.getElementById("modalTitle"),
   modalBody: document.getElementById("modalBody"),
