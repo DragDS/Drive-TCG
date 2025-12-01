@@ -94,10 +94,8 @@
 
     .app-header-main {
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .app-title-block {
@@ -1454,13 +1452,27 @@
                   <div>
                     <div class="field-card-title">Bulk Text Import</div>
                     <div class="field-card-subtitle">
-                      Paste CSV/TSV here to create or update multiple cards at once.
+                      Paste CSV/TSV here or load a CSV/XLSX file to create or update multiple cards at once.
                     </div>
                   </div>
                   <div class="badge">
                     <span class="badge-dot"></span>
                     <span>Header-aware</span>
                   </div>
+                </div>
+
+                <!-- NEW: file upload -->
+                <div class="field">
+                  <label class="field-label">
+                    <span>Load from File</span>
+                    <span class="hint">CSV or Excel (.xlsx)</span>
+                  </label>
+                  <input
+                    id="bulkFileInput"
+                    class="input"
+                    type="file"
+                    accept=".csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                  />
                 </div>
 
                 <div class="field">
@@ -1589,7 +1601,7 @@
 
                   <h3>Bulk Import</h3>
                   <p>
-                    The Bulk tab supports pasting CSV/TSV-like data. It respects headers loosely (ignoring case, spacing, etc.).
+                    The Bulk tab supports pasting CSV/TSV-like data or loading a CSV/XLSX file. It respects headers loosely (ignoring case, spacing, etc.).
                   </p>
                   <p>
                     Basic example:
