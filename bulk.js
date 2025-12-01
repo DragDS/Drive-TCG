@@ -74,8 +74,37 @@ function mapRowToCard(headers, row) {
     });
   };
 
-  const type = get("type");
-  const name = get("name", "cardname", "title");
+  // --- NAME ---
+  const name = get(
+    "name",
+    "cardname",
+    "title",
+    "crewname",
+    "modname",
+    "drivername",
+    "conditionname",
+    "trackname",
+    "vehiclename",
+    "namedvehiclename",
+    "tokens/counters",
+    "tokenscounters"
+  );
+
+  // --- TYPE (can be inferred from header content when no explicit Type column) ---
+  let type = get("type");
+
+  if (!type) {
+    if (hasAny("crewname")) type = "Crew";
+    else if (hasAny("modname")) type = "Mod";
+    else if (hasAny("conditionname")) type = "Condition";
+    else if (hasAny("trackname")) type = "Track";
+    else if (hasAny("namedvehiclename")) type = "Named Vehicle";
+    else if (hasAny("vehiclename")) type = "Vehicle";
+    else if (hasAny("tokens/counters", "tokenscounters")) type = "Misc";
+    else if (hasAny("drivername")) type = "Driver"; // Named Driver cards will come in as Driver by default
+  }
+
+  // --- CORE METADATA ---
   const setName = get("set", "setname", "setid");
   const cardNumber = get("cardnumber", "number", "no", "#");
   const rarity = get("rarity", "rar");
@@ -83,35 +112,68 @@ function mapRowToCard(headers, row) {
   const vt = get("vehicletype", "vehicletype2", "vehicletype1", "vehicletype3");
   const tagsStr = get("tags", "tag", "keywords");
 
+  // Notes / rules text: support master sheet trait columns as well
+  const notes = get(
+    "notes",
+    "rules",
+    "text",
+    "crewtrait",
+    "drivertrait",
+    "conditiontrait",
+    "tracktrait",
+    "trait",
+    "modability",
+    "ability",
+    "vehicletrait"
+  );
+
   const imageUrl = get("image", "imageurl", "img");
-  const notes = get("notes", "rules", "text");
 
   const vehicleTypes = parseVehicleTypes(vt);
   const tags = parseTags(tagsStr);
 
   const extra = {};
 
+  // --- MOD EXTRAS ---
   if (type === "Mod") {
     extra.modBasePart = get("basepart", "part", "modbase");
     extra.modLevel1 = get("level1", "l1", "lvl1");
-    extra.modLevel2 = get("level2", "l2", "lvl2");
-    extra.modLevel3 = get("level3", "l3", "lvl3");
-    extra.modLevel4 = get("level4", "l4", "lvl4");
+    extra.modLevel2 = get("level2", "l2", "lvl2", "modlvl2");
+    extra.modLevel3 = get("level3", "l3", "lvl3", "modlvl3");
+    extra.modLevel4 = get("level4", "l4", "lvl4", "modlvl4");
   }
 
+  // --- VEHICLE / NAMED VEHICLE EXTRAS ---
   if (type === "Vehicle" || type === "Named Vehicle") {
-    const hpConStr = get("hpcon", "hp/con", "hp", "hitpoints");
-    const hpCon = hpConStr.includes("/")
-      ? parseHpCon(hpConStr)
-      : { hp: Number(hpConStr) || undefined };
+    const hpConStr = get(
+      "hpcon",
+      "hp/con",
+      "hp",
+      "hitpoints",
+      "vehiclehpcon",
+      "vehiclehp/con"
+    );
+    let hpCon = { hp: undefined, con: undefined };
+
+    if (hpConStr && hpConStr.includes("/")) {
+      hpCon = parseHpCon(hpConStr);
+    } else if (hpConStr) {
+      hpCon = { hp: Number(hpConStr) || undefined, con: undefined };
+    }
+
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
-    const pitStr = get("pitcost", "pit", "pitpoints");
+
+    const pitStr = get("pitcost", "pit", "pitpoints", "pitcost");
     extra.pitCost = pitStr ? Number(pitStr) : undefined;
   }
 
+  // --- PRINTS ---
   const prints = [];
-  if (hasAny("set", "setname", "setid") || hasAny("cardnumber", "number", "no")) {
+  if (
+    hasAny("set", "setname", "setid") ||
+    hasAny("cardnumber", "number", "no")
+  ) {
     prints.push({
       setName,
       cardNumber,
@@ -138,8 +200,13 @@ function mapRowToCard(headers, row) {
 }
 
 function handleBulkParse() {
-  if (!Dom.bulkInput || !Dom.bulkDelimiterSelect || !Dom.bulkHasHeaderCheckbox ||
-      !Dom.bulkPreview || !Dom.bulkStatus) {
+  if (
+    !Dom.bulkInput ||
+    !Dom.bulkDelimiterSelect ||
+    !Dom.bulkHasHeaderCheckbox ||
+    !Dom.bulkPreview ||
+    !Dom.bulkStatus
+  ) {
     console.warn("[Bulk] DOM elements missing; cannot parse.");
     return;
   }
