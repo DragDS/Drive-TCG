@@ -34,8 +34,22 @@ function addCardToPrecon(precon, cardId, count) {
   }
 }
 
+/**
+ * Build <option> text for a card in the dropdown.
+ */
+function formatCardOptionLabel(card) {
+  const setPart = (card.setName || "").trim();
+  const numPart = (card.cardNumber || "").trim();
+  const namePart = (card.name || "").trim() || "(no name)";
+  const left =
+    (setPart || numPart)
+      ? `${setPart || "Set ?"} • ${numPart || "###"}`
+      : "No Set/Number";
+  return `${left} — ${namePart}`;
+}
+
 /************************************************************
- * UI actions: create precon / add card
+ * UI actions: create precon
  ************************************************************/
 
 /**
@@ -81,91 +95,26 @@ function handleNewPrecon() {
   renderPrecons();
 }
 
-/**
- * Prompt-based card adding to a specific precon.
- */
-function handleAddCardToPrecon(precon) {
-  if (!AppState.cards || !AppState.cards.length) {
-    alert("No cards are loaded yet. Make sure drive-card.json has been loaded.");
-    return;
-  }
-
-  const qRaw = prompt(
-    `Add card to "${precon.name}". Enter card name or card id:`,
-    ""
-  );
-  if (qRaw == null) return;
-  const q = qRaw.trim().toLowerCase();
-  if (!q) return;
-
-  // Try exact ID match first
-  let matches = AppState.cards.filter(c =>
-    (c.id || "").toLowerCase() === q
-  );
-  if (!matches.length) {
-    // Fallback: partial name match
-    matches = AppState.cards.filter(c =>
-      (c.name || "").toLowerCase().includes(q)
-    );
-  }
-
-  if (!matches.length) {
-    alert("No card found matching that query.");
-    return;
-  }
-
-  let card;
-  if (matches.length === 1) {
-    card = matches[0];
-  } else {
-    // Try exact name match among the partials
-    const exactName = matches.find(
-      c => (c.name || "").toLowerCase() === q
-    );
-    if (exactName) {
-      card = exactName;
-    } else {
-      const listStr = matches
-        .slice(0, 12)
-        .map(c => `${c.id} — ${c.name}`)
-        .join("\n");
-      const chosenId = prompt(
-        `Multiple cards found. Enter one of these ids:\n\n${listStr}`,
-        matches[0].id
-      );
-      if (!chosenId) return;
-      card = AppState.cards.find(c => c.id === chosenId.trim());
-      if (!card) {
-        alert("No card with that id was found.");
-        return;
-      }
-    }
-  }
-
-  const countRaw = prompt(
-    `How many copies of "${card.name}" to add?`,
-    "1"
-  );
-  if (countRaw == null) return;
-  const count = Number(countRaw);
-  if (!Number.isFinite(count) || count <= 0) {
-    alert("Count must be a positive number.");
-    return;
-  }
-
-  addCardToPrecon(precon, card.id, count);
-  saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
-
-  setPreconsStatus(`Added ${count}x "${card.name}" to "${precon.name}".`);
-  renderPrecons();
-}
-
 /************************************************************
  * Render precon summary cards
  ************************************************************/
 function renderPrecons() {
   const grid = Dom.preconGrid;
   grid.innerHTML = "";
+
+  const cardsSorted = [...(AppState.cards || [])];
+  // Sort cards for dropdown: by setName, then cardNumber (numeric-ish), then name
+  cardsSorted.sort((a, b) => {
+    const setA = (a.setName || "").localeCompare(b.setName || "");
+    if (setA !== 0) return setA;
+    const numA = (a.cardNumber || "").localeCompare(
+      b.cardNumber || "",
+      undefined,
+      { numeric: true }
+    );
+    if (numA !== 0) return numA;
+    return (a.name || "").localeCompare(b.name || "");
+  });
 
   if (!AppState.precons || !AppState.precons.length) {
     const msg = document.createElement("p");
@@ -195,7 +144,7 @@ function renderPrecons() {
     const list = document.createElement("ul");
     if (!precon.cards || !precon.cards.length) {
       const li = document.createElement("li");
-      li.textContent = "No cards yet – use Add Card to populate this deck.";
+      li.textContent = "No cards yet – use the dropdown below to add cards.";
       list.appendChild(li);
     } else {
       precon.cards.forEach(entry => {
@@ -207,10 +156,11 @@ function renderPrecons() {
       });
     }
 
-    // Controls row (ID + Add Card button)
+    // Controls row: ID + dropdown + count + Add button
     const controls = document.createElement("div");
     controls.style.display = "flex";
-    controls.style.justifyContent = "space-between";
+    controls.style.flexWrap = "wrap";
+    controls.style.gap = "4px";
     controls.style.alignItems = "center";
     controls.style.marginTop = "6px";
 
@@ -219,16 +169,66 @@ function renderPrecons() {
     idSpan.style.fontSize = "11px";
     idSpan.textContent = precon.id ? `ID: ${precon.id}` : "";
 
+    // Dropdown of cards
+    const select = document.createElement("select");
+    select.style.flex = "1 1 160px";
+    select.style.minWidth = "160px";
+
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = cardsSorted.length
+      ? "Select a card from the library…"
+      : "No cards loaded (load drive-card.json)";
+    select.appendChild(placeholder);
+
+    cardsSorted.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = formatCardOptionLabel(c);
+      select.appendChild(opt);
+    });
+
+    // Count input
+    const countInput = document.createElement("input");
+    countInput.type = "number";
+    countInput.min = "1";
+    countInput.value = "1";
+    countInput.style.width = "48px";
+    countInput.style.textAlign = "center";
+
+    // Add button
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn ghost small";
     addBtn.textContent = "Add Card";
     addBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      handleAddCardToPrecon(precon);
+      const cardId = select.value;
+      if (!cardId) {
+        alert("Please select a card from the dropdown first.");
+        return;
+      }
+      const cardObj = AppState.cards.find(c => c.id === cardId);
+      if (!cardObj) {
+        alert("Selected card could not be found in the library.");
+        return;
+      }
+      const count = Number(countInput.value) || 0;
+      if (!Number.isFinite(count) || count <= 0) {
+        alert("Count must be a positive number.");
+        return;
+      }
+
+      addCardToPrecon(precon, cardId, count);
+      saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
+
+      setPreconsStatus(`Added ${count}x "${cardObj.name}" to "${precon.name}".`);
+      renderPrecons(); // re-render to show updated list
     });
 
     controls.appendChild(idSpan);
+    controls.appendChild(select);
+    controls.appendChild(countInput);
     controls.appendChild(addBtn);
 
     card.appendChild(h3);
@@ -270,7 +270,7 @@ export async function loadPrecons() {
 }
 
 /************************************************************
- * Init: wire up the download + new precon button
+ * Init: wire up the export + new precon button
  ************************************************************/
 export function initPrecons() {
   // Export button (existing behavior)
