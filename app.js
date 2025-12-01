@@ -12,15 +12,31 @@ import { initHelp } from "./help.js";
  * Navigation & Sections
  ************************************************************/
 function showSection(which) {
+  // Sections
   Dom.singleSection.classList.remove("active");
   Dom.bulkSection.classList.remove("active");
   Dom.preconsSection.classList.remove("active");
   Dom.helpSection.classList.remove("active");
 
-  if (which === "single") Dom.singleSection.classList.add("active");
-  else if (which === "bulk") Dom.bulkSection.classList.add("active");
-  else if (which === "precons") Dom.preconsSection.classList.add("active");
-  else if (which === "help") Dom.helpSection.classList.add("active");
+  // Nav buttons
+  Dom.navSingleBtn.classList.remove("active");
+  Dom.navBulkBtn.classList.remove("active");
+  Dom.navPreconsBtn.classList.remove("active");
+  Dom.navHelpBtn.classList.remove("active");
+
+  if (which === "single") {
+    Dom.singleSection.classList.add("active");
+    Dom.navSingleBtn.classList.add("active");
+  } else if (which === "bulk") {
+    Dom.bulkSection.classList.add("active");
+    Dom.navBulkBtn.classList.add("active");
+  } else if (which === "precons") {
+    Dom.preconsSection.classList.add("active");
+    Dom.navPreconsBtn.classList.add("active");
+  } else if (which === "help") {
+    Dom.helpSection.classList.add("active");
+    Dom.navHelpBtn.classList.add("active");
+  }
 }
 
 function initNav() {
@@ -73,5 +89,6 @@ function initExportButtons() {
   // Load precons
   await loadPrecons();
 
+  // Default view
   showSection("single");
 })();
