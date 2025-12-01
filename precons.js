@@ -35,6 +35,30 @@ function addCardToPrecon(precon, cardId, count) {
 }
 
 /**
+ * Remove a specific entry from a precon.
+ */
+function removeEntryFromPrecon(precon, entryIndex) {
+  if (!Array.isArray(precon.cards) || entryIndex < 0 || entryIndex >= precon.cards.length) {
+    return;
+  }
+
+  const entry = precon.cards[entryIndex];
+  const cardObj = AppState.cards.find(c => c.id === entry.cardId);
+  const name = cardObj ? cardObj.name : entry.cardId;
+
+  const ok = window.confirm(
+    `Remove ${entry.count || 0}x "${name}" from "${precon.name}"?`
+  );
+  if (!ok) return;
+
+  precon.cards.splice(entryIndex, 1);
+  saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
+
+  setPreconsStatus(`Removed ${entry.count || 0}x "${name}" from "${precon.name}".`);
+  renderPrecons();
+}
+
+/**
  * Build <option> text for a card in the dropdown.
  */
 function formatCardOptionLabel(card) {
@@ -147,11 +171,32 @@ function renderPrecons() {
       li.textContent = "No cards yet – use the dropdown below to add cards.";
       list.appendChild(li);
     } else {
-      precon.cards.forEach(entry => {
+      precon.cards.forEach((entry, idx) => {
         const li = document.createElement("li");
+        li.style.display = "flex";
+        li.style.justifyContent = "space-between";
+        li.style.alignItems = "center";
+        li.style.gap = "4px";
+
         const cardObj = AppState.cards.find(c => c.id === entry.cardId);
         const name = cardObj ? cardObj.name : entry.cardId;
-        li.textContent = `${entry.count || 0}x ${name}`;
+
+        const textSpan = document.createElement("span");
+        textSpan.textContent = `${entry.count || 0}x ${name}`;
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn ghost small";
+        removeBtn.textContent = "✕";
+        removeBtn.style.padding = "0 6px";
+        removeBtn.style.fontSize = "11px";
+        removeBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeEntryFromPrecon(precon, idx);
+        });
+
+        li.appendChild(textSpan);
+        li.appendChild(removeBtn);
         list.appendChild(li);
       });
     }
@@ -171,20 +216,36 @@ function renderPrecons() {
 
     // Dropdown of cards
     const select = document.createElement("select");
-    select.style.flex = "1 1 160px";
-    select.style.minWidth = "160px";
+    select.style.flex = "1 1 180px";
+    select.style.minWidth = "180px";
+    // Closed control styling for your dark theme
+    select.style.backgroundColor = "rgba(8, 8, 12, 0.95)";
+    select.style.color = "#f5f5f5";
+    select.style.border = "1px solid rgba(255,255,255,0.2)";
+    select.style.padding = "2px 6px";
+    select.style.borderRadius = "4px";
+    select.style.fontSize = "12px";
 
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = cardsSorted.length
       ? "Select a card from the library…"
       : "No cards loaded (load drive-card.json)";
+    placeholder.disabled = true;
+    placeholder.selected = true;
+    // Make placeholder readable when open
+    placeholder.style.backgroundColor = "#101018";
+    placeholder.style.color = "#f5f5f5";
     select.appendChild(placeholder);
 
     cardsSorted.forEach(c => {
       const opt = document.createElement("option");
       opt.value = c.id;
       opt.textContent = formatCardOptionLabel(c);
+      opt.title = opt.textContent; // tooltip with full text for readability
+      // Make options readable when dropdown is open
+      opt.style.backgroundColor = "#101018";
+      opt.style.color = "#f5f5f5";
       select.appendChild(opt);
     });
 
@@ -200,7 +261,7 @@ function renderPrecons() {
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn ghost small";
-    addBtn.textContent = "Add Card";
+    addBtn.textContent = "ADD CARD";
     addBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const cardId = select.value;
@@ -223,6 +284,12 @@ function renderPrecons() {
       saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
 
       setPreconsStatus(`Added ${count}x "${cardObj.name}" to "${precon.name}".`);
+
+      // Reset controls for convenience
+      select.value = "";
+      placeholder.selected = true;
+      countInput.value = "1";
+
       renderPrecons(); // re-render to show updated list
     });
 
@@ -286,7 +353,7 @@ export function initPrecons() {
     const newBtn = document.createElement("button");
     newBtn.type = "button";
     newBtn.className = "btn ghost small";
-    newBtn.textContent = "New Precon";
+    newBtn.textContent = "NEW PRECON";
     newBtn.addEventListener("click", handleNewPrecon);
 
     btnRow.appendChild(newBtn);
