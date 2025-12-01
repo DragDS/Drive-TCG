@@ -96,6 +96,15 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .app-header-main {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .app-title-block {
@@ -899,7 +908,7 @@
       padding: 7px 8px;
       max-height: 260px;
       overflow: auto;
-      white-space: pre;
+      white-space: normal; /* changed from 'pre' to allow structured rows */
     }
 
     .precon-grid {
@@ -1233,6 +1242,7 @@
         </header>
 
         <div class="panel-body">
+          <!-- SINGLE CARD SECTION -->
           <section id="singleSection" class="section active">
             <div class="form-layout">
               <div class="field-card">
@@ -1445,34 +1455,22 @@
             </div>
           </section>
 
+          <!-- BULK SECTION (new multi-step flow) -->
           <section id="bulkSection" class="section">
             <div class="bulk-layout">
+              <!-- STEP 1: Source data & parsing -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Bulk Text Import</div>
+                    <div class="field-card-title">Bulk Import · Step 1</div>
                     <div class="field-card-subtitle">
-                      Paste CSV/TSV here or load a CSV/XLSX file to create or update multiple cards at once.
+                      Paste CSV/TSV here to create or update multiple cards at once, then parse into a preview list.
                     </div>
                   </div>
                   <div class="badge">
                     <span class="badge-dot"></span>
                     <span>Header-aware</span>
                   </div>
-                </div>
-
-                <!-- NEW: file upload -->
-                <div class="field">
-                  <label class="field-label">
-                    <span>Load from File</span>
-                    <span class="hint">CSV or Excel (.xlsx)</span>
-                  </label>
-                  <input
-                    id="bulkFileInput"
-                    class="input"
-                    type="file"
-                    accept=".csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  />
                 </div>
 
                 <div class="field">
@@ -1514,19 +1512,17 @@
                   <button id="bulkParseBtn" class="btn primary small" type="button">
                     Parse Text
                   </button>
-                  <button id="bulkImportBtn" class="btn secondary small" type="button">
-                    Import Parsed Cards
-                  </button>
                 </div>
                 <div id="bulkStatus" class="bulk-status">Waiting for data…</div>
               </div>
 
+              <!-- STEP 2 & 3: Selection + final preview/import -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Bulk Preview</div>
+                    <div class="field-card-title">Bulk Review · Steps 2 &amp; 3</div>
                     <div class="field-card-subtitle">
-                      Shows a summary of parsed rows before they are merged into the library.
+                      Filter and select parsed cards (Step 2), then confirm the final selection before importing (Step 3).
                     </div>
                   </div>
                   <div class="badge">
@@ -1535,11 +1531,50 @@
                   </div>
                 </div>
 
-                <pre id="bulkPreview" class="bulk-preview"></pre>
+                <!-- Step 2: filter & select -->
+                <div class="field">
+                  <label class="field-label">
+                    <span>Step 2: Filter &amp; Select Cards</span>
+                    <span class="hint">Use the search box to narrow, then toggle checkboxes.</span>
+                  </label>
+                  <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap;">
+                    <input
+                      id="bulkFilterInput"
+                      class="input input-mono"
+                      type="text"
+                      placeholder="Filter by name, type, set, number, or tags..."
+                      style="flex:1 1 160px;"
+                    />
+                    <button id="bulkSelectAllBtn" class="btn small" type="button">Select All</button>
+                    <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Clear</button>
+                  </div>
+                </div>
+
+                <div id="bulkSelectionList" class="bulk-preview">
+                  <!-- Rows of parsed cards with checkboxes will render here -->
+                </div>
+
+                <!-- Step 3: selected summary + import -->
+                <div style="margin-top:8px;">
+                  <label class="field-label">
+                    <span>Step 3: Selected Summary</span>
+                    <span class="hint">Shows only the cards that will be imported.</span>
+                  </label>
+                  <div id="bulkSelectedPreview" class="bulk-preview" style="max-height:110px;">
+                    <!-- Summary of selected cards will render here -->
+                  </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px;">
+                  <button id="bulkImportBtn" class="btn secondary small" type="button">
+                    Import Selected Cards
+                  </button>
+                </div>
               </div>
             </div>
           </section>
 
+          <!-- PRECONS SECTION (unchanged) -->
           <section id="preconsSection" class="section">
             <div class="field-card">
               <div class="field-card-label">
@@ -1569,6 +1604,7 @@
             </div>
           </section>
 
+          <!-- HELP SECTION (unchanged from your version) -->
           <section id="helpSection" class="section">
             <div class="help-grid">
               <div class="field-card">
@@ -1601,7 +1637,7 @@
 
                   <h3>Bulk Import</h3>
                   <p>
-                    The Bulk tab supports pasting CSV/TSV-like data or loading a CSV/XLSX file. It respects headers loosely (ignoring case, spacing, etc.).
+                    The Bulk tab supports pasting CSV/TSV-like data. It respects headers loosely (ignoring case, spacing, etc.).
                   </p>
                   <p>
                     Basic example:
@@ -1617,7 +1653,7 @@ DRAG RACING ENTHUSIAST,Driver,Set 1,056,Rare,Drag,"Sponsor, Holiday",/img/cards/
                     <li>Auto-detects delimiter (tab, comma, semicolon, or pipe) unless explicitly specified.</li>
                     <li>Maps header columns like <code>Name</code>, <code>Type</code>, <code>Set</code>, and so on.</li>
                     <li>Converts each row into a normalized card object.</li>
-                    <li>Shows a preview so you can confirm before importing.</li>
+                    <li>Lets you filter &amp; select specific rows to import.</li>
                   </ul>
 
                   <h3>Precons</h3>
