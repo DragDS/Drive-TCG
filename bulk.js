@@ -13,7 +13,20 @@ import {
 } from "./single.js";
 
 /************************************************************
- * Bulk Import
+ * XLSX helper (lazy-loaded)
+ ************************************************************/
+let xlsxLibPromise = null;
+
+function loadXlsxLib() {
+  if (!xlsxLibPromise) {
+    // Uses ESM build of SheetJS from a CDN; no bundler needed.
+    xlsxLibPromise = import("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm");
+  }
+  return xlsxLibPromise;
+}
+
+/************************************************************
+ * Bulk Import core helpers
  ************************************************************/
 function detectDelimiter(value) {
   const counts = {
@@ -90,7 +103,7 @@ function mapRowToCard(headers, row) {
     "tokenscounters"
   );
 
-  // --- TYPE (can be inferred from header content when no explicit Type column) ---
+  // --- TYPE (infer from headers if missing) ---
   let type = get("type");
 
   if (!type) {
@@ -101,7 +114,7 @@ function mapRowToCard(headers, row) {
     else if (hasAny("namedvehiclename")) type = "Named Vehicle";
     else if (hasAny("vehiclename")) type = "Vehicle";
     else if (hasAny("tokens/counters", "tokenscounters")) type = "Misc";
-    else if (hasAny("drivername")) type = "Driver"; // Named Driver cards will come in as Driver by default
+    else if (hasAny("drivername")) type = "Driver";
   }
 
   // --- CORE METADATA ---
@@ -111,6 +124,8 @@ function mapRowToCard(headers, row) {
 
   const vt = get("vehicletype", "vehicletype2", "vehicletype1", "vehicletype3");
   const tagsStr = get("tags", "tag", "keywords");
+
+  const imageUrl = get("image", "imageurl", "img");
 
   // Notes / rules text: support master sheet trait columns as well
   const notes = get(
@@ -126,8 +141,6 @@ function mapRowToCard(headers, row) {
     "ability",
     "vehicletrait"
   );
-
-  const imageUrl = get("image", "imageurl", "img");
 
   const vehicleTypes = parseVehicleTypes(vt);
   const tags = parseTags(tagsStr);
@@ -199,6 +212,9 @@ function mapRowToCard(headers, row) {
   return normalizeCardShape(baseCard);
 }
 
+/************************************************************
+ * Parse text in textarea
+ ************************************************************/
 function handleBulkParse() {
   if (
     !Dom.bulkInput ||
@@ -241,7 +257,9 @@ function handleBulkParse() {
   });
 
   const previewLines = cards.slice(0, 20).map(c => {
-    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
+    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${
+      c.setName || "Set ?"
+    } #${c.cardNumber || "###"}`;
   });
 
   Dom.bulkPreview.textContent =
@@ -251,6 +269,9 @@ function handleBulkParse() {
   Dom.bulkStatus.textContent = `Parsed ${cards.length} cards. Ready to import.`;
 }
 
+/************************************************************
+ * Import parsed cards into AppState.cards
+ ************************************************************/
 function handleBulkImport() {
   if (!Dom.bulkPreview || !Dom.bulkStatus || !Dom.bulkInput) {
     console.warn("[Bulk] DOM elements missing; cannot import.");
@@ -294,11 +315,91 @@ function handleBulkImport() {
   refreshSingleUi();
 }
 
+/************************************************************
+ * File upload → textarea → parse
+ ************************************************************/
+async function handleBulkFileChange(e) {
+  if (!Dom.bulkStatus || !Dom.bulkInput || !Dom.bulkDelimiterSelect) {
+    console.warn("[Bulk] DOM elements missing; cannot handle file input.");
+    return;
+  }
+
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+
+  const name = file.name.toLowerCase();
+
+  try {
+    // CSV / TSV / TXT: read as text and feed into existing parser
+    if (
+      name.endsWith(".csv") ||
+      name.endsWith(".tsv") ||
+      name.endsWith(".txt")
+    ) {
+      const text = await file.text();
+      Dom.bulkInput.value = text;
+      Dom.bulkStatus.textContent = `Loaded file: ${file.name}. Parsing…`;
+      Dom.bulkDelimiterSelect.value = "auto";
+      handleBulkParse();
+      return;
+    }
+
+    // XLSX / XLS: use SheetJS via CDN
+    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
+      Dom.bulkStatus.textContent = `Reading Excel file: ${file.name}…`;
+      const arrayBuf = await file.arrayBuffer();
+      const XLSX = await loadXlsxLib();
+      const wb = XLSX.read(arrayBuf, { type: "array" });
+
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      // header:1 => array-of-arrays (first row is header)
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      if (!rows.length) {
+        Dom.bulkStatus.textContent = `Excel sheet "${sheetName}" is empty.`;
+        return;
+      }
+
+      // Convert to TAB-delimited text so the existing parser can handle it.
+      const lines = rows.map(row =>
+        (row || [])
+          .map(cell => {
+            if (cell == null) return "";
+            const str = String(cell);
+            // Strip tabs/newlines to keep a clean TSV-like text
+            return str.replace(/\t/g, " ").replace(/\r?\n/g, " ");
+          })
+          .join("\t")
+      );
+
+      const text = lines.join("\n");
+      Dom.bulkInput.value = text;
+      Dom.bulkDelimiterSelect.value = "tab";
+      Dom.bulkStatus.textContent = `Loaded "${sheetName}" from ${file.name}. Parsing…`;
+      handleBulkParse();
+      return;
+    }
+
+    Dom.bulkStatus.textContent =
+      "Unsupported file type. Please upload a CSV, TSV, TXT, or XLSX file.";
+  } catch (err) {
+    console.error("[Bulk] Error reading file:", err);
+    Dom.bulkStatus.textContent = "Error reading file. See console for details.";
+  }
+}
+
+/************************************************************
+ * Init
+ ************************************************************/
 export function initBulk() {
   if (Dom.bulkParseBtn) {
     Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
   }
   if (Dom.bulkImportBtn) {
     Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+  }
+  if (Dom.bulkFileInput) {
+    Dom.bulkFileInput.addEventListener("change", handleBulkFileChange);
   }
 }
