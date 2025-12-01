@@ -13,20 +13,13 @@ import {
 } from "./single.js";
 
 /************************************************************
- * XLSX helper (lazy-loaded)
+ * Module-level state for bulk flow
  ************************************************************/
-let xlsxLibPromise = null;
-
-function loadXlsxLib() {
-  if (!xlsxLibPromise) {
-    // Uses ESM build of SheetJS from a CDN; no bundler needed.
-    xlsxLibPromise = import("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/+esm");
-  }
-  return xlsxLibPromise;
-}
+let parsedCards = [];
+let selectedCardIds = new Set();
 
 /************************************************************
- * Bulk Import core helpers
+ * Delimiter helpers
  ************************************************************/
 function detectDelimiter(value) {
   const counts = {
@@ -55,6 +48,9 @@ function splitLine(line, delimiter) {
   return [line];
 }
 
+/************************************************************
+ * Row → card mapping
+ ************************************************************/
 function normalizeHeader(str) {
   return (str || "")
     .toLowerCase()
@@ -87,37 +83,8 @@ function mapRowToCard(headers, row) {
     });
   };
 
-  // --- NAME ---
-  const name = get(
-    "name",
-    "cardname",
-    "title",
-    "crewname",
-    "modname",
-    "drivername",
-    "conditionname",
-    "trackname",
-    "vehiclename",
-    "namedvehiclename",
-    "tokens/counters",
-    "tokenscounters"
-  );
-
-  // --- TYPE (infer from headers if missing) ---
-  let type = get("type");
-
-  if (!type) {
-    if (hasAny("crewname")) type = "Crew";
-    else if (hasAny("modname")) type = "Mod";
-    else if (hasAny("conditionname")) type = "Condition";
-    else if (hasAny("trackname")) type = "Track";
-    else if (hasAny("namedvehiclename")) type = "Named Vehicle";
-    else if (hasAny("vehiclename")) type = "Vehicle";
-    else if (hasAny("tokens/counters", "tokenscounters")) type = "Misc";
-    else if (hasAny("drivername")) type = "Driver";
-  }
-
-  // --- CORE METADATA ---
+  const type = get("type");
+  const name = get("name", "cardname", "title");
   const setName = get("set", "setname", "setid");
   const cardNumber = get("cardnumber", "number", "no", "#");
   const rarity = get("rarity", "rar");
@@ -126,67 +93,34 @@ function mapRowToCard(headers, row) {
   const tagsStr = get("tags", "tag", "keywords");
 
   const imageUrl = get("image", "imageurl", "img");
-
-  // Notes / rules text: support master sheet trait columns as well
-  const notes = get(
-    "notes",
-    "rules",
-    "text",
-    "crewtrait",
-    "drivertrait",
-    "conditiontrait",
-    "tracktrait",
-    "trait",
-    "modability",
-    "ability",
-    "vehicletrait"
-  );
+  const notes = get("notes", "rules", "text");
 
   const vehicleTypes = parseVehicleTypes(vt);
   const tags = parseTags(tagsStr);
 
   const extra = {};
 
-  // --- MOD EXTRAS ---
   if (type === "Mod") {
     extra.modBasePart = get("basepart", "part", "modbase");
     extra.modLevel1 = get("level1", "l1", "lvl1");
-    extra.modLevel2 = get("level2", "l2", "lvl2", "modlvl2");
-    extra.modLevel3 = get("level3", "l3", "lvl3", "modlvl3");
-    extra.modLevel4 = get("level4", "l4", "lvl4", "modlvl4");
+    extra.modLevel2 = get("level2", "l2", "lvl2");
+    extra.modLevel3 = get("level3", "l3", "lvl3");
+    extra.modLevel4 = get("level4", "l4", "lvl4");
   }
 
-  // --- VEHICLE / NAMED VEHICLE EXTRAS ---
   if (type === "Vehicle" || type === "Named Vehicle") {
-    const hpConStr = get(
-      "hpcon",
-      "hp/con",
-      "hp",
-      "hitpoints",
-      "vehiclehpcon",
-      "vehiclehp/con"
-    );
-    let hpCon = { hp: undefined, con: undefined };
-
-    if (hpConStr && hpConStr.includes("/")) {
-      hpCon = parseHpCon(hpConStr);
-    } else if (hpConStr) {
-      hpCon = { hp: Number(hpConStr) || undefined, con: undefined };
-    }
-
+    const hpConStr = get("hpcon", "hp/con", "hp", "hitpoints");
+    const hpCon = hpConStr.includes("/")
+      ? parseHpCon(hpConStr)
+      : { hp: Number(hpConStr) || undefined };
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
-
-    const pitStr = get("pitcost", "pit", "pitpoints", "pitcost");
+    const pitStr = get("pitcost", "pit", "pitpoints");
     extra.pitCost = pitStr ? Number(pitStr) : undefined;
   }
 
-  // --- PRINTS ---
   const prints = [];
-  if (
-    hasAny("set", "setname", "setid") ||
-    hasAny("cardnumber", "number", "no")
-  ) {
+  if (hasAny("set", "setname", "setid") || hasAny("cardnumber", "number", "no")) {
     prints.push({
       setName,
       cardNumber,
@@ -213,24 +147,133 @@ function mapRowToCard(headers, row) {
 }
 
 /************************************************************
- * Parse text in textarea
+ * Rendering for Step 2 & 3
  ************************************************************/
-function handleBulkParse() {
-  if (
-    !Dom.bulkInput ||
-    !Dom.bulkDelimiterSelect ||
-    !Dom.bulkHasHeaderCheckbox ||
-    !Dom.bulkPreview ||
-    !Dom.bulkStatus
-  ) {
-    console.warn("[Bulk] DOM elements missing; cannot parse.");
+function getFilteredParsedCards() {
+  const filter = (Dom.bulkFilterInput?.value || "").toLowerCase();
+  if (!filter) return parsedCards;
+
+  return parsedCards.filter(c => {
+    const name = (c.name || "").toLowerCase();
+    const type = (c.type || "").toLowerCase();
+    const setName = (c.setName || "").toLowerCase();
+    const num = (c.cardNumber || "").toLowerCase();
+    const tags = (Array.isArray(c.tags) ? c.tags.join(" ") : "").toLowerCase();
+    return (
+      name.includes(filter) ||
+      type.includes(filter) ||
+      setName.includes(filter) ||
+      num.includes(filter) ||
+      tags.includes(filter)
+    );
+  });
+}
+
+function renderBulkSelectionList() {
+  const container = Dom.bulkSelectionList;
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (!parsedCards.length) {
+    container.textContent = "No parsed cards yet. Paste text and click “Parse Text”.";
     return;
   }
 
+  const filtered = getFilteredParsedCards();
+  if (!filtered.length) {
+    container.textContent = "No cards match the current filter.";
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  filtered.forEach(card => {
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.alignItems = "center";
+    row.style.justifyContent = "space-between";
+    row.style.gap = "6px";
+    row.style.padding = "2px 0";
+
+    const label = document.createElement("label");
+    label.style.display = "flex";
+    label.style.alignItems = "center";
+    label.style.gap = "6px";
+    label.style.cursor = "pointer";
+    label.style.flex = "1";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedCardIds.has(card.id);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        selectedCardIds.add(card.id);
+      } else {
+        selectedCardIds.delete(card.id);
+      }
+      renderBulkSelectedPreview();
+    });
+
+    const summary = document.createElement("span");
+    summary.textContent =
+      `${card.type || "Type ?"} | ` +
+      `${card.name || "(no name)"} | ` +
+      `${card.setName || "Set ?"} #${card.cardNumber || "###"}`;
+
+    label.appendChild(checkbox);
+    label.appendChild(summary);
+
+    row.appendChild(label);
+    frag.appendChild(row);
+  });
+
+  container.appendChild(frag);
+}
+
+function renderBulkSelectedPreview() {
+  const box = Dom.bulkSelectedPreview;
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  if (!parsedCards.length) {
+    box.textContent = "Nothing parsed yet.";
+    return;
+  }
+
+  const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
+  if (!selected.length) {
+    box.textContent = "No cards selected.";
+    return;
+  }
+
+  const lines = selected.slice(0, 20).map(c => {
+    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
+  });
+
+  const text =
+    lines.join("\n") +
+    (selected.length > 20 ? `\n...and ${selected.length - 20} more.` : "");
+
+  const pre = document.createElement("pre");
+  pre.style.margin = "0";
+  pre.textContent = text;
+
+  box.appendChild(pre);
+}
+
+/************************************************************
+ * Step 1: Parse
+ ************************************************************/
+function handleBulkParse() {
   const raw = Dom.bulkInput.value || "";
   if (!raw.trim()) {
     Dom.bulkStatus.textContent = "No data to parse.";
-    Dom.bulkPreview.textContent = "";
+    parsedCards = [];
+    selectedCardIds.clear();
+    renderBulkSelectionList();
+    renderBulkSelectedPreview();
     return;
   }
 
@@ -243,7 +286,10 @@ function handleBulkParse() {
   const lines = raw.split(/\r?\n/).filter(line => line.trim());
   if (!lines.length) {
     Dom.bulkStatus.textContent = "No non-empty lines found.";
-    Dom.bulkPreview.textContent = "";
+    parsedCards = [];
+    selectedCardIds.clear();
+    renderBulkSelectionList();
+    renderBulkSelectedPreview();
     return;
   }
 
@@ -256,46 +302,35 @@ function handleBulkParse() {
     return mapRowToCard(headerCells, cells);
   });
 
-  const previewLines = cards.slice(0, 20).map(c => {
-    return `${c.type || "Type ?"} | ${c.name || "(no name)"} | ${
-      c.setName || "Set ?"
-    } #${c.cardNumber || "###"}`;
-  });
+  parsedCards = cards;
+  selectedCardIds = new Set(cards.map(c => c.id)); // default: all selected
 
-  Dom.bulkPreview.textContent =
-    previewLines.join("\n") +
-    (cards.length > 20 ? `\n...and ${cards.length - 20} more.` : "");
-  Dom.bulkPreview.dataset.parsedCards = JSON.stringify(cards);
-  Dom.bulkStatus.textContent = `Parsed ${cards.length} cards. Ready to import.`;
+  renderBulkSelectionList();
+  renderBulkSelectedPreview();
+
+  Dom.bulkStatus.textContent =
+    `Parsed ${cards.length} cards. All selected by default – refine in Step 2.`;
 }
 
 /************************************************************
- * Import parsed cards into AppState.cards
+ * Import: Step 3
  ************************************************************/
 function handleBulkImport() {
-  if (!Dom.bulkPreview || !Dom.bulkStatus || !Dom.bulkInput) {
-    console.warn("[Bulk] DOM elements missing; cannot import.");
+  if (!parsedCards.length) {
+    Dom.bulkStatus.textContent = "Nothing parsed yet. Click “Parse Text” first.";
     return;
   }
 
-  const parsed = Dom.bulkPreview.dataset.parsedCards;
-  if (!parsed) {
-    Dom.bulkStatus.textContent = "Nothing parsed yet. Click 'Parse Text' first.";
-    return;
-  }
-
-  let cards;
-  try {
-    cards = JSON.parse(parsed);
-  } catch (e) {
-    console.error("Failed to parse parsedCards JSON:", e);
-    Dom.bulkStatus.textContent = "Internal error: could not read parsed cards.";
+  const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
+  if (!selected.length) {
+    Dom.bulkStatus.textContent = "No cards selected to import.";
     return;
   }
 
   let added = 0;
   let updated = 0;
-  cards.forEach(card => {
+
+  selected.forEach(card => {
     const idx = AppState.cards.findIndex(c => c.id === card.id);
     if (idx >= 0) {
       AppState.cards[idx] = card;
@@ -306,100 +341,51 @@ function handleBulkImport() {
     }
   });
 
-  Dom.bulkStatus.textContent = `Imported ${cards.length} cards (${added} added, ${updated} updated).`;
-  Dom.bulkPreview.textContent = "";
-  Dom.bulkPreview.dataset.parsedCards = "";
+  Dom.bulkStatus.textContent =
+    `Imported ${selected.length} cards (${added} added, ${updated} updated).`;
+
+  // Clear local bulk state
+  parsedCards = [];
+  selectedCardIds.clear();
   Dom.bulkInput.value = "";
+  if (Dom.bulkSelectionList) Dom.bulkSelectionList.innerHTML = "";
+  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.innerHTML = "";
+  if (Dom.bulkFilterInput) Dom.bulkFilterInput.value = "";
 
   // Re-render library and preview
   refreshSingleUi();
 }
 
 /************************************************************
- * File upload → textarea → parse
- ************************************************************/
-async function handleBulkFileChange(e) {
-  if (!Dom.bulkStatus || !Dom.bulkInput || !Dom.bulkDelimiterSelect) {
-    console.warn("[Bulk] DOM elements missing; cannot handle file input.");
-    return;
-  }
-
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-
-  const name = file.name.toLowerCase();
-
-  try {
-    // CSV / TSV / TXT: read as text and feed into existing parser
-    if (
-      name.endsWith(".csv") ||
-      name.endsWith(".tsv") ||
-      name.endsWith(".txt")
-    ) {
-      const text = await file.text();
-      Dom.bulkInput.value = text;
-      Dom.bulkStatus.textContent = `Loaded file: ${file.name}. Parsing…`;
-      Dom.bulkDelimiterSelect.value = "auto";
-      handleBulkParse();
-      return;
-    }
-
-    // XLSX / XLS: use SheetJS via CDN
-    if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-      Dom.bulkStatus.textContent = `Reading Excel file: ${file.name}…`;
-      const arrayBuf = await file.arrayBuffer();
-      const XLSX = await loadXlsxLib();
-      const wb = XLSX.read(arrayBuf, { type: "array" });
-
-      const sheetName = wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
-      // header:1 => array-of-arrays (first row is header)
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-
-      if (!rows.length) {
-        Dom.bulkStatus.textContent = `Excel sheet "${sheetName}" is empty.`;
-        return;
-      }
-
-      // Convert to TAB-delimited text so the existing parser can handle it.
-      const lines = rows.map(row =>
-        (row || [])
-          .map(cell => {
-            if (cell == null) return "";
-            const str = String(cell);
-            // Strip tabs/newlines to keep a clean TSV-like text
-            return str.replace(/\t/g, " ").replace(/\r?\n/g, " ");
-          })
-          .join("\t")
-      );
-
-      const text = lines.join("\n");
-      Dom.bulkInput.value = text;
-      Dom.bulkDelimiterSelect.value = "tab";
-      Dom.bulkStatus.textContent = `Loaded "${sheetName}" from ${file.name}. Parsing…`;
-      handleBulkParse();
-      return;
-    }
-
-    Dom.bulkStatus.textContent =
-      "Unsupported file type. Please upload a CSV, TSV, TXT, or XLSX file.";
-  } catch (err) {
-    console.error("[Bulk] Error reading file:", err);
-    Dom.bulkStatus.textContent = "Error reading file. See console for details.";
-  }
-}
-
-/************************************************************
- * Init
+ * Init wiring
  ************************************************************/
 export function initBulk() {
-  if (Dom.bulkParseBtn) {
-    Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
+  Dom.bulkParseBtn.addEventListener("click", handleBulkParse);
+  Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+
+  if (Dom.bulkFilterInput) {
+    Dom.bulkFilterInput.addEventListener("input", () => {
+      renderBulkSelectionList();
+    });
   }
-  if (Dom.bulkImportBtn) {
-    Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
+
+  if (Dom.bulkSelectAllBtn) {
+    Dom.bulkSelectAllBtn.addEventListener("click", () => {
+      parsedCards.forEach(c => selectedCardIds.add(c.id));
+      renderBulkSelectionList();
+      renderBulkSelectedPreview();
+    });
   }
-  if (Dom.bulkFileInput) {
-    Dom.bulkFileInput.addEventListener("change", handleBulkFileChange);
+
+  if (Dom.bulkDeselectAllBtn) {
+    Dom.bulkDeselectAllBtn.addEventListener("click", () => {
+      selectedCardIds.clear();
+      renderBulkSelectionList();
+      renderBulkSelectedPreview();
+    });
   }
+
+  // Initial empty render for cleanliness
+  renderBulkSelectionList();
+  renderBulkSelectedPreview();
 }
