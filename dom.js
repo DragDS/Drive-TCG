@@ -53,20 +53,25 @@ export const Dom = {
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
-  // Bulk import (new 3-step XLSX flow)
-  bulkFileInput: document.getElementById("bulkFileInput"),
+  // Bulk import (3-step)
+  bulkInput: document.getElementById("bulkInput"),               // (unused now, ok)
+  bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"), // (unused)
+  bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"), // (unused)
+  bulkParseBtn: document.getElementById("bulkParseBtn"),         // (unused)
+  bulkImportBtn: document.getElementById("bulkImportBtn"),
+  bulkPreview: document.getElementById("bulkPreview"),           // (unused)
   bulkStatus: document.getElementById("bulkStatus"),
+  bulkFileInput: document.getElementById("bulkFileInput"),
 
-  bulkFilterTypeSelect: document.getElementById("bulkFilterTypeSelect"),
-  bulkFilterSetSelect: document.getElementById("bulkFilterSetSelect"),
-
+  bulkFilterInput: document.getElementById("bulkFilterInput"),   // (unused)
   bulkSelectAllBtn: document.getElementById("bulkSelectAllBtn"),
   bulkDeselectAllBtn: document.getElementById("bulkDeselectAllBtn"),
-
   bulkSelectionList: document.getElementById("bulkSelectionList"),
   bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
 
-  bulkImportBtn: document.getElementById("bulkImportBtn"),
+  // NEW: bulk filters + clear button
+  bulkTypeFilterSelect: document.getElementById("bulkTypeFilterSelect"),
+  bulkSetFilterSelect: document.getElementById("bulkSetFilterSelect"),
   bulkClearBtn: document.getElementById("bulkClearBtn"),
 
   // Precons
@@ -85,3 +90,4 @@ export const Dom = {
   modalCancelBtn: document.getElementById("modalCancelBtn"),
   modalConfirmBtn: document.getElementById("modalConfirmBtn")
 };
+
