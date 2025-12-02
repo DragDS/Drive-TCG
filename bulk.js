@@ -63,23 +63,21 @@ function hasAnyField(normRow, ...candidates) {
  * Infer card Type from sheet name when not explicitly present
  ************************************************************/
 function guessTypeFromSheetName(sheetName) {
-  const nk = normalizeHeader(sheetName);
-  const base = nk.replace(/s$/, ""); // Handle plurals
+  const s = (sheetName || "").toString().toLowerCase();
 
-  const map = {
-    crew: "Crew",
-    driver: "Driver",
-    nameddriver: "Named Driver",
-    mod: "Mod",
-    modification: "Mod",
-    vehicle: "Vehicle",
-    namedvehicle: "Named Vehicle",
-    track: "Track",
-    condition: "Condition",
-    misc: "Misc"
-  };
+  // Check more specific patterns first
+  if (s.includes("named vehicle")) return "Named Vehicle";
+  if (s.includes("named driver")) return "Named Driver";
 
-  return map[base] || map[nk] || "";
+  if (s.includes("vehicle")) return "Vehicle";
+  if (s.includes("driver")) return "Driver";
+  if (s.includes("crew")) return "Crew";
+  if (s.includes("mod")) return "Mod";
+  if (s.includes("condition")) return "Condition";
+  if (s.includes("track")) return "Track";
+  if (s.includes("misc")) return "Misc";
+
+  return "";
 }
 
 /************************************************************
@@ -88,13 +86,24 @@ function guessTypeFromSheetName(sheetName) {
 function mapRowToCard(sheetType, rowObj) {
   const norm = buildNormRowMap(rowObj);
 
-  // Basic fields
+  // ----- BASIC FIELDS -----
   let type = getField(norm, "type", "cardtype", "kind");
-  if (!type) {
-    type = sheetType || "";
+  if (!type && sheetType) {
+    type = sheetType;
   }
 
-  const name = getField(norm, "name", "cardname", "card name", "title");
+  let name = getField(norm, "name", "cardname", "card name", "title");
+
+  // Fallback: any header that contains "name" (e.g. Crew Name, Mod Name, Driver Name)
+  if (!name) {
+    for (const [k, v] of Object.entries(norm)) {
+      if (k.includes("name") && v) {
+        name = v;
+        break;
+      }
+    }
+  }
+
   const setName = getField(norm, "set", "setname", "set name", "setid");
   const cardNumber = getField(norm, "cardnumber", "number", "no", "#", "card #");
   const rarity = getField(norm, "rarity", "rar");
@@ -110,7 +119,32 @@ function mapRowToCard(sheetType, rowObj) {
   const tagsStr = getField(norm, "tags", "tag", "keywords");
 
   const imageUrl = getField(norm, "image", "imageurl", "art", "img");
-  const notes = getField(norm, "notes", "rules", "rules text", "text", "effect", "cardtext");
+
+  let notes = getField(
+    norm,
+    "notes",
+    "rules",
+    "rules text",
+    "text",
+    "effect",
+    "cardtext"
+  );
+
+  // Fallback: any header with "trait", "text", "effect", or "ability"
+  if (!notes) {
+    for (const [k, v] of Object.entries(norm)) {
+      if (
+        v &&
+        (k.includes("trait") ||
+         k.includes("text") ||
+         k.includes("effect") ||
+         k.includes("ability"))
+      ) {
+        notes = v;
+        break;
+      }
+    }
+  }
 
   const vehicleTypes = parseVehicleTypes(vtRaw);
   const tags = parseTags(tagsStr);
@@ -122,7 +156,7 @@ function mapRowToCard(sheetType, rowObj) {
 
   const extra = {};
 
-  // Mod-specific fields
+  // ----- MOD-SPECIFIC -----
   if (type === "Mod") {
     extra.modBasePart = getField(norm, "basepart", "base part", "part", "modbase");
     extra.modLevel1 = getField(norm, "level1", "l1", "lvl1");
@@ -131,7 +165,7 @@ function mapRowToCard(sheetType, rowObj) {
     extra.modLevel4 = getField(norm, "level4", "l4", "lvl4");
   }
 
-  // Vehicle / Named Vehicle fields
+  // ----- VEHICLE / NAMED VEHICLE -----
   if (type === "Vehicle" || type === "Named Vehicle") {
     const hpConCombined = getField(norm, "hpcon", "hp/con", "hp_con", "hp and con");
     const hpOnly = getField(norm, "hp", "hitpoints", "hit points");
@@ -157,10 +191,12 @@ function mapRowToCard(sheetType, rowObj) {
     extra.pitCost = pitStr ? Number(pitStr) || undefined : undefined;
   }
 
-  // Prints (we rely on set + card number when present)
+  // ----- PRINTS -----
   const prints = [];
-  if (hasAnyField(norm, "set", "setname", "set name", "setid") ||
-      hasAnyField(norm, "cardnumber", "number", "no", "#", "card #")) {
+  if (
+    hasAnyField(norm, "set", "setname", "set name", "setid") ||
+    hasAnyField(norm, "cardnumber", "number", "no", "#", "card #")
+  ) {
     prints.push({
       setName,
       cardNumber,
