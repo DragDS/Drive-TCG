@@ -157,6 +157,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+      margin-top: 6px;
     }
 
     .meta-pills {
@@ -192,17 +193,12 @@
       color: var(--warn);
     }
 
-    .pill-dot, .pill-dot-danger {
+    .pill-dot {
       width: 6px;
       height: 6px;
       border-radius: 999px;
       background: var(--ok);
       box-shadow: 0 0 8px rgba(63,224,168,0.8);
-    }
-
-    .pill-dot-danger {
-      background: var(--danger);
-      box-shadow: 0 0 8px rgba(255,75,106,0.8);
     }
 
     .app-actions {
@@ -250,12 +246,6 @@
       color: var(--danger);
     }
 
-    .btn.green {
-      background: var(--ok-soft);
-      border-color: var(--ok-border);
-      color: var(--ok);
-    }
-
     .btn:hover {
       transform: translateY(-1px);
       border-color: rgba(255,255,255,0.32);
@@ -268,18 +258,6 @@
 
     .btn:active {
       transform: translateY(0);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border-style: dashed;
-      border-color: rgba(255,255,255,0.24);
-    }
-
-    .btn-danger {
-      background: var(--danger-soft);
-      border-color: var(--danger-border);
-      color: var(--danger);
     }
 
     .badge {
@@ -545,80 +523,6 @@
       font-size: 11px;
     }
 
-    .tag-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 10px;
-      color: var(--text-softer);
-      margin-top: 4px;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: var(--pill-bg);
-      border: 1px solid rgba(255,255,255,0.16);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .pill.ok {
-      border-color: var(--ok-border);
-      background: var(--ok-soft);
-      color: var(--ok);
-    }
-
-    .pill.warn {
-      border-color: var(--warn-border);
-      background: var(--warn-soft);
-      color: var(--warn);
-    }
-
-    .label-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(8,8,16,0.8);
-      color: var(--text-soft);
-    }
-
-    .label-pill.ok {
-      border-color: var(--ok-border);
-      background: var(--ok-soft);
-      color: var(--ok);
-    }
-
-    .label-pill.warn {
-      border-color: var(--warn-border);
-      background: var(--warn-soft);
-      color: var(--warn);
-    }
-
-    .label-pill.info {
-      border-color: rgba(119,167,255,0.45);
-      background: rgba(119,167,255,0.12);
-      color: #b6c9ff;
-    }
-
-    .label-pill.danger {
-      border-color: var(--danger-border);
-      background: var(--danger-soft);
-      color: var(--danger);
-    }
-
     .chip {
       display: inline-flex;
       align-items: center;
@@ -636,10 +540,6 @@
       background: var(--chip-bg-key);
       border-color: var(--chip-border-key);
       color: var(--accent-muted);
-    }
-
-    .chip + .chip {
-      margin-left: 4px;
     }
 
     .card-preview {
@@ -703,12 +603,6 @@
       display: block;
     }
 
-    .card-preview-text {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
     .notes-area {
       border-radius: 10px;
       padding: 6px 8px;
@@ -725,10 +619,6 @@
       padding-top: 6px;
       font-size: 11px;
       color: var(--text-soft);
-    }
-
-    .card-preview-footer .chip {
-      margin-top: 2px;
     }
 
     .single-status {
@@ -753,12 +643,6 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-    }
-
-    .library-header-left {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
     }
 
     .library-title {
@@ -871,131 +755,74 @@
       color: var(--danger);
     }
 
+    /* === Bulk layout height + scrolling patch === */
+    #bulkSection .panel-body {
+      min-height: calc(100vh - 260px);
+    }
+
     .bulk-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      gap: 10px;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
+      gap: 12px;
+      height: 100%;
     }
 
-    .bulk-editor {
-      min-height: 180px;
-      font-family: var(--font-mono);
+    .bulk-step-panel {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      gap: 8px;
+    }
+
+    #bulkSelectionList {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      overflow-y: auto;
+      list-style: none;
+      margin: 0;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
       font-size: 11px;
-      line-height: 1.4;
     }
 
-    .bulk-status {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-top: 4px;
+    #bulkSelectionList li + li {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      margin-top: 2px;
+      padding-top: 2px;
     }
 
-    .bulk-preview {
+    #bulkSelectedPreview {
+      flex: 1;
+      min-height: 120px;
+      max-height: none;
+      overflow-y: auto;
       font-family: var(--font-mono);
       font-size: 11px;
       background: rgba(0,0,0,0.52);
       border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.12);
       padding: 7px 8px;
-      max-height: 260px;
-      overflow: auto;
       white-space: pre;
     }
 
-    .precon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .precon-card {
-      border-radius: 14px;
-      padding: 9px 10px 10px;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 58%),
-        linear-gradient(155deg, rgba(5,5,12,0.96), rgba(5,6,16,0.98));
-      border: 1px solid rgba(255,255,255,0.12);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .precon-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .precon-title {
-      font-size: 13px;
-    }
-
-    .precon-meta {
-      font-size: 10px;
-      color: var(--text-softer);
-    }
-
-    .precon-list {
-      list-style: none;
-      margin: 4px 0 0;
-      padding: 0;
-      max-height: 150px;
-      overflow: auto;
-      border-radius: 9px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(0,0,0,0.46);
-      font-size: 11px;
-    }
-
-    .precon-list li {
-      padding: 2px 7px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .precon-list li:last-child {
-      border-bottom: none;
-    }
-
-    .precon-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 6px;
-      margin-top: 4px;
-      font-size: 10px;
-      color: var(--text-softer);
-    }
-
-    .precon-id {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      opacity: 0.85;
-    }
-
-    .precon-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .precon-controls {
+    .bulk-card-row {
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 4px;
-      flex-wrap: wrap;
     }
 
-    .precon-controls select,
-    .precon-controls input {
-      font-size: 11px;
-      height: 24px;
+    .bulk-card-checkbox {
+      flex: 0 0 auto;
     }
 
-    .precon-controls input[type="number"] {
-      width: 52px;
+    .bulk-card-label {
+      flex: 1 1 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .help-grid {
@@ -1024,10 +851,6 @@
       color: var(--text-soft);
     }
 
-    .help-section li + li {
-      margin-top: 2px;
-    }
-
     .help-note {
       border-radius: 10px;
       border: 1px dashed rgba(255,255,255,0.18);
@@ -1038,16 +861,9 @@
       margin-top: 6px;
     }
 
-    .help-note strong {
-      color: var(--accent-muted);
-    }
-
     .help-section code {
       font-family: var(--font-mono);
       font-size: 11px;
-      background: rgba(255,255,255,0.08);
-      padding: 1px 5px;
-      border-radius: 999px;
     }
 
     .help-section pre {
@@ -1060,12 +876,6 @@
       white-space: pre;
       overflow: auto;
       max-height: 260px;
-    }
-
-    .help-section pre code {
-      background: transparent;
-      padding: 0;
-      border-radius: 0;
     }
 
     .modal-backdrop {
@@ -1187,10 +997,10 @@
             </div>
           </div>
           <div class="app-actions">
-            <button id="downloadCardsJsonBtn" class="btn secondary small">
+            <button id="downloadCardsJsonBtn" class="btn secondary small" type="button">
               Export Card JSON
             </button>
-            <button id="downloadPreconsJsonBtn" class="btn secondary small">
+            <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">
               Export Precon JSON
             </button>
           </div>
@@ -1212,19 +1022,19 @@
           </div>
           <div class="panel-actions">
             <nav class="nav-tabs">
-              <button id="navSingleBtn" class="nav-tab active">
+              <button id="navSingleBtn" class="nav-tab active" type="button">
                 <span class="bullet"></span>
                 Single Card
               </button>
-              <button id="navBulkBtn" class="nav-tab">
+              <button id="navBulkBtn" class="nav-tab" type="button">
                 <span class="bullet"></span>
                 Bulk Import
               </button>
-              <button id="navPreconsBtn" class="nav-tab">
+              <button id="navPreconsBtn" class="nav-tab" type="button">
                 <span class="bullet"></span>
                 Precons
               </button>
-              <button id="navHelpBtn" class="nav-tab">
+              <button id="navHelpBtn" class="nav-tab" type="button">
                 <span class="bullet"></span>
                 Help
               </button>
@@ -1256,7 +1066,7 @@
                       <span class="field-required">Card Name</span>
                       <span class="hint">e.g. LUCKY CHARM, JUNKYARD DOG</span>
                     </label>
-                    <input id="cardNameInput" class="input" type="text" placeholder="e.g. LUCKY CHARM, JUNKYARD DOG" />
+                    <input id="cardNameInput" class="input" type="text" />
                   </div>
 
                   <div class="field">
@@ -1281,9 +1091,9 @@
                   <div class="field">
                     <label class="field-label">
                       <span class="field-required">Set Name</span>
-                      <span class="hint">Displayed set, e.g. Set 1, Set 2, etc.</span>
+                      <span class="hint">Displayed set, e.g. Set 1, Set 2, Father's Day</span>
                     </label>
-                    <input id="cardSetNameInput" class="input input-mono" type="text" placeholder="e.g. Set 1, Set 2, Father's Day" />
+                    <input id="cardSetNameInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
@@ -1291,7 +1101,7 @@
                       <span class="field-required">Card Number</span>
                       <span class="hint">Numeric or alphanumeric</span>
                     </label>
-                    <input id="cardNumberInput" class="input input-mono" type="text" placeholder="e.g. 001, 02, FD-03" />
+                    <input id="cardNumberInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
@@ -1299,7 +1109,7 @@
                       <span>Rarity</span>
                       <span class="hint">Common, Uncommon, Rare, Ultra Rare, etc.</span>
                     </label>
-                    <input id="cardRarityInput" class="input input-mono" type="text" placeholder="e.g. Common" />
+                    <input id="cardRarityInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
@@ -1307,7 +1117,7 @@
                       <span>Image URL</span>
                       <span class="hint">Path or URL to art</span>
                     </label>
-                    <input id="cardImageUrlInput" class="input input-mono" type="text" placeholder="e.g. /img/cards/lucky_charm.png" />
+                    <input id="cardImageUrlInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
@@ -1315,7 +1125,7 @@
                       <span>Vehicle Types</span>
                       <span class="hint">Comma-separated: Drag, Drift, Off-Road, Rally</span>
                     </label>
-                    <input id="cardVehicleTypesInput" class="input input-mono" type="text" placeholder="e.g. Drag, Drift" />
+                    <input id="cardVehicleTypesInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
@@ -1323,86 +1133,15 @@
                       <span>Tags</span>
                       <span class="hint">Comma-separated keywords</span>
                     </label>
-                    <input id="cardTagsInput" class="input input-mono" type="text" placeholder="e.g. Junkyard, Sponsor, Holiday" />
+                    <input id="cardTagsInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field" data-for-types="Mod">
                     <label class="field-label">
                       <span>Mod Base Part</span>
-                      <span class="hint">Used to filter vehicles and synergy for Tracks/Conditions.</span>
+                      <span class="hint">Headers, Engine, Brakes, etc.</span>
                     </label>
-                    <input
-                      id="modBasePartInput"
-                      class="input input-mono"
-                      type="text"
-                      placeholder="Headers, Engine, Brakes"
-                    />
-                  </div>
-
-                  <!-- NEW: Mod Levels block -->
-                  <div class="field" data-for-types="Mod">
-                    <label class="field-label">
-                      <span>Mod Levels</span>
-                      <span class="hint">
-                        Each level is HP/CON (e.g. 1/2). Use "-" if the Mod cannot reach that level.
-                      </span>
-                    </label>
-
-                    <div class="field-grid">
-                      <div class="field">
-                        <label class="field-label">
-                          <span>L1</span>
-                        </label>
-                        <input
-                          id="modL1Input"
-                          class="input input-mono"
-                          type="text"
-                          placeholder="e.g. 1/2"
-                        />
-                      </div>
-
-                      <div class="field">
-                        <label class="field-label">
-                          <span>L2</span>
-                        </label>
-                        <input
-                          id="modL2Input"
-                          class="input input-mono"
-                          type="text"
-                          placeholder="e.g. 2/2 or -"
-                        />
-                      </div>
-
-                      <div class="field">
-                        <label class="field-label">
-                          <span>L3</span>
-                        </label>
-                        <input
-                          id="modL3Input"
-                          class="input input-mono"
-                          type="text"
-                          placeholder="e.g. 3/3 or -"
-                        />
-                      </div>
-
-                      <div class="field">
-                        <label class="field-label">
-                          <span>L4</span>
-                        </label>
-                        <input
-                          id="modL4Input"
-                          class="input input-mono"
-                          type="text"
-                          placeholder="e.g. 5/3 or -"
-                        />
-                      </div>
-                    </div>
-
-                    <div class="tag-row">
-                      <span class="hint">
-                        Leave later levels blank if this Mod doesn’t have them.
-                      </span>
-                    </div>
+                    <input id="modBasePartInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
@@ -1414,20 +1153,41 @@
                       <div class="field">
                         <label class="field-label">
                           <span>HP / CON</span>
-                          <span class="hint">e.g. 3/2 Pit Cost</span>
                         </label>
                         <input id="vehicleHpConInput" class="input input-mono" type="text" placeholder="e.g. 3/2" />
                       </div>
                       <div class="field">
                         <label class="field-label">
                           <span>Pit Cost</span>
-                          <span class="hint">Numeric</span>
                         </label>
-                        <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" placeholder="e.g. 2" />
+                        <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" />
                       </div>
                     </div>
-                    <div class="tag-row">
-                      <span class="tip">HP/CON and Pit Cost are only relevant for Vehicles.</span>
+                  </div>
+
+                  <!-- Mod Levels -->
+                  <div class="field" data-for-types="Mod">
+                    <label class="field-label">
+                      <span>Mod Levels</span>
+                      <span class="hint">Each level is HP/CON or "-".</span>
+                    </label>
+                    <div class="field-grid">
+                      <div class="field">
+                        <label class="field-label"><span>L1</span></label>
+                        <input id="modL1Input" class="input input-mono" type="text" placeholder="e.g. 1/2" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>L2</span></label>
+                        <input id="modL2Input" class="input input-mono" type="text" placeholder="e.g. 2/2" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>L3</span></label>
+                        <input id="modL3Input" class="input input-mono" type="text" placeholder="e.g. 3/3" />
+                      </div>
+                      <div class="field">
+                        <label class="field-label"><span>L4</span></label>
+                        <input id="modL4Input" class="input input-mono" type="text" placeholder="e.g. -" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1435,24 +1195,24 @@
                 <div class="field">
                   <label class="field-label">
                     <span>Card Notes / Rules Text</span>
-                    <span class="hint">Use full rules text; preview appears on the right.</span>
+                    <span class="hint">Full rules text; preview appears on the right.</span>
                   </label>
-                  <textarea id="cardNotesInput" class="input input-mono" placeholder="Enter the card's full rules text, flavor, or reminder text"></textarea>
+                  <textarea id="cardNotesInput" class="input input-mono"></textarea>
                 </div>
 
                 <div class="field-card-footer">
-                  <div class="tag-row">
-                    <span class="hint">ID is auto-assigned for new cards. For existing cards, the ID is used to match updates.</span>
+                  <div class="hint">
+                    ID is auto-assigned for new cards. For existing cards, the ID is used to match updates.
                   </div>
                   <div style="display:flex;gap:6px;align-items:center;">
                     <input id="cardIdInput" class="input input-mono" type="text" placeholder="(auto)" style="max-width: 180px;" />
                     <button id="singleSaveBtn" class="btn primary small" type="button">Save / Update Card</button>
-                    <button id="singleNewBtn" class="btn small btn-ghost" type="button">New Card</button>
-                    <button id="singleDeleteBtn" class="btn small btn-danger" type="button">Delete Card</button>
+                    <button id="singleNewBtn" class="btn small" type="button">New Card</button>
+                    <button id="singleDeleteBtn" class="btn small danger" type="button">Delete Card</button>
                   </div>
                 </div>
 
-                <div class="single-status" id="singleStatus">Ready.</div>
+                <div id="singleStatus" class="single-status">Ready.</div>
               </div>
 
               <div class="field-card">
@@ -1465,9 +1225,7 @@
                   </div>
                 </div>
 
-                <div id="singlePreview" class="card-preview">
-                  <!-- Filled by JS -->
-                </div>
+                <div id="singlePreview" class="card-preview"></div>
 
                 <div class="prints-row">
                   <div class="prints-controls">
@@ -1482,12 +1240,12 @@
                       <option value="CUSTOM">Custom…</option>
                     </select>
                     <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name" />
-                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="# number" />
+                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="# number (press Enter)" />
                   </div>
 
                   <div class="prints-actions">
                     <button id="printSetPrimaryBtn" class="btn small" type="button">Set Last As Primary ★</button>
-                    <button id="printClearAllBtn" class="btn small btn-ghost" type="button">Clear Prints</button>
+                    <button id="printClearAllBtn" class="btn small" type="button">Clear Prints</button>
                     <span class="hint">Click a print in the list below to remove it.</span>
                   </div>
 
@@ -1496,7 +1254,7 @@
 
                 <div class="library-panel">
                   <div class="library-header">
-                    <div class="library-header-left">
+                    <div>
                       <div class="library-title">Card Library</div>
                       <div id="libraryCount" class="library-count">0 cards</div>
                     </div>
@@ -1506,9 +1264,7 @@
                 </div>
 
                 <div class="field-card-footer">
-                  <div class="tag-row">
-                    <span class="hint">Use the library to quickly locate cards to edit.</span>
-                  </div>
+                  <div class="hint">Use the library to quickly locate cards to edit.</div>
                   <button id="downloadCardsJsonBtn_single" class="btn secondary small" type="button">
                     Export Card JSON
                   </button>
@@ -1517,84 +1273,113 @@
             </div>
           </section>
 
-          <!-- BULK IMPORT SECTION (3-step + file upload) -->
-      <section id="bulkSection" class="section">
-  <div class="section-header">
-    <div class="section-title">Bulk Import</div>
-    <div class="section-subtitle">
-      Load from your master spreadsheet, filter by Type/Set, then import into the card library.
-    </div>
-  </div>
+          <!-- BULK IMPORT SECTION -->
+          <section id="bulkSection" class="section">
+            <div class="bulk-layout">
+              <!-- Step 1 -->
+              <div class="field-card bulk-step-panel">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Step 1 · Load master spreadsheet</div>
+                    <div class="field-card-subtitle">
+                      Load your <strong>Drive Cards.xlsx</strong> master file. The sheets will be read and turned into cards.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>XLSX only</span>
+                  </div>
+                </div>
 
-  <div class="bulk-layout">
-    <!-- STEP 1: Load master spreadsheet -->
-    <div class="field-card">
-      <h2>Step 1 · Load master spreadsheet</h2>
-      <div class="field">
-        <label class="field-label" for="bulkFileInput">Drive master file (.xlsx)</label>
-        <input type="file" id="bulkFileInput" accept=".xlsx" />
-        <p class="hint">
-          Select your <strong>Drive Cards.xlsx</strong> file. The sheets will be parsed automatically.
-          You won’t see the raw grid, just card summaries.
-        </p>
-      </div>
+                <div class="field">
+                  <label class="field-label">
+                    <span>Drive master file (.xlsx)</span>
+                  </label>
+                  <input
+                    id="bulkFileInput"
+                    type="file"
+                    accept=".xlsx"
+                    class="input"
+                    style="padding:3px 8px;"
+                  />
+                  <span class="hint">
+                    Select your <strong>Drive Cards.xlsx</strong>. You will not see the raw grid, just card summaries.
+                  </span>
+                </div>
 
-      <pre id="bulkStatus" class="bulk-preview">No file loaded yet.</pre>
-    </div>
+                <div id="bulkStatus" class="single-status" style="margin-top:8px;">
+                  Waiting for a master spreadsheet…
+                </div>
+              </div>
 
-    <!-- STEP 2 + 3: Filter, select, preview, import -->
-    <div class="field-card">
-      <h2>Step 2 · Filter & choose cards</h2>
+              <!-- Step 2 & 3 -->
+              <div class="field-card bulk-step-panel">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Step 2 · Filter &amp; choose cards</div>
+                    <div class="field-card-subtitle">
+                      Filter by Type or Set, select the cards you want, then import or clear.
+                    </div>
+                  </div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Selection &amp; Import</span>
+                  </div>
+                </div>
 
-      <div class="field-grid two-cols">
-        <div class="field">
-          <label class="field-label" for="bulkTypeFilterSelect">Filter by Type</label>
-          <select id="bulkTypeFilterSelect">
-            <option value="">All Types</option>
-          </select>
-        </div>
+                <div class="field-grid full" style="gap:8px;">
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Filter by Type</span>
+                    </label>
+                    <select id="bulkFilterTypeSelect" class="input input-mono">
+                      <option value="">All Types</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Filter by Set</span>
+                    </label>
+                    <select id="bulkFilterSetSelect" class="input input-mono">
+                      <option value="">All Sets</option>
+                    </select>
+                  </div>
+                </div>
 
-        <div class="field">
-          <label class="field-label" for="bulkSetFilterSelect">Filter by Set</label>
-          <select id="bulkSetFilterSelect">
-            <option value="">All Sets</option>
-          </select>
-        </div>
-      </div>
+                <div style="display:flex;gap:6px;margin:6px 0;">
+                  <button id="bulkSelectAllViewedBtn" class="btn small" type="button">Select all viewed</button>
+                  <button id="bulkDeselectAllViewedBtn" class="btn small" type="button">Deselect all viewed</button>
+                </div>
 
-      <div class="field-grid" style="margin-top: 6px;">
-        <div class="field">
-          <button type="button" id="bulkSelectAllBtn" class="btn secondary">
-            Select all viewed
-          </button>
-          <button type="button" id="bulkDeselectAllBtn" class="btn ghost">
-            Deselect all viewed
-          </button>
-        </div>
-      </div>
+                <div class="field">
+                  <label class="field-label">
+                    <span>Step 2 · Visible cards</span>
+                    <span class="hint">Each line is one card. Check the box to include it in Step 3.</span>
+                  </label>
+                  <ul id="bulkSelectionList"></ul>
+                </div>
 
-      <ul id="bulkSelectionList" class="prints-list bulk-selection-list"></ul>
+                <div class="field">
+                  <label class="field-label">
+                    <span>Step 3 · Selected cards</span>
+                    <span class="hint">Cards that will be imported into the JSON library.</span>
+                  </label>
+                  <pre id="bulkSelectedPreview"></pre>
+                </div>
 
-      <h2 style="margin-top: 16px;">Step 3 · Review & import</h2>
-      <pre id="bulkSelectedPreview" class="bulk-preview">No cards selected for import.</pre>
+                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">
+                  <button id="bulkClearSessionBtn" class="btn small danger" type="button">
+                    Clear current bulk session
+                  </button>
+                  <button id="bulkImportBtn" class="btn small primary" type="button">
+                    Import selected into library
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
 
-      <div class="field-grid two-cols" style="margin-top: 8px;">
-        <div class="field">
-          <button type="button" id="bulkImportBtn" class="btn primary">
-            Import selected into library
-          </button>
-        </div>
-        <div class="field" style="text-align: right;">
-          <button type="button" id="bulkClearBtn" class="btn danger">
-            Clear current bulk session
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-          <!-- PRECONS SECTION -->
+          <!-- PRECONS SECTION (read-only summary) -->
           <section id="preconsSection" class="section">
             <div class="field-card">
               <div class="field-card-label">
@@ -1614,9 +1399,7 @@
               <div id="preconGrid" class="precon-grid"></div>
 
               <div class="field-card-footer">
-                <div class="tag-row">
-                  <span class="hint">Precons display counts and card names resolved from the current card library.</span>
-                </div>
+                <div class="hint">Precons display counts and card names resolved from the current card library.</div>
                 <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">
                   Export Precon JSON
                 </button>
@@ -1642,44 +1425,30 @@
                 </div>
                 <div class="help-section">
                   <h3>Single Card Editor</h3>
-                  <p>
-                    The Single Card tab lets you edit one card at a time. The preview on the right updates as you type.
-                  </p>
+                  <p>The Single Card tab lets you edit one card at a time. The preview on the right updates as you type.</p>
                   <ul>
-                    <li><strong>Save / Update Card</strong> will add or update the card in the in-memory library.</li>
-                    <li><strong>New Card</strong> clears the form so you can create a fresh entry.</li>
-                    <li><strong>Delete Card</strong> removes the selected card from the library.</li>
+                    <li><strong>Save / Update Card</strong> adds or updates the card in the in-memory library.</li>
+                    <li><strong>New Card</strong> clears the form.</li>
+                    <li><strong>Delete Card</strong> removes the selected card.</li>
                   </ul>
-                  <p>
-                    Use the <strong>Card Library</strong> list below the editor to filter and select existing cards.
-                    Click any card to load it into the editor for changes.
-                  </p>
 
                   <h3>Bulk Import</h3>
                   <p>
-                    The Bulk tab now works in three steps:
+                    The Bulk tab uses your master <code>Drive Cards.xlsx</code> file:
                   </p>
                   <ul>
-                    <li><strong>Step 1:</strong> Paste or load a CSV/TSV/XLSX file and parse it.</li>
-                    <li><strong>Step 2:</strong> Filter and select which parsed cards you want.</li>
+                    <li><strong>Step 1:</strong> Load the master spreadsheet.</li>
+                    <li><strong>Step 2:</strong> Filter by Type / Set, then select or deselect viewed cards.</li>
                     <li><strong>Step 3:</strong> Review the selected cards and import them into the library.</li>
                   </ul>
                   <p>
-                    XLSX import uses the first sheet and converts it to CSV in-memory.
+                    Cards that belong to multiple sets (e.g. <code>Set 1 &amp; 3</code>) will appear when you select either
+                    of those sets in the Set filter.
                   </p>
 
                   <h3>Precons</h3>
                   <p>
-                    The Precons tab shows a summary of each preconstructed deck defined in <code>drive-precons.json</code>.
-                    Each deck displays:
-                  </p>
-                  <ul>
-                    <li>Deck name and description.</li>
-                    <li>List of card IDs plus counts, resolved against the current card library when possible.</li>
-                  </ul>
-                  <p>
-                    Use your code editor to change the JSON, then refresh this page, or export a new JSON from here using the
-                    <strong>Export Precon JSON</strong> button.
+                    The Precons tab shows a summary of each preconstructed deck from <code>drive-precons.json</code>.
                   </p>
                 </div>
               </div>
@@ -1692,7 +1461,10 @@
                       Reference for the shape of <code>drive-card.json</code> and <code>drive-precons.json</code>.
                     </div>
                   </div>
-                  <div class="label-pill info">Kept in sync with the admin logic.</div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Reference</span>
+                  </div>
                 </div>
                 <div class="help-section">
                   <h3>Card JSON</h3>
@@ -1733,12 +1505,6 @@
     ]
   }
 ]</code></pre>
-
-                  <div class="help-note">
-                    <strong>Tip:</strong>
-                    Whenever you change card IDs in <code>drive-card.json</code>, make sure to update references in
-                    <code>drive-precons.json</code> so precon summaries stay accurate.
-                  </div>
                 </div>
               </div>
 
@@ -1747,18 +1513,21 @@
                   <div>
                     <div class="field-card-title">Local Backup &amp; Tools</div>
                     <div class="field-card-subtitle">
-                      The admin will try to load <code>drive-card.json</code> and <code>drive-precons.json</code>, and fall back to <code>localStorage</code> backups if needed.
+                      Suggested workflow for editing and exporting JSON safely.
                     </div>
                   </div>
-                  <div class="label-pill.ok">Auto-load from JSON when possible</div>
+                  <div class="badge">
+                    <span class="badge-dot"></span>
+                    <span>Workflow</span>
+                  </div>
                 </div>
                 <div class="help-section">
                   <div class="help-note">
-                    <strong>Workflow suggestion:</strong>
+                    <strong>Suggested workflow:</strong>
                     <ol style="margin:4px 0 0;padding-left:18px;font-size:11px;">
                       <li>Open this admin and let it load <code>drive-card.json</code> and <code>drive-precons.json</code>.</li>
                       <li>Use <strong>Single</strong> and <strong>Bulk</strong> tabs to edit or create cards.</li>
-                      <li>Check precons under <strong>Precons</strong> to verify deck contents are correct.</li>
+                      <li>Check precons under <strong>Precons</strong> to verify deck contents.</li>
                       <li>Click <strong>Export Card JSON</strong> and <strong>Export Precon JSON</strong> to download updated files.</li>
                       <li>Replace the JSON files in your repo with the exported ones and commit.</li>
                     </ol>
@@ -1776,14 +1545,12 @@
     <div class="modal">
       <div class="modal-header">
         <h3 id="modalTitle">Confirm</h3>
-        <span class="label-pill warn">Dangerous</span>
+        <span class="badge">Dangerous</span>
       </div>
-      <div id="modalBody" class="modal-body">
-        Are you sure?
-      </div>
+      <div id="modalBody" class="modal-body">Are you sure?</div>
       <div class="modal-footer">
-        <button id="modalCancelBtn" class="btn small btn-ghost" type="button">Cancel</button>
-        <button id="modalConfirmBtn" class="btn small btn-danger" type="button">Confirm</button>
+        <button id="modalCancelBtn" class="btn small" type="button">Cancel</button>
+        <button id="modalConfirmBtn" class="btn small danger" type="button">Confirm</button>
       </div>
     </div>
   </div>
