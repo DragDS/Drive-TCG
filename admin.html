@@ -94,10 +94,8 @@
 
     .app-header-main {
       display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
     }
 
     .app-title-block {
@@ -865,13 +863,25 @@
 
     .prints-list li {
       padding: 2px 0;
-      cursor: default;
+      cursor: pointer;
+    }
+
+    .prints-list li:hover {
+      text-decoration: line-through;
+      color: var(--danger);
     }
 
     .bulk-layout {
       display: grid;
       grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
       gap: 10px;
+    }
+
+    .bulk-editor {
+      min-height: 180px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.4;
     }
 
     .bulk-status {
@@ -1223,7 +1233,7 @@
         </header>
 
         <div class="panel-body">
-          <!-- SINGLE CARD SECTION (unchanged logic) -->
+          <!-- SINGLE CARD SECTION -->
           <section id="singleSection" class="section active">
             <div class="form-layout">
               <div class="field-card">
@@ -1321,7 +1331,78 @@
                       <span>Mod Base Part</span>
                       <span class="hint">Used to filter vehicles and synergy for Tracks/Conditions.</span>
                     </label>
-                    <input id="modBasePartInput" class="input input-mono" type="text" placeholder="Headers, Engine, Brakes" />
+                    <input
+                      id="modBasePartInput"
+                      class="input input-mono"
+                      type="text"
+                      placeholder="Headers, Engine, Brakes"
+                    />
+                  </div>
+
+                  <!-- NEW: Mod Levels block -->
+                  <div class="field" data-for-types="Mod">
+                    <label class="field-label">
+                      <span>Mod Levels</span>
+                      <span class="hint">
+                        Each level is HP/CON (e.g. 1/2). Use "-" if the Mod cannot reach that level.
+                      </span>
+                    </label>
+
+                    <div class="field-grid">
+                      <div class="field">
+                        <label class="field-label">
+                          <span>L1</span>
+                        </label>
+                        <input
+                          id="modL1Input"
+                          class="input input-mono"
+                          type="text"
+                          placeholder="e.g. 1/2"
+                        />
+                      </div>
+
+                      <div class="field">
+                        <label class="field-label">
+                          <span>L2</span>
+                        </label>
+                        <input
+                          id="modL2Input"
+                          class="input input-mono"
+                          type="text"
+                          placeholder="e.g. 2/2 or -"
+                        />
+                      </div>
+
+                      <div class="field">
+                        <label class="field-label">
+                          <span>L3</span>
+                        </label>
+                        <input
+                          id="modL3Input"
+                          class="input input-mono"
+                          type="text"
+                          placeholder="e.g. 3/3 or -"
+                        />
+                      </div>
+
+                      <div class="field">
+                        <label class="field-label">
+                          <span>L4</span>
+                        </label>
+                        <input
+                          id="modL4Input"
+                          class="input input-mono"
+                          type="text"
+                          placeholder="e.g. 5/3 or -"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="tag-row">
+                      <span class="hint">
+                        Leave later levels blank if this Mod doesn’t have them.
+                      </span>
+                    </div>
                   </div>
 
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
@@ -1436,115 +1517,151 @@
             </div>
           </section>
 
-          <!-- BULK IMPORT SECTION – NEW 3-STEP WORKBOOK FLOW -->
+          <!-- BULK IMPORT SECTION (3-step + file upload) -->
           <section id="bulkSection" class="section">
             <div class="bulk-layout">
-              <!-- STEP 1: LOAD WORKBOOK -->
+              <!-- STEP 1: SOURCE & PARSE -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Bulk Import · Step 1</div>
                     <div class="field-card-subtitle">
-                      Load your master <strong>.xlsx</strong> workbook. All sheets will be scanned for cards.
+                      Paste CSV/TSV or load a file, then parse into normalized card rows.
                     </div>
                   </div>
                   <div class="badge">
                     <span class="badge-dot"></span>
-                    <span>Workbook Loader</span>
+                    <span>Header-aware</span>
                   </div>
                 </div>
 
                 <div class="field">
                   <label class="field-label">
-                    <span>Load Master Spreadsheet</span>
-                    <span class="hint">Select your DRIVE master Excel file (.xlsx).</span>
+                    <span>Raw Data</span>
+                    <span class="hint">Each line is one card; first row can be a header.</span>
                   </label>
+                  <textarea
+                    id="bulkInput"
+                    class="input bulk-editor"
+                    placeholder="Paste CSV/TSV data here, or choose a file below..."
+                  ></textarea>
+                </div>
+
+                <!-- File import (CSV / TSV / XLSX) -->
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
                   <input
                     id="bulkFileInput"
                     type="file"
-                    accept=".xlsx"
+                    accept=".csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     style="font-size:11px;"
                   />
+                  <span class="hint">
+                    Choose a CSV/TSV/TXT or XLSX file. The first sheet will be converted into rows here.
+                  </span>
                 </div>
 
-                <div class="field-card-footer">
-                  <div class="tag-row">
-                    <span id="bulkStatus" class="hint">No file loaded. Step 1 only needs you to choose the workbook.</span>
+                <div class="field-grid" style="margin-top: 6px;">
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Delimiter</span>
+                    </label>
+                    <select id="bulkDelimiterSelect" class="input input-mono">
+                      <option value="auto">Auto-detect</option>
+                      <option value="comma">Comma (,)</option>
+                      <option value="tab">Tab (↹)</option>
+                      <option value="semicolon">Semicolon (;)</option>
+                      <option value="pipe">Pipe (|)</option>
+                    </select>
                   </div>
+                  <div class="field">
+                    <label class="field-label">
+                      <span>Header &amp; Mapping</span>
+                    </label>
+                    <div style="display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--text-soft);">
+                      <label>
+                        <input id="bulkHasHeaderCheckbox" type="checkbox" checked />
+                        <span>First row is header</span>
+                      </label>
+                      <span class="label-pill info">Column names are loosely matched (case &amp; spacing ignored).</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
+                  <button id="bulkParseBtn" class="btn primary small" type="button">
+                    Step 1: Parse Text / File
+                  </button>
+                </div>
+                <div id="bulkStatus" class="bulk-status">Waiting for data…</div>
+
+                <div class="field" style="margin-top:6px;">
+                  <label class="field-label">
+                    <span>Step 1 Preview</span>
+                    <span class="hint">Shows the first few parsed rows.</span>
+                  </label>
+                  <pre id="bulkPreview" class="bulk-preview"></pre>
                 </div>
               </div>
 
-              <!-- STEP 2 & 3: FILTER / SELECT / IMPORT -->
+              <!-- STEP 2 & 3: SELECT + IMPORT -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Bulk Import · Step 2 &amp; 3</div>
                     <div class="field-card-subtitle">
-                      Filter by Type or Set, select the cards you want, then import or clear.
+                      Filter and select which parsed cards to import, then confirm import.
                     </div>
                   </div>
                   <div class="badge">
                     <span class="badge-dot"></span>
-                    <span>Selection &amp; Import</span>
+                    <span>Non-destructive</span>
                   </div>
                 </div>
 
-                <!-- STEP 2: FILTER & SELECT -->
-                <div class="field-grid">
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Filter by Type</span>
-                    </label>
-                    <select id="bulkFilterTypeSelect" class="input input-mono">
-                      <option value="">All Types</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Filter by Set</span>
-                    </label>
-                    <select id="bulkFilterSetSelect" class="input input-mono">
-                      <option value="">All Sets</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:6px;margin:6px 0;">
-                  <button id="bulkSelectAllBtn" class="btn small" type="button">Select All Viewed</button>
-                  <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Deselect All Viewed</button>
-                  <span class="hint">These buttons only affect cards currently visible with the filters.</span>
-                </div>
-
+                <!-- STEP 2: SELECTION -->
                 <div class="field">
                   <label class="field-label">
-                    <span>Step 2 · Card List</span>
-                    <span class="hint">Each line is one card. Check the box to include it in Step 3.</span>
+                    <span>Step 2 · Select Cards</span>
+                    <span class="hint">Filter by name/type and toggle selections.</span>
                   </label>
-                  <ul id="bulkSelectionList" class="prints-list" style="max-height: 170px;"></ul>
+                  <input
+                    id="bulkFilterInput"
+                    class="input input-mono"
+                    type="text"
+                    placeholder="Filter parsed cards by name, type, or set…"
+                  />
                 </div>
 
-                <!-- STEP 3: REVIEW & IMPORT -->
+                <div style="display:flex;align-items:center;gap:6px;margin:4px 0 6px;">
+                  <button id="bulkSelectAllBtn" class="btn small" type="button">Select All</button>
+                  <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Deselect All</button>
+                </div>
+
+                <ul
+                  id="bulkSelectionList"
+                  class="prints-list"
+                  style="max-height: 140px; margin-top: 0;"
+                ></ul>
+
+                <!-- STEP 3: PREVIEW & IMPORT -->
                 <div class="field" style="margin-top:8px;">
                   <label class="field-label">
-                    <span>Step 3 · Selected Cards</span>
-                    <span class="hint">Cards that will be imported into the JSON library.</span>
+                    <span>Step 3 · Selected Preview</span>
+                    <span class="hint">Review what will be merged into the library.</span>
                   </label>
-                  <pre id="bulkSelectedPreview" class="bulk-preview">No cards selected yet.</pre>
+                  <pre id="bulkSelectedPreview" class="bulk-preview"></pre>
                 </div>
 
-                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">
-                  <button id="bulkClearBtn" class="btn small btn-ghost" type="button">
-                    Clear Selection &amp; Data
-                  </button>
+                <div style="display:flex;justify-content:flex-end;margin-top:6px;">
                   <button id="bulkImportBtn" class="btn secondary small" type="button">
-                    Import Selected Cards
+                    Step 3: Import Selected Cards
                   </button>
                 </div>
               </div>
             </div>
           </section>
 
-          <!-- PRECONS SECTION (unchanged from your logic) -->
+          <!-- PRECONS SECTION -->
           <section id="preconsSection" class="section">
             <div class="field-card">
               <div class="field-card-label">
@@ -1574,7 +1691,7 @@
             </div>
           </section>
 
-          <!-- HELP SECTION (unchanged content) -->
+          <!-- HELP SECTION -->
           <section id="helpSection" class="section">
             <div class="help-grid">
               <div class="field-card">
@@ -1607,15 +1724,15 @@
 
                   <h3>Bulk Import</h3>
                   <p>
-                    The Bulk tab works in three steps:
+                    The Bulk tab now works in three steps:
                   </p>
                   <ul>
-                    <li><strong>Step 1:</strong> Load your master <code>.xlsx</code> spreadsheet.</li>
-                    <li><strong>Step 2:</strong> Filter by Type or Set and select the cards you want.</li>
+                    <li><strong>Step 1:</strong> Paste or load a CSV/TSV/XLSX file and parse it.</li>
+                    <li><strong>Step 2:</strong> Filter and select which parsed cards you want.</li>
                     <li><strong>Step 3:</strong> Review the selected cards and import them into the library.</li>
                   </ul>
                   <p>
-                    Each worksheet can represent a card type; the importer will infer card type from the sheet name and column headers.
+                    XLSX import uses the first sheet and converts it to CSV in-memory.
                   </p>
 
                   <h3>Precons</h3>
@@ -1642,7 +1759,7 @@
                       Reference for the shape of <code>drive-card.json</code> and <code>drive-precons.json</code>.
                     </div>
                   </div>
-                  <div class="label-pill.info">Kept in sync with the admin logic.</div>
+                  <div class="label-pill info">Kept in sync with the admin logic.</div>
                 </div>
                 <div class="help-section">
                   <h3>Card JSON</h3>
@@ -1700,7 +1817,7 @@
                       The admin will try to load <code>drive-card.json</code> and <code>drive-precons.json</code>, and fall back to <code>localStorage</code> backups if needed.
                     </div>
                   </div>
-                  <div class="label-pill ok">Auto-load from JSON when possible</div>
+                  <div class="label-pill.ok">Auto-load from JSON when possible</div>
                 </div>
                 <div class="help-section">
                   <div class="help-note">
