@@ -1,11 +1,10 @@
 // bulk.js
-// Bulk import: load .xlsx workbook, filter/select, preview, and import into AppState.cards.
+// Bulk import: load master XLSX, filter, select, preview, and import into AppState.cards.
 
 import { AppState } from "./state.js";
 import { Dom } from "./dom.js";
 import {
   parseVehicleTypes,
-  parseTags,
   parseHpCon,
   normalizeCardShape,
   generateId,
@@ -15,11 +14,13 @@ import {
 /************************************************************
  * Module-level state for bulk import
  ************************************************************/
-let parsedCards = [];            // All cards parsed from workbook
+let parsedCards = [];           // All cards parsed from the loaded workbook
 let selectedCardIds = new Set(); // IDs of cards chosen for import
+let availableTypes = new Set();
+let availableSets = new Set();
 
 /************************************************************
- * Header normalization & helpers
+ * Helpers
  ************************************************************/
 function normalizeHeader(str) {
   return (str || "")
@@ -29,274 +30,469 @@ function normalizeHeader(str) {
     .replace(/\W+/g, "");
 }
 
-function buildNormRowMap(rowObj) {
-  const norm = {};
-  for (const [key, value] of Object.entries(rowObj || {})) {
-    if (!key) continue;
-    const nk = normalizeHeader(key);
-    const v = value == null ? "" : String(value).trim();
-    if (nk) {
-      norm[nk] = v;
-    }
-  }
-  return norm;
+function normalizeSetName(value) {
+  if (value === null || value === undefined) return "";
+  const s = String(value).trim();
+  if (!s) return "";
+  const m = s.match(/set\s*(\d+)/i);
+  if (m) return `Set ${m[1]}`;
+  return s;
 }
 
-function getField(normRow, ...candidates) {
-  for (const key of candidates) {
-    const nk = normalizeHeader(key);
-    if (nk in normRow && normRow[nk] !== "") {
-      return normRow[nk];
-    }
+function normalizeCardNumber(value) {
+  if (value === null || value === undefined) return "";
+  let s = String(value).trim();
+  // strip trailing ".0" etc from Excel numbers
+  if (/^\d+(\.0+)?$/.test(s)) {
+    s = String(parseInt(s, 10));
   }
-  return "";
+  return s;
 }
 
-function hasAnyField(normRow, ...candidates) {
-  return candidates.some((k) => {
-    const nk = normalizeHeader(k);
-    return nk in normRow && normRow[nk] !== "";
+function findExistingCardId(name, type, setName, cardNumber) {
+  const targetName = (name || "").trim().toLowerCase();
+  const targetType = (type || "").trim().toLowerCase();
+  const targetSet = (setName || "").trim().toLowerCase();
+  const targetNo = (cardNumber || "").trim().toLowerCase();
+
+  if (!targetName && !targetType && !targetSet && !targetNo) return null;
+
+  const existing = AppState.cards.find(c => {
+    const n = (c.name || "").trim().toLowerCase();
+    const t = (c.type || "").trim().toLowerCase();
+    const s = (c.setName || "").trim().toLowerCase();
+    const no = (c.cardNumber || "").trim().toLowerCase();
+    return n === targetName && t === targetType && s === targetSet && no === targetNo;
   });
+
+  return existing ? existing.id : null;
 }
 
 /************************************************************
- * Infer card Type from sheet name when not explicitly present
+ * XLSX parsing (master spreadsheet)
  ************************************************************/
-function guessTypeFromSheetName(sheetName) {
-  const s = (sheetName || "").toString().toLowerCase();
+function parseWorkbookToCards(workbook) {
+  const all = [];
 
-  // Check more specific patterns first
-  if (s.includes("named vehicle")) return "Named Vehicle";
-  if (s.includes("named driver")) return "Named Driver";
-
-  if (s.includes("vehicle")) return "Vehicle";
-  if (s.includes("driver")) return "Driver";
-  if (s.includes("crew")) return "Crew";
-  if (s.includes("mod")) return "Mod";
-  if (s.includes("condition")) return "Condition";
-  if (s.includes("track")) return "Track";
-  if (s.includes("misc")) return "Misc";
-
-  return "";
-}
-
-/************************************************************
- * Map a row (object from SheetJS) into a normalized card
- ************************************************************/
-function mapRowToCard(sheetType, rowObj) {
-  const norm = buildNormRowMap(rowObj);
-
-  // ----- BASIC FIELDS -----
-  let type = getField(norm, "type", "cardtype", "kind");
-  if (!type && sheetType) {
-    type = sheetType;
-  }
-
-  let name = getField(norm, "name", "cardname", "card name", "title");
-
-  // Fallback: any header that contains "name" (e.g. Crew Name, Mod Name, Driver Name)
-  if (!name) {
-    for (const [k, v] of Object.entries(norm)) {
-      if (k.includes("name") && v) {
-        name = v;
-        break;
-      }
-    }
-  }
-
-  const setName = getField(norm, "set", "setname", "set name", "setid");
-  const cardNumber = getField(norm, "cardnumber", "number", "no", "#", "card #");
-  const rarity = getField(norm, "rarity", "rar");
-
-  const vtRaw = getField(
-    norm,
-    "vehicletype",
-    "vehicle type",
-    "vehicletype1",
-    "vehicletype2",
-    "vehicletype3"
-  );
-  const tagsStr = getField(norm, "tags", "tag", "keywords");
-
-  const imageUrl = getField(norm, "image", "imageurl", "art", "img");
-
-  let notes = getField(
-    norm,
-    "notes",
-    "rules",
-    "rules text",
-    "text",
-    "effect",
-    "cardtext"
-  );
-
-  // Fallback: any header with "trait", "text", "effect", or "ability"
-  if (!notes) {
-    for (const [k, v] of Object.entries(norm)) {
-      if (
-        v &&
-        (k.includes("trait") ||
-         k.includes("text") ||
-         k.includes("effect") ||
-         k.includes("ability"))
-      ) {
-        notes = v;
-        break;
-      }
-    }
-  }
-
-  const vehicleTypes = parseVehicleTypes(vtRaw);
-  const tags = parseTags(tagsStr);
-
-  // If the row is basically empty, skip it
-  if (!name && !type && !setName && !cardNumber && !notes) {
-    return null;
-  }
-
-  const extra = {};
-
-  // ----- MOD-SPECIFIC -----
-  if (type === "Mod") {
-    extra.modBasePart = getField(norm, "basepart", "base part", "part", "modbase");
-    extra.modLevel1 = getField(norm, "level1", "l1", "lvl1");
-    extra.modLevel2 = getField(norm, "level2", "l2", "lvl2");
-    extra.modLevel3 = getField(norm, "level3", "l3", "lvl3");
-    extra.modLevel4 = getField(norm, "level4", "l4", "lvl4");
-  }
-
-  // ----- VEHICLE / NAMED VEHICLE -----
-  if (type === "Vehicle" || type === "Named Vehicle") {
-    const hpConCombined = getField(norm, "hpcon", "hp/con", "hp_con", "hp and con");
-    const hpOnly = getField(norm, "hp", "hitpoints", "hit points");
-    const conOnly = getField(norm, "con", "constitution", "condition");
-
-    let hpCon = { hp: undefined, con: undefined };
-
-    if (hpConCombined && hpConCombined.includes("/")) {
-      hpCon = parseHpCon(hpConCombined);
-    } else {
-      if (hpOnly) {
-        hpCon.hp = Number(hpOnly) || undefined;
-      }
-      if (conOnly) {
-        hpCon.con = Number(conOnly) || undefined;
-      }
-    }
-
-    extra.hp = hpCon.hp;
-    extra.con = hpCon.con;
-
-    const pitStr = getField(norm, "pitcost", "pit cost", "pit", "pitpoints", "pit points");
-    extra.pitCost = pitStr ? Number(pitStr) || undefined : undefined;
-  }
-
-  // ----- PRINTS -----
-  const prints = [];
-  if (
-    hasAnyField(norm, "set", "setname", "set name", "setid") ||
-    hasAnyField(norm, "cardnumber", "number", "no", "#", "card #")
-  ) {
-    prints.push({
-      setName,
-      cardNumber,
-      isPrimary: true
-    });
-  }
-
-  const baseCard = {
-    id: getField(norm, "id", "cardid") || generateId(),
-    name,
-    type,
-    setName,
-    cardNumber,
-    rarity,
-    vehicleTypes,
-    tags,
-    imageUrl,
-    notes,
-    extra,
-    prints
-  };
-
-  return normalizeCardShape(baseCard);
-}
-
-/************************************************************
- * STEP 1: Load XLSX workbook
- ************************************************************/
-function parseWorkbook(workbook) {
-  parsedCards = [];
-  selectedCardIds.clear();
-
-  const sheetNames = workbook.SheetNames || [];
-
-  sheetNames.forEach((sheetName) => {
+  workbook.SheetNames.forEach(sheetName => {
     const sheet = workbook.Sheets[sheetName];
     if (!sheet) return;
 
-    const sheetType = guessTypeFromSheetName(sheetName);
+    // Get rows as [ [header...], [row1...], ... ]
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+    if (!rows.length) return;
 
-    // Turn each row into a plain object keyed by header titles
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+    const header = rows[0];
+    const headerIndex = {};
 
-    rows.forEach((rowObj) => {
-      const card = mapRowToCard(sheetType, rowObj);
-      if (card) {
-        parsedCards.push(card);
+    header.forEach((h, idx) => {
+      if (h !== null && h !== undefined && String(h).trim()) {
+        headerIndex[normalizeHeader(h)] = idx;
+      }
+    });
+
+    function get(row, ...names) {
+      for (const name of names) {
+        const key = normalizeHeader(name);
+        const idx = headerIndex[key];
+        if (idx !== undefined && idx < row.length) {
+          return row[idx];
+        }
+      }
+      return "";
+    }
+
+    // Decide card type & mapping based on sheet name
+    const sheetKey = sheetName.toLowerCase().trim();
+
+    const dataRows = rows.slice(1);
+    dataRows.forEach(row => {
+      const nonEmpty = row.some(v => v !== null && v !== undefined && String(v).trim() !== "");
+      if (!nonEmpty) return;
+
+      let baseCard = null;
+
+      if (sheetKey === "crew cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Crew Name");
+        const trait = get(row, "Crew Trait");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Crew";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [],
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      } else if (sheetKey === "driver cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Driver Name");
+        const trait = get(row, "Driver Trait");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Driver";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [],
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      } else if (sheetKey === "named driver cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Named Driver Name");
+        const trait = get(row, "Named Driver Trait");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Named Driver";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [],
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      } else if (sheetKey === "condition cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Condition Name");
+        const trait = get(row, "Condition Trait");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Condition";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [],
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      } else if (sheetKey === "track cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Track Name");
+        const vtRaw = get(row, "Vehicle Type");
+        const trait = get(row, "Track Trait");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Track";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        const vtClean = (vtRaw || "").toString().replace(/\//g, ",");
+        const vehicleTypes = parseVehicleTypes(vtClean);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes,
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      } else if (sheetKey === "mod cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "Mod Name");
+        const modTypeRaw = get(row, "Mod TYPE");
+        const basePart = get(row, "Base Part");
+        const ability = get(row, "Mod Ability");
+        const l1 = get(row, "Mod Lvl 1");
+        const l2 = get(row, "Mod Lvl 2");
+        const l3 = get(row, "Mod Lvl 3");
+        const l4 = get(row, "Mod Lvl 4");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !ability && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Mod";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [], // if you later want TYPE: DRAG as vehicles, we can wire this
+          tags: modTypeRaw ? [String(modTypeRaw)] : [],
+          imageUrl: "",
+          notes: ability || "",
+          extra: {
+            sourceSheet: sheetName,
+            modBasePart: basePart || "",
+            modLevel1: l1 || "",
+            modLevel2: l2 || "",
+            modLevel3: l3 || "",
+            modLevel4: l4 || ""
+          },
+          prints: []
+        };
+      } else if (sheetKey === "vehicle cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "VEHICLE name");
+        const hpConRaw = get(row, "VEHICLE HP/CON");
+        const vtRaw = get(row, "Vehicle Type");
+        const pitRaw = get(row, "PIT COST");
+        const trait = get(row, "TRAIT");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Vehicle";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        const hpConStr = hpConRaw ? String(hpConRaw) : "";
+        const hpCon = hpConStr ? parseHpCon(hpConStr) : {};
+        const vtClean = (vtRaw || "").toString().replace(/\//g, ",");
+        const vehicleTypes = parseVehicleTypes(vtClean);
+        const pitCost = pitRaw !== "" && pitRaw !== null && pitRaw !== undefined
+          ? Number(pitRaw)
+          : undefined;
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes,
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: {
+            sourceSheet: sheetName,
+            hp: hpCon.hp,
+            con: hpCon.con,
+            pitCost
+          },
+          prints: []
+        };
+      } else if (sheetKey === "named vehicle" || sheetKey === "named vehicle cards") {
+        const setNameRaw = get(row, "SET");
+        const name = get(row, "NAMED VEHICLE NAME");
+        const hpConRaw = get(row, "VEHICLE HP/CON");
+        const vtRaw = get(row, "Vehicle Type");
+        const pitRaw = get(row, "PIT COST");
+        const trait = get(row, "VEHICLE TRAIT");
+        const rarity = get(row, "RARITY");
+        const cardNoRaw = get(row, "Card Number");
+
+        if (!name && !trait && !setNameRaw && !cardNoRaw) return;
+
+        const setName = normalizeSetName(setNameRaw);
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Named Vehicle";
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        const hpConStr = hpConRaw ? String(hpConRaw) : "";
+        const hpCon = hpConStr ? parseHpCon(hpConStr) : {};
+        const vtClean = (vtRaw || "").toString().replace(/\//g, ",");
+        const vehicleTypes = parseVehicleTypes(vtClean);
+        const pitCost = pitRaw !== "" && pitRaw !== null && pitRaw !== undefined
+          ? Number(pitRaw)
+          : undefined;
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes,
+          tags: [],
+          imageUrl: "",
+          notes: trait || "",
+          extra: {
+            sourceSheet: sheetName,
+            hp: hpCon.hp,
+            con: hpCon.con,
+            pitCost
+          },
+          prints: []
+        };
+      } else if (sheetKey === "misc") {
+        const name = get(row, "TOKENS/COUNTERS");
+        const ability = get(row, "ABILITY");
+        const cardNoRaw = get(row, "Card Number");
+        const rarity = get(row, "RARITY");
+
+        if (!name && !ability && !cardNoRaw) return;
+
+        const cardNumber = normalizeCardNumber(cardNoRaw);
+        const type = "Misc";
+        const setName = ""; // none in this sheet
+        const existingId = findExistingCardId(name, type, setName, cardNumber);
+
+        baseCard = {
+          id: existingId || generateId(),
+          name,
+          type,
+          setName,
+          cardNumber,
+          rarity,
+          vehicleTypes: [],
+          tags: [],
+          imageUrl: "",
+          notes: ability || "",
+          extra: { sourceSheet: sheetName },
+          prints: []
+        };
+      }
+
+      if (baseCard) {
+        // If we have setName/cardNumber, synthesize a print
+        const setName = baseCard.setName || "";
+        const cardNumber = baseCard.cardNumber || "";
+        const prints = [];
+        if (setName || cardNumber) {
+          prints.push({
+            setName,
+            cardNumber,
+            isPrimary: true
+          });
+        }
+        baseCard.prints = prints;
+
+        const normalized = normalizeCardShape(baseCard);
+        all.push(normalized);
       }
     });
   });
 
-  if (!parsedCards.length) {
-    Dom.bulkStatus.textContent =
-      "Workbook loaded, but no usable card rows were detected. Check sheet headers.";
-  } else {
-    // Pre-select everything
-    selectedCardIds = new Set(parsedCards.map((c) => c.id));
-
-    Dom.bulkStatus.textContent =
-      `Loaded ${parsedCards.length} card(s) from ${sheetNames.length} sheet(s). ` +
-      `Use Step 2 to filter and select.`;
-  }
-
-  refreshBulkFilterOptions();
-  renderBulkSelectionList();
-  renderBulkSelectedPreview();
+  return all;
 }
 
+/************************************************************
+ * Step 1: Handle file load
+ ************************************************************/
 function handleBulkFileChange(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
+
+  if (!Dom.bulkStatus) return;
+  Dom.bulkStatus.textContent = `Loading "${file.name}"...`;
 
   const name = (file.name || "").toLowerCase();
   const isXlsx = name.endsWith(".xlsx");
 
   if (!isXlsx) {
-    Dom.bulkStatus.textContent = "Please select a .xlsx Excel file (master workbook).";
+    Dom.bulkStatus.textContent = "Please select an .xlsx master file (Drive Cards.xlsx).";
     return;
   }
 
   if (typeof XLSX === "undefined") {
     Dom.bulkStatus.textContent =
-      "XLSX library is not loaded. Check the SheetJS <script> tag in admin.html.";
+      "XLSX library is not loaded. Check the <script> tag for SheetJS in admin.html.";
     return;
   }
 
-  Dom.bulkStatus.textContent = "Reading workbook…";
-
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = e => {
     try {
       const data = e.target.result;
       const workbook = XLSX.read(data, { type: "array" });
-      parseWorkbook(workbook);
+      parsedCards = parseWorkbookToCards(workbook) || [];
+      selectedCardIds.clear();
+      availableTypes = new Set();
+      availableSets = new Set();
+
+      parsedCards.forEach(card => {
+        if (card.type) availableTypes.add(card.type);
+        if (card.setName) availableSets.add(card.setName);
+      });
+
+      updateFilterDropdowns();
+      renderBulkSelectionList();
+      renderBulkSelectedPreview();
+
+      if (!parsedCards.length) {
+        Dom.bulkStatus.textContent =
+          "Loaded the workbook, but found 0 usable rows. Check that your sheets match the expected format.";
+      } else {
+        Dom.bulkStatus.textContent =
+          `Loaded ${parsedCards.length} card(s) from ${workbook.SheetNames.length} sheet(s).` +
+          " Use Step 2 to filter and select cards for import.";
+      }
     } catch (err) {
       console.error(err);
       Dom.bulkStatus.textContent = "Failed to parse XLSX file.";
       parsedCards = [];
       selectedCardIds.clear();
-      refreshBulkFilterOptions();
       renderBulkSelectionList();
       renderBulkSelectedPreview();
     }
@@ -308,77 +504,68 @@ function handleBulkFileChange(event) {
 }
 
 /************************************************************
- * STEP 2: Filter + selection UI
+ * Step 2: Filtering & selection UI
  ************************************************************/
-function refreshBulkFilterOptions() {
-  const typeSelect = Dom.bulkFilterTypeSelect;
-  const setSelect = Dom.bulkFilterSetSelect;
-  if (!typeSelect || !setSelect) return;
-
-  const prevType = typeSelect.value || "";
-  const prevSet = setSelect.value || "";
-
-  // Unique Types & Sets
-  const types = Array.from(
-    new Set(parsedCards.map((c) => c.type).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b));
-
-  const sets = Array.from(
-    new Set(parsedCards.map((c) => c.setName).filter(Boolean))
-  ).sort((a, b) => a.localeCompare(b));
-
-  // Rebuild Type select
-  typeSelect.innerHTML = "";
-  const typeAll = document.createElement("option");
-  typeAll.value = "";
-  typeAll.textContent = "All Types";
-  typeSelect.appendChild(typeAll);
-  types.forEach((t) => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    typeSelect.appendChild(opt);
-  });
-  if (prevType && types.includes(prevType)) {
-    typeSelect.value = prevType;
+function updateFilterDropdowns() {
+  if (Dom.bulkTypeFilterSelect) {
+    const sel = Dom.bulkTypeFilterSelect;
+    const current = sel.value;
+    sel.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "All Types";
+    sel.appendChild(optAll);
+    Array.from(availableTypes).sort().forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      sel.appendChild(opt);
+    });
+    if (current && Array.from(availableTypes).includes(current)) {
+      sel.value = current;
+    }
   }
 
-  // Rebuild Set select
-  setSelect.innerHTML = "";
-  const setAll = document.createElement("option");
-  setAll.value = "";
-  setAll.textContent = "All Sets";
-  setSelect.appendChild(setAll);
-  sets.forEach((s) => {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
-    setSelect.appendChild(opt);
-  });
-  if (prevSet && sets.includes(prevSet)) {
-    setSelect.value = prevSet;
+  if (Dom.bulkSetFilterSelect) {
+    const sel = Dom.bulkSetFilterSelect;
+    const current = sel.value;
+    sel.innerHTML = "";
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "All Sets";
+    sel.appendChild(optAll);
+    Array.from(availableSets).sort().forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      sel.appendChild(opt);
+    });
+    if (current && Array.from(availableSets).includes(current)) {
+      sel.value = current;
+    }
   }
 }
 
 function getFilteredCards() {
-  const typeFilter = (Dom.bulkFilterTypeSelect?.value || "").toLowerCase();
-  const setFilter = (Dom.bulkFilterSetSelect?.value || "").toLowerCase();
+  const typeFilter = Dom.bulkTypeFilterSelect ? Dom.bulkTypeFilterSelect.value : "";
+  const setFilter = Dom.bulkSetFilterSelect ? Dom.bulkSetFilterSelect.value : "";
 
-  return parsedCards.filter((c) => {
-    if (typeFilter && (c.type || "").toLowerCase() !== typeFilter) return false;
-    if (setFilter && (c.setName || "").toLowerCase() !== setFilter) return false;
-    return true;
+  return parsedCards.filter(c => {
+    const okType = !typeFilter || (c.type || "") === typeFilter;
+    const okSet = !setFilter || (c.setName || "") === setFilter;
+    return okType && okSet;
   });
 }
 
 function renderBulkSelectionList() {
   const list = Dom.bulkSelectionList;
   if (!list) return;
+
   list.innerHTML = "";
 
   if (!parsedCards.length) {
     const li = document.createElement("li");
-    li.textContent = "No workbook loaded yet. Use Step 1 to load your master Excel file.";
+    li.textContent = "No file loaded yet. Use Step 1 to load your master spreadsheet.";
     list.appendChild(li);
     return;
   }
@@ -387,16 +574,17 @@ function renderBulkSelectionList() {
 
   if (!filtered.length) {
     const li = document.createElement("li");
-    li.textContent = "No cards match the current Type/Set filters.";
+    li.textContent = "No cards match the current Type/Set filter.";
     list.appendChild(li);
     return;
   }
 
-  filtered.forEach((card) => {
+  filtered.forEach(card => {
     const li = document.createElement("li");
     li.style.display = "flex";
     li.style.alignItems = "center";
     li.style.gap = "6px";
+    li.style.fontSize = "11px";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -412,9 +600,8 @@ function renderBulkSelectionList() {
     });
 
     const label = document.createElement("span");
-    label.style.fontSize = "11px";
     label.textContent =
-      `(${card.type || "?"}) ${card.name || "(no name)"} — ` +
+      `${card.type || "Type ?"} | ${card.name || "(no name)"} | ` +
       `${card.setName || "Set ?"} #${card.cardNumber || "###"}`;
 
     li.appendChild(checkbox);
@@ -424,51 +611,56 @@ function renderBulkSelectionList() {
 }
 
 /************************************************************
- * STEP 3: Selected preview & import
+ * Step 3: Selected preview & import / clear
  ************************************************************/
 function renderBulkSelectedPreview() {
   const out = Dom.bulkSelectedPreview;
   if (!out) return;
 
   if (!parsedCards.length) {
-    out.textContent = "No workbook loaded yet.";
+    out.textContent = "No file loaded yet.";
     return;
   }
 
-  const selected = parsedCards.filter((c) => selectedCardIds.has(c.id));
+  const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
 
   if (!selected.length) {
     out.textContent = "No cards selected for import.";
     return;
   }
 
-  const lines = selected.slice(0, 60).map((c) => {
-    return `• (${c.type || "?"}) ${c.name || "(no name)"} — ${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
+  const lines = selected.slice(0, 40).map(c => {
+    return `• ${c.type || "Type ?"} | ${c.name || "(no name)"} | ` +
+           `${c.setName || "Set ?"} #${c.cardNumber || "###"}`;
   });
 
   out.textContent =
     `${selected.length} card(s) selected for import:\n` +
     lines.join("\n") +
-    (selected.length > 60 ? `\n...and ${selected.length - 60} more.` : "");
+    (selected.length > 40 ? `\n...and ${selected.length - 40} more.` : "");
 }
 
 function handleBulkImport() {
   if (!parsedCards.length) {
-    Dom.bulkStatus.textContent = "Nothing to import. Load a workbook in Step 1 first.";
+    if (Dom.bulkStatus) {
+      Dom.bulkStatus.textContent = "No file loaded yet. Use Step 1 first.";
+    }
     return;
   }
 
-  const toImport = parsedCards.filter((c) => selectedCardIds.has(c.id));
+  const toImport = parsedCards.filter(c => selectedCardIds.has(c.id));
   if (!toImport.length) {
-    Dom.bulkStatus.textContent = "No cards selected to import (Step 2).";
+    if (Dom.bulkStatus) {
+      Dom.bulkStatus.textContent = "No cards selected to import (Step 3).";
+    }
     return;
   }
 
   let added = 0;
   let updated = 0;
 
-  toImport.forEach((card) => {
-    const idx = AppState.cards.findIndex((c) => c.id === card.id);
+  toImport.forEach(card => {
+    const idx = AppState.cards.findIndex(c => c.id === card.id);
     if (idx >= 0) {
       AppState.cards[idx] = card;
       updated++;
@@ -478,57 +670,60 @@ function handleBulkImport() {
     }
   });
 
-  Dom.bulkStatus.textContent =
-    `Imported ${toImport.length} card(s) into the library (${added} added, ${updated} updated).`;
+  if (Dom.bulkStatus) {
+    Dom.bulkStatus.textContent =
+      `Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`;
+  }
 
-  // Re-render library / single-tab UI so you can immediately see changes.
   refreshSingleUi();
 }
 
 function handleBulkClear() {
   parsedCards = [];
   selectedCardIds.clear();
+  availableTypes = new Set();
+  availableSets = new Set();
 
-  if (Dom.bulkFileInput) {
-    Dom.bulkFileInput.value = "";
+  if (Dom.bulkStatus) {
+    Dom.bulkStatus.textContent = "Bulk session cleared. Load a file again in Step 1.";
+  }
+  if (Dom.bulkSelectionList) {
+    Dom.bulkSelectionList.innerHTML = "";
+  }
+  if (Dom.bulkSelectedPreview) {
+    Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
   }
 
-  Dom.bulkStatus.textContent =
-    "Cleared bulk import data. Load a workbook in Step 1 to start again.";
-
-  refreshBulkFilterOptions();
-  renderBulkSelectionList();
-  renderBulkSelectedPreview();
+  if (Dom.bulkTypeFilterSelect) Dom.bulkTypeFilterSelect.value = "";
+  if (Dom.bulkSetFilterSelect) Dom.bulkSetFilterSelect.value = "";
 }
 
 /************************************************************
  * Public init
  ************************************************************/
 export function initBulk() {
-  // Step 1: file input
   if (Dom.bulkFileInput) {
     Dom.bulkFileInput.addEventListener("change", handleBulkFileChange);
   }
 
-  // Step 2: filter changes
-  if (Dom.bulkFilterTypeSelect) {
-    Dom.bulkFilterTypeSelect.addEventListener("change", () => {
-      renderBulkSelectionList();
-      renderBulkSelectedPreview();
-    });
-  }
-  if (Dom.bulkFilterSetSelect) {
-    Dom.bulkFilterSetSelect.addEventListener("change", () => {
+  if (Dom.bulkTypeFilterSelect) {
+    Dom.bulkTypeFilterSelect.addEventListener("change", () => {
       renderBulkSelectionList();
       renderBulkSelectedPreview();
     });
   }
 
-  // Step 2: select / deselect viewed
+  if (Dom.bulkSetFilterSelect) {
+    Dom.bulkSetFilterSelect.addEventListener("change", () => {
+      renderBulkSelectionList();
+      renderBulkSelectedPreview();
+    });
+  }
+
   if (Dom.bulkSelectAllBtn) {
     Dom.bulkSelectAllBtn.addEventListener("click", () => {
       const filtered = getFilteredCards();
-      filtered.forEach((c) => selectedCardIds.add(c.id));
+      filtered.forEach(c => selectedCardIds.add(c.id));
       renderBulkSelectionList();
       renderBulkSelectedPreview();
     });
@@ -537,22 +732,21 @@ export function initBulk() {
   if (Dom.bulkDeselectAllBtn) {
     Dom.bulkDeselectAllBtn.addEventListener("click", () => {
       const filtered = getFilteredCards();
-      filtered.forEach((c) => selectedCardIds.delete(c.id));
+      filtered.forEach(c => selectedCardIds.delete(c.id));
       renderBulkSelectionList();
       renderBulkSelectedPreview();
     });
   }
 
-  // Step 3: import & clear
   if (Dom.bulkImportBtn) {
     Dom.bulkImportBtn.addEventListener("click", handleBulkImport);
   }
+
   if (Dom.bulkClearBtn) {
     Dom.bulkClearBtn.addEventListener("click", handleBulkClear);
   }
 
-  // Initial empty state
-  refreshBulkFilterOptions();
+  // Initial empty render
   renderBulkSelectionList();
   renderBulkSelectedPreview();
 }
