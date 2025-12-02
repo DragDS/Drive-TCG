@@ -15,8 +15,16 @@ import {
 /************************************************************
  * Module-level state for bulk import
  ************************************************************/
-let parsedCards = [];           // All cards parsed from text/file
-let selectedCardIds = new Set(); // IDs of cards chosen for import
+let parsedCards = [];             // All cards parsed from text/file
+let selectedCardIds = new Set();  // IDs of cards chosen for import
+
+// NEW: default type inferred from XLSX sheet name (Crew, Condition, etc.)
+let currentBulkDefaultType = "";
+
+// NEW: default column mapping when there is NO header row
+// index: 0    1     2      3       4
+// maps:  set, name, notes, rarity, cardnumber
+const NO_HEADER_DEFAULTS = ["set", "name", "notes", "rarity", "cardnumber"];
 
 /************************************************************
  * Delimiter + header helpers
@@ -83,7 +91,10 @@ function mapRowToCard(headers, row) {
     });
   };
 
-  const type = get("type");
+  // NEW: allow type to fall back to the sheet-inferred type
+  const rawType = get("type");
+  const type = rawType || currentBulkDefaultType || "";
+
   const name = get("name", "cardname", "title");
   const setName = get("set", "setname", "setid");
   const cardNumber = get("cardnumber", "number", "no", "#");
@@ -179,9 +190,23 @@ function handleBulkParse() {
     return;
   }
 
-  const headerLine = lines[0];
-  const headerCells = splitLine(headerLine, delimiter);
-  const dataLines = Dom.bulkHasHeaderCheckbox.checked ? lines.slice(1) : lines;
+  // NEW: handle "no header row" by using default column names
+  const firstLineCells = splitLine(lines[0], delimiter);
+  let headerCells;
+  let dataLines;
+
+  if (Dom.bulkHasHeaderCheckbox.checked) {
+    // Normal mode: first row is actual column names
+    headerCells = firstLineCells;
+    dataLines = lines.slice(1);
+  } else {
+    // No header: assume your standard layout:
+    // Set, Name, Notes, Rarity, CardNumber, ...
+    headerCells = firstLineCells.map((_, idx) => {
+      return NO_HEADER_DEFAULTS[idx] || `col${idx + 1}`;
+    });
+    dataLines = lines;
+  }
 
   parsedCards = dataLines
     .map(line => {
@@ -352,6 +377,26 @@ function handleBulkImport() {
 }
 
 /************************************************************
+ * XLSX helpers: infer type from sheet name
+ ************************************************************/
+function normalizeSheetTypeName(sheetName) {
+  const n = (sheetName || "").toLowerCase();
+
+  // You can tweak these mappings to match your exact sheet names
+  if (n.includes("named driver")) return "Named Driver";
+  if (n.includes("named vehicle")) return "Named Vehicle";
+  if (n.includes("driver")) return "Driver";
+  if (n.includes("vehicle")) return "Vehicle";
+  if (n.includes("crew")) return "Crew";
+  if (n.includes("mod")) return "Mod";
+  if (n.includes("track")) return "Track";
+  if (n.includes("condition")) return "Condition";
+
+  // Fallback: just return the original sheet name
+  return sheetName || "";
+}
+
+/************************************************************
  * File loading (CSV / TSV / TXT / XLSX)
  ************************************************************/
 function setBulkInputAndParse(text) {
@@ -371,6 +416,7 @@ function handleBulkFileChange(event) {
     const reader = new FileReader();
     reader.onload = e => {
       const text = e.target.result || "";
+      currentBulkDefaultType = ""; // reset; no sheet context
       setBulkInputAndParse(text);
     };
     reader.onerror = () => {
@@ -397,6 +443,10 @@ function handleBulkFileChange(event) {
         Dom.bulkStatus.textContent = "No sheets found in XLSX file.";
         return;
       }
+
+      // NEW: infer default type from sheet name
+      currentBulkDefaultType = normalizeSheetTypeName(firstSheetName);
+
       const sheet = workbook.Sheets[firstSheetName];
       const csv = XLSX.utils.sheet_to_csv(sheet);
       setBulkInputAndParse(csv);
