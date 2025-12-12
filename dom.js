@@ -1,76 +1,48 @@
 // dom.js
-// Centralized DOM element lookups for DRIVE admin.
+// Lazy DOM getters – safe with dynamic sections & imports
+
+function el(id) {
+  return document.getElementById(id);
+}
 
 export const Dom = {
   // Nav
-  navSingleBtn: document.getElementById("navSingleBtn"),
-  navBulkBtn: document.getElementById("navBulkBtn"),
-  navPreconsBtn: document.getElementById("navPreconsBtn"),
-  navHelpBtn: document.getElementById("navHelpBtn"),
+  get navSingleBtn() { return el("navSingleBtn"); }
+  get navBulkBtn() { return el("navBulkBtn"); }
+  get navPreconsBtn() { return el("navPreconsBtn"); }
+  get navHelpBtn() { return el("navHelpBtn"); }
 
   // Sections
-  singleSection: document.getElementById("singleSection"),
-  bulkSection: document.getElementById("bulkSection"),
-  preconsSection: document.getElementById("preconsSection"),
-  helpSection: document.getElementById("helpSection"),
+  get singleSection() { return el("singleSection"); }
+  get bulkSection() { return el("bulkSection"); }
+  get preconsSection() { return el("preconsSection"); }
+  get helpSection() { return el("helpSection"); }
 
-  // Single card form
-  cardIdInput: document.getElementById("cardIdInput"),
-  cardNameInput: document.getElementById("cardNameInput"),
-  cardTypeInput: document.getElementById("cardTypeInput"),
-  cardSetNameInput: document.getElementById("cardSetNameInput"), // hidden (derived)
-  cardNumberInput: document.getElementById("cardNumberInput"),   // hidden (derived)
-  cardRarityInput: document.getElementById("cardRarityInput"),
-  cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
-  cardTagsInput: document.getElementById("cardTagsInput"),
-  cardImageUrlInput: document.getElementById("cardImageUrlInput"),
-  cardNotesInput: document.getElementById("cardNotesInput"),
+  // Bulk
+  get bulkFileInput() { return el("bulkFileInput"); }
+  get bulkLoadBtn() { return el("bulkLoadBtn"); }
+  get bulkStatus() { return el("bulkStatus"); }
 
-  modBasePartInput: document.getElementById("modBasePartInput"),
-  modL1Input: document.getElementById("modL1Input"),
-  modL2Input: document.getElementById("modL2Input"),
-  modL3Input: document.getElementById("modL3Input"),
-  modL4Input: document.getElementById("modL4Input"),
+  get bulkTypeFilter() { return el("bulkTypeFilter"); }
+  get bulkSetFilter() { return el("bulkSetFilter"); }
+  get bulkFilterInput() { return el("bulkFilterInput"); }
+  get bulkSelectionList() { return el("bulkSelectionList"); }
+  get bulkSelectedPreview() { return el("bulkSelectedPreview"); }
 
-  vehicleHpConInput: document.getElementById("vehicleHpConInput"),
-  vehiclePitCostInput: document.getElementById("vehiclePitCostInput"),
-
-  // Prints
-  printSetSelect: document.getElementById("printSetSelect"),
-  printCustomSetInput: document.getElementById("printCustomSetInput"),
-  printCardNumberInput: document.getElementById("printCardNumberInput"),
-  printAddBtn: document.getElementById("printAddBtn"),
-  printUpdateBtn: document.getElementById("printUpdateBtn"),
-  printCancelEditBtn: document.getElementById("printCancelEditBtn"),
-  printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
-  printClearAllBtn: document.getElementById("printClearAllBtn"),
-  printsList: document.getElementById("printsList"),
-
-  // Single actions
-  singleSaveBtn: document.getElementById("singleSaveBtn"),
-  singleNewBtn: document.getElementById("singleNewBtn"),
-  singleDeleteBtn: document.getElementById("singleDeleteBtn"),
-  singleStatus: document.getElementById("singleStatus"),
-
-  // Preview & Library
-  singlePreview: document.getElementById("singlePreview"),
-  cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
-  cardLibraryList: document.getElementById("cardLibraryList"),
-  libraryCount: document.getElementById("libraryCount"),
-
-  // Export buttons
-  downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
-  downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
-  downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
-
-  // Precons
-  preconGrid: document.getElementById("preconGrid"),
-  preconsStatus: document.getElementById("preconsStatus"),
+  get bulkSelectAllViewedBtn() { return el("bulkSelectAllViewedBtn"); }
+  get bulkDeselectAllViewedBtn() { return el("bulkDeselectAllViewedBtn"); }
+  get bulkImportSelectedBtn() { return el("bulkImportSelectedBtn"); }
+  get bulkClearSessionBtn() { return el("bulkClearSessionBtn"); }
 
   // Modal
-  modalBackdrop: document.getElementById("modalBackdrop"),
-  modalTitle: document.getElementById("modalTitle"),
-  modalBody: document.getElementById("modalBody"),
-  modalCancelBtn: document.getElementById("modalCancelBtn"),
-  modalConfirmBtn: document.getElementById("modalConfirmBtn")
+  get modalBackdrop() { return el("modalBackdrop"); }
+  get modalTitle() { return el("modalTitle"); }
+  get modalBody() { return el("modalBody"); }
+  get modalCancelBtn() { return el("modalCancelBtn"); }
+  get modalConfirmBtn() { return el("modalConfirmBtn"); }
+
+  // Exports
+  get downloadCardsJsonBtn() { return el("downloadCardsJsonBtn"); }
+  get downloadCardsJsonBtn_single() { return el("downloadCardsJsonBtn_single"); }
+  get downloadPreconsJsonBtn() { return el("downloadPreconsJsonBtn"); }
 };
