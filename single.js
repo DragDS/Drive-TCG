@@ -64,6 +64,26 @@ function syncLegacySetNumberFromPrints() {
   setValue(Dom.cardNumberInput, p?.cardNumber || "");
 }
 
+/**
+ * Show/hide fields based on data-for-types="..."
+ * This is REQUIRED so Mod / Vehicle fields appear when their Type is selected.
+ */
+function updateTypeFieldVisibility() {
+  if (!Dom.cardTypeInput) return;
+
+  const type = (Dom.cardTypeInput.value || "").trim();
+
+  const fields = document.querySelectorAll('.field-grid .field[data-for-types]');
+  fields.forEach(field => {
+    const typesAttr = (field.dataset.forTypes || "").trim();
+    const allowed = typesAttr.split(",").map(t => t.trim()).filter(Boolean);
+    const show = !allowed.length || allowed.includes(type);
+
+    // Force hide/show reliably (even if something started with display:none)
+    field.style.display = show ? "" : "none";
+  });
+}
+
 /************************************************************
  * Prints: Add + Edit + Update + Cancel
  ************************************************************/
@@ -127,7 +147,6 @@ function handlePrintStartEdit(idx) {
 
   // populate inputs
   if (Dom.printSetSelect) {
-    // If the setName matches an option, select it; otherwise go CUSTOM.
     const options = Array.from(Dom.printSetSelect.options).map(o => o.value);
     if (p.setName && options.includes(p.setName)) {
       Dom.printSetSelect.value = p.setName;
@@ -181,12 +200,10 @@ function handlePrintDelete(idx) {
 
   AppState.currentSinglePrints.splice(idx, 1);
 
-  // if primary was removed, ensure a new primary
   if (AppState.currentSinglePrints.length && !AppState.currentSinglePrints.some(x => x.isPrimary)) {
     AppState.currentSinglePrints[0].isPrimary = true;
   }
 
-  // if we deleted the one we were editing, exit edit mode
   if (editingPrintIndex === idx) setPrintEditMode(-1);
   else if (editingPrintIndex > idx) editingPrintIndex -= 1;
 
@@ -313,7 +330,6 @@ export function normalizeCardShape(raw) {
 
   if (prints.length && !prints.some(p => p.isPrimary)) prints[0].isPrimary = true;
 
-  // move primary first
   if (prints.length) {
     const primaryIdx = prints.findIndex(p => p.isPrimary);
     if (primaryIdx > 0) {
@@ -360,7 +376,7 @@ export function getCardsForExport() {
 }
 
 /************************************************************
- * Preview / Library rendering (unchanged from your patched logic)
+ * Preview / Library rendering
  ************************************************************/
 
 function formatExtraForSummary(card) {
@@ -630,7 +646,7 @@ function renderCardLibraryList() {
 }
 
 /************************************************************
- * Single Card: Collect & Fill, Save/New/Delete (same as your patch)
+ * Single Card: Collect & Fill, Save/New/Delete
  ************************************************************/
 
 function collectSingleCardFromInputs() {
@@ -718,6 +734,8 @@ function fillSingleCardInputs(card) {
 
   setPrintEditMode(-1);
   syncLegacySetNumberFromPrints();
+
+  updateTypeFieldVisibility(); // ✅ IMPORTANT
   renderPrintsList();
   renderSinglePreview();
 }
@@ -758,6 +776,8 @@ async function handleSingleNew() {
   AppState.currentSinglePrints = [];
   setPrintEditMode(-1);
   syncLegacySetNumberFromPrints();
+
+  updateTypeFieldVisibility(); // ✅ IMPORTANT
 
   if (Dom.singleStatus) Dom.singleStatus.textContent = "Ready to create a new card.";
   renderPrintsList();
@@ -801,13 +821,23 @@ export function initSingle() {
   // initial renders
   renderPrintsList();
   syncLegacySetNumberFromPrints();
+
+  updateTypeFieldVisibility(); // ✅ IMPORTANT
+
   renderSinglePreview();
   renderCardLibraryList();
+
+  // Type dropdown should toggle fields immediately
+  if (Dom.cardTypeInput) {
+    Dom.cardTypeInput.addEventListener("change", () => {
+      updateTypeFieldVisibility();
+      renderSinglePreview();
+    });
+  }
 
   // live preview inputs
   const previewInputs = [
     Dom.cardNameInput,
-    Dom.cardTypeInput,
     Dom.cardRarityInput,
     Dom.cardVehicleTypesInput,
     Dom.cardTagsInput,
@@ -865,6 +895,7 @@ export function initSingle() {
 }
 
 export function refreshSingleUi() {
+  updateTypeFieldVisibility();
   renderSinglePreview();
   renderCardLibraryList();
   renderPrintsList();
