@@ -53,26 +53,23 @@ export const Dom = {
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
-  // Bulk import (3-step)
-  bulkInput: document.getElementById("bulkInput"),               // (unused now, ok)
-  bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"), // (unused)
-  bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"), // (unused)
-  bulkParseBtn: document.getElementById("bulkParseBtn"),         // (unused)
-  bulkImportBtn: document.getElementById("bulkImportBtn"),
-  bulkPreview: document.getElementById("bulkPreview"),           // (unused)
-  bulkStatus: document.getElementById("bulkStatus"),
+  /************************************************************
+   * Bulk import (new 3-step XLSX flow)
+   ************************************************************/
   bulkFileInput: document.getElementById("bulkFileInput"),
+  bulkStatus: document.getElementById("bulkStatus"),
 
-  bulkFilterInput: document.getElementById("bulkFilterInput"),   // (unused)
-  bulkSelectAllBtn: document.getElementById("bulkSelectAllBtn"),
-  bulkDeselectAllBtn: document.getElementById("bulkDeselectAllBtn"),
+  bulkFilterTypeSelect: document.getElementById("bulkFilterTypeSelect"),
+  bulkFilterSetSelect: document.getElementById("bulkFilterSetSelect"),
+
+  bulkSelectAllViewedBtn: document.getElementById("bulkSelectAllViewedBtn"),
+  bulkDeselectAllViewedBtn: document.getElementById("bulkDeselectAllViewedBtn"),
+
   bulkSelectionList: document.getElementById("bulkSelectionList"),
   bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
 
-  // NEW: bulk filters + clear button
-  bulkTypeFilterSelect: document.getElementById("bulkTypeFilterSelect"),
-  bulkSetFilterSelect: document.getElementById("bulkSetFilterSelect"),
-  bulkClearBtn: document.getElementById("bulkClearBtn"),
+  bulkImportBtn: document.getElementById("bulkImportBtn"),
+  bulkClearSessionBtn: document.getElementById("bulkClearSessionBtn"),
 
   // Precons
   preconGrid: document.getElementById("preconGrid"),
@@ -90,4 +87,3 @@ export const Dom = {
   modalCancelBtn: document.getElementById("modalCancelBtn"),
   modalConfirmBtn: document.getElementById("modalConfirmBtn")
 };
-
