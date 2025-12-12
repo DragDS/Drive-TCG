@@ -33,66 +33,71 @@ export const AppState = {
   precons: []
 };
 
-// Internal ID helper used by normalizeCardShape while loading from JSON.
 function generateId() {
   return "card_" + Math.random().toString(36).slice(2, 10);
 }
 
-// Lightweight copy of normalizeCardShape used only when loading from drive-card.json.
-// (The main admin logic also has its own version for working with cards in-memory.)
 function normalizeCardShape(raw) {
-      const base = raw || {};
+  const base = raw || {};
 
-      // Vehicle types & tags
-      const vehicleTypes = Array.isArray(base.vehicleTypes)
-        ? base.vehicleTypes
-        : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
+  const vehicleTypes = Array.isArray(base.vehicleTypes)
+    ? base.vehicleTypes
+    : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
 
-      const tags = Array.isArray(base.tags)
-        ? base.tags
-        : (base.tags ? [].concat(base.tags) : []);
+  const tags = Array.isArray(base.tags)
+    ? base.tags
+    : (base.tags ? [].concat(base.tags) : []);
 
-      const extra = (base.extra && typeof base.extra === "object")
-        ? { ...base.extra }
-        : {};
+  const extra = (base.extra && typeof base.extra === "object")
+    ? { ...base.extra }
+    : {};
 
-      // Normalize prints
-      const printsRaw = Array.isArray(base.prints) ? base.prints : [];
+  const printsRaw = Array.isArray(base.prints) ? base.prints : [];
+  let prints = printsRaw
+    .map(p => ({
+      setName: (p.setName || p.setId || "").trim(),
+      cardNumber: (p.cardNumber || "").trim(),
+      isPrimary: !!p.isPrimary
+    }))
+    .filter(p => p.setName || p.cardNumber);
 
-      let prints = printsRaw
-        .map(p => ({
-          setName: (p.setName || p.setId || "").trim(),
-          cardNumber: (p.cardNumber || "").trim()
-        }))
-        .filter(p => p.setName || p.cardNumber);
+  let setNameLegacy = (base.setName || base.setId || "").trim();
+  let cardNumberLegacy = (base.cardNumber || base.cardNo || "").trim();
 
-      // Try to infer from root fields if needed
-      let setName = (base.setName || base.setId || "").trim();
-      let cardNumber = (base.cardNumber || base.cardNo || "").trim();
+  if (!prints.length && (setNameLegacy || cardNumberLegacy)) {
+    prints = [{ setName: setNameLegacy, cardNumber: cardNumberLegacy, isPrimary: true }];
+  }
 
-      if (!prints.length && (setName || cardNumber)) {
-        prints = [{ setName, cardNumber }];
-      }
+  if (prints.length && !prints.some(p => p.isPrimary)) {
+    prints[0].isPrimary = true;
+  }
 
-      // If root fields are empty but we have prints, sync them from the first print
-      if (!setName && prints[0]) setName = prints[0].setName || "";
-      if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
-
-      return {
-        id: base.id || generateId(),
-        name: base.name || "",
-        type: base.type || "",
-        setName,
-        cardNumber,
-        rarity: base.rarity || "",
-        vehicleTypes,
-        tags,
-        imageUrl: base.imageUrl || "",
-        notes: base.notes || "",
-        extra,
-        prints
-      };
+  // move primary first
+  if (prints.length) {
+    const primaryIdx = prints.findIndex(p => p.isPrimary);
+    if (primaryIdx > 0) {
+      const [p] = prints.splice(primaryIdx, 1);
+      prints.unshift(p);
     }
+  }
+
+  const primary = prints[0] || null;
+
+  return {
+    id: base.id || generateId(),
+    name: base.name || "",
+    type: base.type || "",
+    setName: primary?.setName || "",
+    cardNumber: primary?.cardNumber || "",
+    rarity: base.rarity || "",
+    vehicleTypes,
+    tags,
+    imageUrl: base.imageUrl || "",
+    notes: base.notes || "",
+    extra,
+    prints
+  };
+}
 
 // Generic JSON download helper
 export function downloadJson(data, filename) {
