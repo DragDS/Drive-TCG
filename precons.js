@@ -1,5 +1,6 @@
 // precons.js
 // Preconstructed deck loading, rendering, editing, and export.
+// Hardened: null-safe DOM access + no hard crashes if elements missing.
 
 import {
   STORAGE_KEYS,
@@ -13,11 +14,17 @@ import { Dom } from "./dom.js";
 /************************************************************
  * Helpers
  ************************************************************/
-
 function setPreconsStatus(msg) {
-  if (Dom.preconsStatus) {
-    Dom.preconsStatus.textContent = msg;
+  if (Dom.preconsStatus) Dom.preconsStatus.textContent = msg;
+  else console.warn("[precons] Status:", msg);
+}
+
+function getPreconGrid() {
+  const grid = Dom.preconGrid;
+  if (!grid) {
+    console.warn("[precons] preconGrid element not found (id='preconGrid').");
   }
+  return grid;
 }
 
 /**
@@ -25,30 +32,22 @@ function setPreconsStatus(msg) {
  */
 function addCardToPrecon(precon, cardId, count) {
   if (!Array.isArray(precon.cards)) precon.cards = [];
-
   const existing = precon.cards.find(e => e.cardId === cardId);
-  if (existing) {
-    existing.count = (existing.count || 0) + count;
-  } else {
-    precon.cards.push({ cardId, count });
-  }
+  if (existing) existing.count = (existing.count || 0) + count;
+  else precon.cards.push({ cardId, count });
 }
 
 /**
  * Remove a specific entry from a precon.
  */
 function removeEntryFromPrecon(precon, entryIndex) {
-  if (!Array.isArray(precon.cards) || entryIndex < 0 || entryIndex >= precon.cards.length) {
-    return;
-  }
+  if (!Array.isArray(precon.cards) || entryIndex < 0 || entryIndex >= precon.cards.length) return;
 
   const entry = precon.cards[entryIndex];
-  const cardObj = AppState.cards.find(c => c.id === entry.cardId);
+  const cardObj = (AppState.cards || []).find(c => c.id === entry.cardId);
   const name = cardObj ? cardObj.name : entry.cardId;
 
-  const ok = window.confirm(
-    `Remove ${entry.count || 0}x "${name}" from "${precon.name}"?`
-  );
+  const ok = window.confirm(`Remove ${entry.count || 0}x "${name}" from "${precon.name}"?`);
   if (!ok) return;
 
   precon.cards.splice(entryIndex, 1);
@@ -65,37 +64,20 @@ function formatCardOptionLabel(card) {
   const setPart = (card.setName || "").trim();
   const numPart = (card.cardNumber || "").trim();
   const namePart = (card.name || "").trim() || "(no name)";
-  const left =
-    (setPart || numPart)
-      ? `${setPart || "Set ?"} • ${numPart || "###"}`
-      : "No Set/Number";
+  const left = (setPart || numPart) ? `${setPart || "Set ?"} • ${numPart || "###"}` : "No Set/Number";
   return `${left} — ${namePart}`;
 }
 
 /************************************************************
  * UI actions: create precon
  ************************************************************/
-
-/**
- * Create a new preconstructed deck via prompt dialogs.
- */
 function handleNewPrecon() {
-  const idRaw = prompt(
-    "New deck ID (used in JSON, no spaces). Example: set1_starter",
-    ""
-  );
-  if (idRaw == null) return; // user cancelled
+  const idRaw = prompt("New deck ID (used in JSON, no spaces). Example: set1_starter", "");
+  if (idRaw == null) return;
 
   const id = idRaw.trim();
-  if (!id) {
-    alert("Deck ID cannot be empty.");
-    return;
-  }
-
-  if (AppState.precons.some(p => p.id === id)) {
-    alert("A precon with that ID already exists.");
-    return;
-  }
+  if (!id) return alert("Deck ID cannot be empty.");
+  if ((AppState.precons || []).some(p => p.id === id)) return alert("A precon with that ID already exists.");
 
   const nameRaw = prompt("Display name for this deck:", id);
   if (nameRaw == null) return;
@@ -105,13 +87,9 @@ function handleNewPrecon() {
   if (descRaw == null) return;
   const description = descRaw.trim();
 
-  const precon = {
-    id,
-    name,
-    description,
-    cards: []
-  };
+  const precon = { id, name, description, cards: [] };
 
+  if (!Array.isArray(AppState.precons)) AppState.precons = [];
   AppState.precons.push(precon);
   saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
 
@@ -123,19 +101,16 @@ function handleNewPrecon() {
  * Render precon summary cards
  ************************************************************/
 function renderPrecons() {
-  const grid = Dom.preconGrid;
+  const grid = getPreconGrid();
+  if (!grid) return;
+
   grid.innerHTML = "";
 
   const cardsSorted = [...(AppState.cards || [])];
-  // Sort cards for dropdown: by setName, then cardNumber (numeric-ish), then name
   cardsSorted.sort((a, b) => {
     const setA = (a.setName || "").localeCompare(b.setName || "");
     if (setA !== 0) return setA;
-    const numA = (a.cardNumber || "").localeCompare(
-      b.cardNumber || "",
-      undefined,
-      { numeric: true }
-    );
+    const numA = (a.cardNumber || "").localeCompare(b.cardNumber || "", undefined, { numeric: true });
     if (numA !== 0) return numA;
     return (a.name || "").localeCompare(b.name || "");
   });
@@ -155,6 +130,7 @@ function renderPrecons() {
 
     const h3 = document.createElement("h3");
     h3.textContent = precon.name;
+
     const pill = document.createElement("span");
     pill.className = "pill";
     pill.textContent = `${precon.cards ? precon.cards.length : 0} entries`;
@@ -178,7 +154,7 @@ function renderPrecons() {
         li.style.alignItems = "center";
         li.style.gap = "4px";
 
-        const cardObj = AppState.cards.find(c => c.id === entry.cardId);
+        const cardObj = (AppState.cards || []).find(c => c.id === entry.cardId);
         const name = cardObj ? cardObj.name : entry.cardId;
 
         const textSpan = document.createElement("span");
@@ -201,7 +177,6 @@ function renderPrecons() {
       });
     }
 
-    // Controls row: ID + dropdown + count + Add button
     const controls = document.createElement("div");
     controls.style.display = "flex";
     controls.style.flexWrap = "wrap";
@@ -214,11 +189,9 @@ function renderPrecons() {
     idSpan.style.fontSize = "11px";
     idSpan.textContent = precon.id ? `ID: ${precon.id}` : "";
 
-    // Dropdown of cards
     const select = document.createElement("select");
     select.style.flex = "1 1 180px";
     select.style.minWidth = "180px";
-    // Closed control styling for your dark theme
     select.style.backgroundColor = "rgba(8, 8, 12, 0.95)";
     select.style.color = "#f5f5f5";
     select.style.border = "1px solid rgba(255,255,255,0.2)";
@@ -233,7 +206,6 @@ function renderPrecons() {
       : "No cards loaded (load drive-card.json)";
     placeholder.disabled = true;
     placeholder.selected = true;
-    // Make placeholder readable when open
     placeholder.style.backgroundColor = "#101018";
     placeholder.style.color = "#f5f5f5";
     select.appendChild(placeholder);
@@ -242,14 +214,12 @@ function renderPrecons() {
       const opt = document.createElement("option");
       opt.value = c.id;
       opt.textContent = formatCardOptionLabel(c);
-      opt.title = opt.textContent; // tooltip with full text for readability
-      // Make options readable when dropdown is open
+      opt.title = opt.textContent;
       opt.style.backgroundColor = "#101018";
       opt.style.color = "#f5f5f5";
       select.appendChild(opt);
     });
 
-    // Count input
     const countInput = document.createElement("input");
     countInput.type = "number";
     countInput.min = "1";
@@ -257,40 +227,32 @@ function renderPrecons() {
     countInput.style.width = "48px";
     countInput.style.textAlign = "center";
 
-    // Add button
     const addBtn = document.createElement("button");
     addBtn.type = "button";
     addBtn.className = "btn ghost small";
     addBtn.textContent = "ADD CARD";
     addBtn.addEventListener("click", (e) => {
       e.stopPropagation();
+
       const cardId = select.value;
-      if (!cardId) {
-        alert("Please select a card from the dropdown first.");
-        return;
-      }
-      const cardObj = AppState.cards.find(c => c.id === cardId);
-      if (!cardObj) {
-        alert("Selected card could not be found in the library.");
-        return;
-      }
+      if (!cardId) return alert("Please select a card from the dropdown first.");
+
+      const cardObj = (AppState.cards || []).find(c => c.id === cardId);
+      if (!cardObj) return alert("Selected card could not be found in the library.");
+
       const count = Number(countInput.value) || 0;
-      if (!Number.isFinite(count) || count <= 0) {
-        alert("Count must be a positive number.");
-        return;
-      }
+      if (!Number.isFinite(count) || count <= 0) return alert("Count must be a positive number.");
 
       addCardToPrecon(precon, cardId, count);
       saveToLocalStorage(STORAGE_KEYS.PRECONS, AppState.precons);
 
       setPreconsStatus(`Added ${count}x "${cardObj.name}" to "${precon.name}".`);
 
-      // Reset controls for convenience
       select.value = "";
       placeholder.selected = true;
       countInput.value = "1";
 
-      renderPrecons(); // re-render to show updated list
+      renderPrecons();
     });
 
     controls.appendChild(idSpan);
@@ -325,14 +287,12 @@ export async function loadPrecons() {
     renderPrecons();
     return;
   } catch (e) {
-    console.warn("Could not fetch drive-precons.json, falling back to localStorage:", e);
+    console.warn("[precons] Could not fetch drive-precons.json, falling back to localStorage:", e);
   }
 
-  if (localBackup && Array.isArray(localBackup)) {
-    AppState.precons = localBackup;
-  } else {
-    AppState.precons = [];
-  }
+  if (localBackup && Array.isArray(localBackup)) AppState.precons = localBackup;
+  else AppState.precons = [];
+
   renderPrecons();
 }
 
@@ -340,10 +300,14 @@ export async function loadPrecons() {
  * Init: wire up the export + new precon button
  ************************************************************/
 export function initPrecons() {
-  // Export button (existing behavior)
-  Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
-    downloadJson(AppState.precons, "drive-precons.json");
-  });
+  // Export button (null-safe)
+  if (Dom.downloadPreconsJsonBtn) {
+    Dom.downloadPreconsJsonBtn.addEventListener("click", () => {
+      downloadJson(AppState.precons || [], "drive-precons.json");
+    });
+  } else {
+    console.warn("[precons] downloadPreconsJsonBtn not found (id='downloadPreconsJsonBtn').");
+  }
 
   // Inject a "New Precon" button once, under the status line.
   if (Dom.preconsStatus && !Dom.preconsStatus.dataset.newPreconWired) {
@@ -357,7 +321,7 @@ export function initPrecons() {
     newBtn.addEventListener("click", handleNewPrecon);
 
     btnRow.appendChild(newBtn);
-    Dom.preconsStatus.parentElement.appendChild(btnRow);
+    Dom.preconsStatus.parentElement?.appendChild(btnRow);
 
     Dom.preconsStatus.dataset.newPreconWired = "1";
   }
