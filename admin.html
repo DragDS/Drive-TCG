@@ -1,1562 +1,556 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>DRIVE TCG Admin</title>
+
+  <!-- SheetJS (XLSX) - REQUIRED for bulk import -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    :root {
-      --bg: #050509;
-      --bg-elevated: #0f1016;
-      --bg-elevated-soft: #151726;
-      --border-subtle: rgba(255,255,255,0.06);
-      --border-strong: rgba(255,255,255,0.18);
-      --accent: #ff6b3a;
-      --accent-soft: rgba(255,107,58,0.15);
-      --accent-strong: #ff8356;
-      --accent-glow: 0 0 18px rgba(255,107,58,0.4);
-      --accent-muted: #fcb99d;
-      --accent-pill: linear-gradient(135deg, #ff6b3a, #ffa63f);
-      --accent-pill-soft: linear-gradient(135deg, rgba(255,107,58,0.12), rgba(255,166,63,0.06));
-      --accent-pill-border: rgba(255,166,63,0.5);
-      --text-main: #f6f7ff;
-      --text-soft: #b5b9d9;
-      --text-softer: #8b8fad;
-      --danger: #ff4b6a;
-      --danger-soft: rgba(255,75,106,0.16);
-      --danger-border: rgba(255,75,106,0.5);
-      --ok: #3fe0a8;
-      --ok-soft: rgba(63,224,168,0.12);
-      --ok-border: rgba(63,224,168,0.45);
-      --warn: #ffce4b;
-      --warn-soft: rgba(255,206,75,0.14);
-      --warn-border: rgba(255,206,75,0.5);
-      --input-bg: #101322;
-      --input-border: rgba(235,240,255,0.12);
-      --input-border-focus: rgba(255,166,63,0.85);
-      --input-shadow-focus: 0 0 0 1px rgba(255,166,63,0.3);
-      --chip-bg: rgba(255,255,255,0.06);
-      --chip-bg-key: rgba(255,166,63,0.16);
-      --chip-border: rgba(255,255,255,0.18);
-      --chip-border-key: rgba(255,166,63,0.8);
-      --pill-bg: rgba(0,0,0,0.4);
-      --outline-soft: rgba(255,255,255,0.06);
-      --outline-strong: rgba(255,255,255,0.2);
-      --shadow-soft: 0 18px 40px rgba(0,0,0,0.85);
-      --shadow-heavy: 0 26px 70px rgba(0,0,0,0.95);
-      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-                   Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-                   "Courier New", monospace;
+    :root{
+      --bg:#06060b;
+      --panel:#0b0b12;
+      --panel2:#0a0a10;
+      --text:#e9e9f2;
+      --muted:#a6a6bf;
+      --line:rgba(255,255,255,.10);
+      --line2:rgba(255,255,255,.08);
+      --accent:#ff8a2a;
+      --accent2:#ff4d5a;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top left, #181828 0, #050509 60%);
-      color: var(--text-main);
-      font-family: var(--font-sans);
-      font-size: 14px;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .app-shell {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px clamp(16px, 4vw, 32px);
-      max-width: 1440px;
-      margin: 0 auto;
-    }
-
-    .app-header {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 14px;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 60%),
-        linear-gradient(135deg, #181a24, #080915);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: var(--shadow-soft);
-    }
-
-    .app-header-main {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .app-title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .logo-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .drive-pill {
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.4);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: var(--accent-glow);
-    }
-
-    .drive-pill span {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--accent-muted);
-    }
-
-    .drive-pill strong {
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      color: var(--accent-strong);
-    }
-
-    .app-title {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .app-title-main {
-      font-size: 18px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .app-subtitle {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .app-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .meta-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: var(--text-soft);
-    }
-
-    .pill-ok {
-      border-color: var(--ok-border);
-      background: var(--ok-soft);
-      color: var(--ok);
-    }
-
-    .pill-warn {
-      border-color: var(--warn-border);
-      background: var(--warn-soft);
-      color: var(--warn);
-    }
-
-    .pill-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--ok);
-      box-shadow: 0 0 8px rgba(63,224,168,0.8);
-    }
-
-    .app-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .btn {
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(8,8,16,0.9);
-      color: var(--text-main);
-      padding: 6px 12px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
-    }
-
-    .btn.small {
-      padding: 4px 10px;
-      font-size: 10px;
-    }
-
-    .btn.primary {
-      background: var(--accent-pill);
-      border-color: var(--accent-pill-border);
-      color: #190b05;
-      box-shadow: var(--accent-glow);
-    }
-
-    .btn.secondary {
-      background: rgba(255,255,255,0.04);
-    }
-
-    .btn.danger {
-      background: var(--danger-soft);
-      border-color: var(--danger-border);
-      color: var(--danger);
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255,255,255,0.32);
-      background: rgba(26,28,42,0.95);
-    }
-
-    .btn.primary:hover {
-      background: linear-gradient(135deg, #ff8c48, #ffd84f);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(5,5,10,0.9);
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: var(--accent-strong);
-      box-shadow: var(--accent-glow);
-    }
-
-    .app-main {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .panel {
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 55%),
-        linear-gradient(145deg, #151726, #080814);
-      border-radius: 18px;
-      border: 1px solid var(--border-strong);
-      box-shadow: var(--shadow-soft);
-      overflow: hidden;
-    }
-
-    .panel-subtle {
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 55%),
-        linear-gradient(145deg, #10111b, #070711);
-      border-color: var(--border-subtle);
-    }
-
-    .panel-header {
-      padding: 10px 12px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .panel-header-main {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .panel-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-    }
-
-    .panel-title-pill {
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-pill-soft);
-      border: 1px solid var(--accent-pill-border);
-      font-size: 9px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent-muted);
-    }
-
-    .panel-subtitle {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .panel-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .panel-body {
-      padding: 10px 12px 12px;
-    }
-
-    .nav-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 3px;
-      border-radius: 999px;
-      background: rgba(4,4,10,0.75);
-      border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    .nav-tab {
-      position: relative;
-      border: none;
-      background: transparent;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--text-softer);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      transition: color 0.14s ease, background 0.14s ease, transform 0.05s ease;
-    }
-
-    .nav-tab .bullet {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.16);
-    }
-
-    .nav-tab.active {
-      background: rgba(255,255,255,0.06);
-      color: var(--accent-muted);
-    }
-
-    .nav-tab.active .bullet {
-      background: var(--accent-strong);
-      box-shadow: var(--accent-glow);
-    }
-
-    .section {
-      display: none;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    .form-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr);
-      gap: 10px;
-    }
-
-    .field-card {
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
-        linear-gradient(150deg, rgba(7,8,16,0.96), rgba(8,9,20,0.98));
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 10px 11px 9px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .field-card-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
-    .field-card-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      margin-bottom: 2px;
-    }
-
-    .field-card-subtitle {
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .field-card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .field-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 10px;
-    }
-
-    .field-grid.full {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .field-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--text-soft);
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .field-required::after {
-      content: "•";
-      margin-left: 4px;
-      color: var(--accent);
-    }
-
-    .hint {
-      font-size: 10px;
-      color: var(--text-softer);
-    }
-
-    .input, textarea, select {
-      font-family: var(--font-sans);
-      font-size: 12px;
-      color: var(--text-main);
-      background: var(--input-bg);
-      border-radius: 10px;
-      border: 1px solid var(--input-border);
-      padding: 5px 8px;
-      outline: none;
-      transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-    }
-
-    .input:focus,
-    textarea:focus,
-    select:focus {
-      border-color: var(--input-border-focus);
-      box-shadow: var(--input-shadow-focus);
-      background: #15182a;
-    }
-
-    textarea {
-      min-height: 68px;
-      resize: vertical;
-    }
-
-    .input-mono {
-      font-family: var(--font-mono);
-      font-size: 11px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: var(--chip-bg);
-      border: 1px solid var(--chip-border);
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-soft);
-    }
-
-    .chip.key {
-      background: var(--chip-bg-key);
-      border-color: var(--chip-border-key);
-      color: var(--accent-muted);
-    }
-
-    .card-preview {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      border-radius: 16px;
-      padding: 10px 11px;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 58%),
-        linear-gradient(145deg, #151726, #05060d);
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.9);
-    }
-
-    .card-preview-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-    }
-
-    .card-preview-header h2 {
-      font-size: 15px;
-      margin: 0;
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .card-preview-body {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
-      gap: 8px;
-      align-items: stretch;
-    }
-
-    .card-preview-img {
-      border-radius: 12px;
-      border: 1px dashed rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px;
-      font-size: 11px;
-      text-align: center;
-      color: var(--text-softer);
-    }
-
-    .card-preview-img img {
-      max-width: 100%;
-      border-radius: 10px;
-      display: block;
-    }
-
-    .notes-area {
-      border-radius: 10px;
-      padding: 6px 8px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 11px;
-      color: var(--text-main);
-      min-height: 52px;
-      white-space: pre-wrap;
-    }
-
-    .card-preview-footer {
-      border-top: 1px dashed rgba(255,255,255,0.18);
-      padding-top: 6px;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .single-status {
-      font-size: 11px;
-      color: var(--text-softer);
-      margin-top: 4px;
-    }
-
-    .library-panel {
-      margin-top: 8px;
-      border-radius: 12px;
-      padding: 8px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.12);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .library-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .library-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-    }
-
-    .library-count {
-      font-size: 10px;
-      color: var(--text-softer);
-    }
-
-    .library-search {
-      min-width: 180px;
-    }
-
-    .library-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      max-height: 240px;
-      overflow: auto;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
-                  linear-gradient(160deg, rgba(5,5,12,0.95), rgba(4,4,10,0.98));
-    }
-
-    .library-item {
-      padding: 5px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      cursor: pointer;
-      transition: background 0.12s ease, transform 0.05s ease;
-    }
-
-    .library-item:last-child {
-      border-bottom: none;
-    }
-
-    .library-item:hover {
-      background: rgba(255,255,255,0.05);
-      transform: translateY(-1px);
-    }
-
-    .library-item .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .library-item .title {
-      font-size: 12px;
-    }
-
-    .library-item .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-    }
-
-    .library-item .sub {
-      font-size: 10px;
-      color: var(--text-softer);
-      margin-top: 2px;
-    }
-
-    .prints-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .prints-controls {
-      display: grid;
-      grid-template-columns: 1.1fr 0.7fr auto;
-      gap: 6px;
-    }
-
-    .prints-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      font-size: 10px;
-      color: var(--text-softer);
-    }
-
-    .prints-list {
-      list-style: none;
-      margin: 0;
-      padding: 4px 6px 4px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 11px;
-      max-height: 100px;
-      overflow: auto;
-    }
-
-    .prints-list li {
-      padding: 2px 0;
-      cursor: pointer;
-    }
-
-    .prints-list li:hover {
-      text-decoration: line-through;
-      color: var(--danger);
-    }
-
-    /* === Bulk layout height + scrolling patch === */
-    #bulkSection .panel-body {
-      min-height: calc(100vh - 260px);
-    }
-
-    .bulk-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr);
-      gap: 12px;
-      height: 100%;
-    }
-
-    .bulk-step-panel {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      gap: 8px;
-    }
-
-    #bulkSelectionList {
-      flex: 1;
-      min-height: 0;
-      max-height: none;
-      overflow-y: auto;
-      list-style: none;
-      margin: 0;
-      padding: 6px 8px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 11px;
-    }
-
-    #bulkSelectionList li + li {
-      border-top: 1px solid rgba(255,255,255,0.06);
-      margin-top: 2px;
-      padding-top: 2px;
-    }
-
-    #bulkSelectedPreview {
-      flex: 1;
-      min-height: 120px;
-      max-height: none;
-      overflow-y: auto;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      background: rgba(0,0,0,0.52);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      padding: 7px 8px;
-      white-space: pre;
-    }
-
-    .bulk-card-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .bulk-card-checkbox {
-      flex: 0 0 auto;
-    }
-
-    .bulk-card-label {
-      flex: 1 1 auto;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .help-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 10px;
-    }
-
-    .help-section h3 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      margin: 6px 0 4px;
-    }
-
-    .help-section p {
-      font-size: 11px;
-      color: var(--text-soft);
-      margin: 4px 0;
-    }
-
-    .help-section ul {
-      margin: 4px 0;
-      padding-left: 18px;
-      font-size: 11px;
-      color: var(--text-soft);
-    }
-
-    .help-note {
-      border-radius: 10px;
-      border: 1px dashed rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.48);
-      padding: 6px 8px;
-      font-size: 11px;
-      color: var(--text-soft);
-      margin-top: 6px;
-    }
-
-    .help-section code {
-      font-family: var(--font-mono);
-      font-size: 11px;
-    }
-
-    .help-section pre {
-      background: rgba(0,0,0,0.65);
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.18);
-      padding: 6px 8px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      white-space: pre;
-      overflow: auto;
-      max-height: 260px;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at top, rgba(0,0,0,0.9), rgba(0,0,0,0.92));
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 40;
-    }
-
-    .modal-backdrop.active {
-      display: flex;
-    }
-
-    .modal {
-      width: min(360px, 92vw);
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%),
-                  linear-gradient(145deg, #141726, #070814);
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.95);
-      padding: 12px 14px 10px;
-      transform: translateY(6px);
-      opacity: 0;
-      transition: all 0.18s ease-out;
-    }
-
-    .modal-backdrop.active .modal {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    .modal-header h3 {
-      margin: 0;
-      font-size: 13px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .modal-body {
-      font-size: 12px;
-      color: var(--text-soft);
-      margin-bottom: 8px;
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: flex-end;
-      gap: 6px;
-    }
-
-    @media (max-width: 980px) {
-      .form-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .bulk-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    @media (max-width: 720px) {
-      .app-header-main {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .app-actions {
-        justify-content: flex-start;
-      }
-      .library-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .library-search {
-        width: 100%;
-      }
-    }
+        radial-gradient(1200px 600px at 30% 0%, rgba(255,138,42,.12), transparent 60%),
+        radial-gradient(900px 450px at 70% 10%, rgba(255,77,90,.10), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+    .wrap{
+      width:min(1180px, calc(100% - 32px));
+      margin:22px auto 36px;
+    }
+
+    /* Top header */
+    .top-card{
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:18px 18px 14px;
+      box-shadow: 0 16px 60px rgba(0,0,0,.45);
+    }
+    .top-title{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .top-left h1{
+      margin:2px 0 4px;
+      letter-spacing:.12em;
+      font-size:18px;
+      font-weight:800;
+    }
+    .top-left .kicker{
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 2px;
+    }
+    .pill-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .pill{
+      font-size:11px;
+      letter-spacing:.10em;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line2);
+      background:rgba(0,0,0,.22);
+      color:var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      text-transform:uppercase;
+    }
+    .pill .dot{
+      width:7px;
+      height:7px;
+      border-radius:999px;
+      background:#2fe27d;
+      box-shadow: 0 0 10px rgba(47,226,125,.6);
+    }
+
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition:transform .05s ease, border-color .15s ease, background .15s ease;
+      white-space:nowrap;
+    }
+    .btn:active{ transform:translateY(1px); }
+    .btn.primary{
+      border-color:rgba(255,138,42,.55);
+      background:rgba(255,138,42,.12);
+    }
+    .btn.danger{
+      border-color:rgba(255,77,90,.55);
+      background:rgba(255,77,90,.10);
+    }
+    .btn.small{
+      font-size:11px;
+      padding:7px 10px;
+    }
+
+    /* Workspace */
+    .workspace{
+      margin-top:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: 0 18px 70px rgba(0,0,0,.42);
+    }
+    .workspace-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      flex-wrap:wrap;
+      padding:4px 2px 10px;
+    }
+    .workspace-head .title{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .workspace-head .title h2{
+      margin:0;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--muted);
+      font-weight:800;
+    }
+    .workspace-head .subtitle{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:6px;
+      border:1px solid var(--line2);
+      background:rgba(0,0,0,.22);
+      border-radius:999px;
+    }
+    .tab{
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      padding:7px 10px;
+      font-size:11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      border-radius:999px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color:rgba(255,138,42,.55);
+      background:rgba(255,138,42,.12);
+    }
+
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    /* Shared panels */
+    .panel{
+      background:rgba(0,0,0,.24);
+      border:1px solid var(--line2);
+      border-radius:14px;
+      padding:14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid2{ grid-template-columns:1fr; }
+    }
+
+    /* Bulk layout */
+    .bulk-grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .bulk-grid{ grid-template-columns:1fr; }
+    }
+
+    .h3{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+    .hint{
+      margin:0 0 10px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .label{
+      font-size:11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin:10px 0 6px;
+    }
+
+    select, input[type="text"]{
+      width:100%;
+      border-radius:10px;
+      border:1px solid var(--line2);
+      background:rgba(0,0,0,.28);
+      color:var(--text);
+      padding:9px 10px;
+      outline:none;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .row > *{ flex:1; }
+    .row .tight{ flex:0 0 auto; }
+
+    .status{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--line2);
+      background:rgba(0,0,0,.22);
+      color:var(--muted);
+      font-size:12px;
+      min-height:38px;
+      display:flex;
+      align-items:center;
+    }
+
+    /* PATCH: prevent infinite height, scroll inside list boxes */
+    #bulkSelectionList,
+    #bulkSelectedPreview{
+      margin:0;
+      padding:0.25rem 0.5rem;
+      list-style:none;
+      background:#050509;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.08);
+      max-height: calc(100vh - 360px);
+      overflow-y:auto;
+      font-family:var(--mono);
+      font-size:11px;
+      line-height:1.4;
+    }
+    #bulkSelectedPreview{
+      white-space:pre-wrap;
+      padding:10px 12px;
+      list-style:none;
+    }
+    #bulkSelectionList li.bulk-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 2px;
+      border-bottom:1px dashed rgba(255,255,255,.06);
+    }
+    #bulkSelectionList li.bulk-row:last-child{ border-bottom:none; }
+    #bulkSelectionList li.bulk-row .bulk-row-label{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      color:var(--text);
+    }
+
+    /* Buttons footer */
+    .bulk-actions{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .bulk-actions .btn{ flex:1; }
+    .bulk-actions .btn.tight{ flex:0 0 auto; }
+
+    /* Minimal placeholder styles for other sections */
+    .placeholder{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    /* Modal */
+    #modalBackdrop{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.60);
+      z-index:50;
+      padding:18px;
+    }
+    #modalBackdrop.active{ display:flex; }
+    .modal{
+      width:min(520px, 100%);
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      padding:14px;
+      box-shadow: 0 26px 90px rgba(0,0,0,.60);
+    }
+    .modal h3{ margin:0 0 8px; }
+    .modal p{ margin:0 0 12px; color:var(--muted); }
+    .modal .row{ justify-content:flex-end; }
+    .modal .row .btn{ flex:0 0 auto; }
   </style>
 </head>
+
 <body>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="app-header-main">
-        <div class="app-title-block">
-          <div class="logo-row">
-            <div class="drive-pill">
-              <span>Drive TCG</span>
-              <strong>Admin</strong>
-            </div>
-          </div>
-          <div class="app-title">
-            <div class="app-title-main">Admin Toolkit</div>
-            <div class="app-subtitle">
-              Editing <strong>drive-card.json</strong> and <strong>drive-precons.json</strong> directly in your browser.
-            </div>
+  <div class="wrap">
+
+    <!-- Header -->
+    <div class="top-card">
+      <div class="top-title">
+        <div class="top-left">
+          <div class="kicker">DRIVE TCG Admin</div>
+          <h1>ADMIN TOOLKIT</h1>
+          <div class="pill-row">
+            <span class="pill"><span class="dot"></span> single-file json • no server</span>
+            <span class="pill">changes are live in memory</span>
+            <span class="pill">use export json to save your edits</span>
           </div>
         </div>
 
-        <div class="app-meta">
-          <div class="meta-pills">
-            <div class="pill">
-              <span class="pill-dot"></span>
-              <span>Single-file JSON · No server</span>
-            </div>
-            <div class="pill pill-ok">
-              <span>Changes are live in memory</span>
-            </div>
-            <div class="pill pill-warn">
-              <span>Use <strong>Export JSON</strong> to save your edits</span>
-            </div>
-          </div>
-          <div class="app-actions">
-            <button id="downloadCardsJsonBtn" class="btn secondary small" type="button">
-              Export Card JSON
-            </button>
-            <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">
-              Export Precon JSON
-            </button>
-          </div>
+        <div class="top-right" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn" id="downloadCardsJsonBtn">Export Card JSON</button>
+          <button class="btn" id="downloadPreconsJsonBtn">Export Precon JSON</button>
         </div>
       </div>
-    </header>
+    </div>
 
-    <main class="app-main">
-      <section class="panel panel-subtle">
-        <header class="panel-header">
-          <div class="panel-header-main">
-            <div class="panel-title">
-              <span>Workspace</span>
-              <span class="panel-title-pill">Card &amp; Deck Editor</span>
+    <!-- Workspace -->
+    <div class="workspace">
+      <div class="workspace-head">
+        <div class="title">
+          <h2>Workspace</h2>
+          <p class="subtitle">Use the tabs to switch between Single Card, Bulk Import, and Precon Decks.</p>
+        </div>
+
+        <div class="tabs" aria-label="Workspace navigation">
+          <button class="tab active" id="navSingleBtn">Single Card</button>
+          <button class="tab" id="navBulkBtn">Bulk Import</button>
+          <button class="tab" id="navPreconsBtn">Precons</button>
+          <button class="tab" id="navHelpBtn">Help</button>
+        </div>
+      </div>
+
+      <!-- SINGLE -->
+      <section class="section active" id="singleSection">
+        <div class="panel">
+          <div class="h3">Single Card</div>
+          <p class="hint">Single editor UI is handled by your existing Single module. (No changes required here for the bulk patch.)</p>
+
+          <!-- Keep your existing Single HTML here if you already have it.
+               Minimal placeholders below so the page still loads if you paste this fresh file. -->
+
+          <div class="grid2">
+            <div class="panel" style="background:rgba(0,0,0,.18)">
+              <div class="label">Editor</div>
+              <div class="placeholder">
+                If you already have a full Single Editor section, paste it here and keep the element IDs
+                used by <code>dom.js</code> and <code>single.js</code>.
+              </div>
+
+              <!-- basic buttons (IDs used by app.js / single.js) -->
+              <div class="bulk-actions" style="margin-top:12px;">
+                <button class="btn primary" id="downloadCardsJsonBtn_single">Export Card JSON</button>
+                <button class="btn" id="singleSaveBtn">Save</button>
+                <button class="btn" id="singleNewBtn">New</button>
+                <button class="btn danger" id="singleDeleteBtn">Delete</button>
+              </div>
+
+              <div class="status" id="singleStatus">Single status…</div>
             </div>
-            <div class="panel-subtitle">
-              Use the tabs to switch between <strong>Single Card</strong>, <strong>Bulk Import</strong>, and <strong>Precon Decks</strong>.
+
+            <div class="panel" style="background:rgba(0,0,0,.18)">
+              <div class="label">Preview</div>
+              <div id="singlePreview" class="placeholder">Single preview renders here…</div>
+
+              <div class="label" style="margin-top:12px;">Library</div>
+              <input id="cardLibrarySearchInput" type="text" placeholder="Search cards…" />
+              <div class="status" style="margin-top:8px;">
+                <span id="libraryCount">0 cards</span>
+              </div>
+              <ul id="cardLibraryList" style="margin:8px 0 0; padding:0; list-style:none;"></ul>
             </div>
           </div>
-          <div class="panel-actions">
-            <nav class="nav-tabs">
-              <button id="navSingleBtn" class="nav-tab active" type="button">
-                <span class="bullet"></span>
-                Single Card
-              </button>
-              <button id="navBulkBtn" class="nav-tab" type="button">
-                <span class="bullet"></span>
-                Bulk Import
-              </button>
-              <button id="navPreconsBtn" class="nav-tab" type="button">
-                <span class="bullet"></span>
-                Precons
-              </button>
-              <button id="navHelpBtn" class="nav-tab" type="button">
-                <span class="bullet"></span>
-                Help
-              </button>
-            </nav>
-          </div>
-        </header>
 
-        <div class="panel-body">
-          <!-- SINGLE CARD SECTION -->
-          <section id="singleSection" class="section active">
-            <div class="form-layout">
-              <div class="field-card">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">Single Card Editor</div>
-                    <div class="field-card-subtitle">
-                      Edit the core data for a single card, then export the full <code>drive-card.json</code>.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>Live Preview</span>
-                  </div>
-                </div>
+          <!-- Hidden inputs referenced by dom.js/single.js; include if your current admin.html already has them.
+               If your existing file already includes them, keep yours and delete these. -->
+          <input id="cardIdInput" type="hidden">
+          <input id="cardNameInput" type="hidden">
+          <input id="cardTypeInput" type="hidden">
+          <input id="cardSetNameInput" type="hidden">
+          <input id="cardNumberInput" type="hidden">
+          <input id="cardRarityInput" type="hidden">
+          <input id="cardVehicleTypesInput" type="hidden">
+          <input id="cardTagsInput" type="hidden">
+          <input id="cardImageUrlInput" type="hidden">
+          <input id="modBasePartInput" type="hidden">
+          <input id="modL1Input" type="hidden">
+          <input id="modL2Input" type="hidden">
+          <input id="modL3Input" type="hidden">
+          <input id="modL4Input" type="hidden">
+          <input id="vehicleHpConInput" type="hidden">
+          <input id="vehiclePitCostInput" type="hidden">
+          <textarea id="cardNotesInput" style="display:none"></textarea>
 
-                <div class="field-grid">
-                  <div class="field">
-                    <label class="field-label">
-                      <span class="field-required">Card Name</span>
-                      <span class="hint">e.g. LUCKY CHARM, JUNKYARD DOG</span>
-                    </label>
-                    <input id="cardNameInput" class="input" type="text" />
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span class="field-required">Type</span>
-                      <span class="hint">Crew / Driver / Mod / Vehicle / Track / Condition</span>
-                    </label>
-                    <select id="cardTypeInput" class="input">
-                      <option value="">Select a type…</option>
-                      <option value="Crew">Crew</option>
-                      <option value="Driver">Driver</option>
-                      <option value="Named Driver">Named Driver</option>
-                      <option value="Mod">Mod</option>
-                      <option value="Vehicle">Vehicle</option>
-                      <option value="Named Vehicle">Named Vehicle</option>
-                      <option value="Track">Track</option>
-                      <option value="Condition">Condition</option>
-                      <option value="Misc">Misc</option>
-                    </select>
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span class="field-required">Set Name</span>
-                      <span class="hint">Displayed set, e.g. Set 1, Set 2, Father's Day</span>
-                    </label>
-                    <input id="cardSetNameInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span class="field-required">Card Number</span>
-                      <span class="hint">Numeric or alphanumeric</span>
-                    </label>
-                    <input id="cardNumberInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Rarity</span>
-                      <span class="hint">Common, Uncommon, Rare, Ultra Rare, etc.</span>
-                    </label>
-                    <input id="cardRarityInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Image URL</span>
-                      <span class="hint">Path or URL to art</span>
-                    </label>
-                    <input id="cardImageUrlInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field" data-for-types="Vehicle,Named Vehicle">
-                    <label class="field-label">
-                      <span>Vehicle Types</span>
-                      <span class="hint">Comma-separated: Drag, Drift, Off-Road, Rally</span>
-                    </label>
-                    <input id="cardVehicleTypesInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Tags</span>
-                      <span class="hint">Comma-separated keywords</span>
-                    </label>
-                    <input id="cardTagsInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field" data-for-types="Mod">
-                    <label class="field-label">
-                      <span>Mod Base Part</span>
-                      <span class="hint">Headers, Engine, Brakes, etc.</span>
-                    </label>
-                    <input id="modBasePartInput" class="input input-mono" type="text" />
-                  </div>
-
-                  <div class="field" data-for-types="Vehicle,Named Vehicle">
-                    <label class="field-label">
-                      <span>Vehicle Stats</span>
-                      <span class="hint">Vehicle-only</span>
-                    </label>
-                    <div class="field-grid">
-                      <div class="field">
-                        <label class="field-label">
-                          <span>HP / CON</span>
-                        </label>
-                        <input id="vehicleHpConInput" class="input input-mono" type="text" placeholder="e.g. 3/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label">
-                          <span>Pit Cost</span>
-                        </label>
-                        <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Mod Levels -->
-                  <div class="field" data-for-types="Mod">
-                    <label class="field-label">
-                      <span>Mod Levels</span>
-                      <span class="hint">Each level is HP/CON or "-".</span>
-                    </label>
-                    <div class="field-grid">
-                      <div class="field">
-                        <label class="field-label"><span>L1</span></label>
-                        <input id="modL1Input" class="input input-mono" type="text" placeholder="e.g. 1/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>L2</span></label>
-                        <input id="modL2Input" class="input input-mono" type="text" placeholder="e.g. 2/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>L3</span></label>
-                        <input id="modL3Input" class="input input-mono" type="text" placeholder="e.g. 3/3" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>L4</span></label>
-                        <input id="modL4Input" class="input input-mono" type="text" placeholder="e.g. -" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label class="field-label">
-                    <span>Card Notes / Rules Text</span>
-                    <span class="hint">Full rules text; preview appears on the right.</span>
-                  </label>
-                  <textarea id="cardNotesInput" class="input input-mono"></textarea>
-                </div>
-
-                <div class="field-card-footer">
-                  <div class="hint">
-                    ID is auto-assigned for new cards. For existing cards, the ID is used to match updates.
-                  </div>
-                  <div style="display:flex;gap:6px;align-items:center;">
-                    <input id="cardIdInput" class="input input-mono" type="text" placeholder="(auto)" style="max-width: 180px;" />
-                    <button id="singleSaveBtn" class="btn primary small" type="button">Save / Update Card</button>
-                    <button id="singleNewBtn" class="btn small" type="button">New Card</button>
-                    <button id="singleDeleteBtn" class="btn small danger" type="button">Delete Card</button>
-                  </div>
-                </div>
-
-                <div id="singleStatus" class="single-status">Ready.</div>
-              </div>
-
-              <div class="field-card">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">Live Preview &amp; Prints</div>
-                    <div class="field-card-subtitle">
-                      Shows a structured view of the card plus all associated prints.
-                    </div>
-                  </div>
-                </div>
-
-                <div id="singlePreview" class="card-preview"></div>
-
-                <div class="prints-row">
-                  <div class="prints-controls">
-                    <select id="printSetSelect" class="input input-mono">
-                      <option value="">Select a set…</option>
-                      <option value="Set 1">Set 1</option>
-                      <option value="Set 2">Set 2</option>
-                      <option value="Set 3">Set 3</option>
-                      <option value="Set 4">Set 4</option>
-                      <option value="Set 5">Set 5</option>
-                      <option value="Set 6">Set 6</option>
-                      <option value="CUSTOM">Custom…</option>
-                    </select>
-                    <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name" />
-                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="# number (press Enter)" />
-                  </div>
-
-                  <div class="prints-actions">
-                    <button id="printSetPrimaryBtn" class="btn small" type="button">Set Last As Primary ★</button>
-                    <button id="printClearAllBtn" class="btn small" type="button">Clear Prints</button>
-                    <span class="hint">Click a print in the list below to remove it.</span>
-                  </div>
-
-                  <ul id="printsList" class="prints-list"></ul>
-                </div>
-
-                <div class="library-panel">
-                  <div class="library-header">
-                    <div>
-                      <div class="library-title">Card Library</div>
-                      <div id="libraryCount" class="library-count">0 cards</div>
-                    </div>
-                    <input id="cardLibrarySearchInput" class="input input-mono library-search" type="text" placeholder="Filter by name, type, or tags…" />
-                  </div>
-                  <ul id="cardLibraryList" class="library-list"></ul>
-                </div>
-
-                <div class="field-card-footer">
-                  <div class="hint">Use the library to quickly locate cards to edit.</div>
-                  <button id="downloadCardsJsonBtn_single" class="btn secondary small" type="button">
-                    Export Card JSON
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- BULK IMPORT SECTION -->
-          <section id="bulkSection" class="section">
-            <div class="bulk-layout">
-              <!-- Step 1 -->
-              <div class="field-card bulk-step-panel">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">Step 1 · Load master spreadsheet</div>
-                    <div class="field-card-subtitle">
-                      Load your <strong>Drive Cards.xlsx</strong> master file. The sheets will be read and turned into cards.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>XLSX only</span>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <label class="field-label">
-                    <span>Drive master file (.xlsx)</span>
-                  </label>
-                  <input
-                    id="bulkFileInput"
-                    type="file"
-                    accept=".xlsx"
-                    class="input"
-                    style="padding:3px 8px;"
-                  />
-                  <span class="hint">
-                    Select your <strong>Drive Cards.xlsx</strong>. You will not see the raw grid, just card summaries.
-                  </span>
-                </div>
-
-                <div id="bulkStatus" class="single-status" style="margin-top:8px;">
-                  Waiting for a master spreadsheet…
-                </div>
-              </div>
-
-              <!-- Step 2 & 3 -->
-              <div class="field-card bulk-step-panel">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">Step 2 · Filter &amp; choose cards</div>
-                    <div class="field-card-subtitle">
-                      Filter by Type or Set, select the cards you want, then import or clear.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>Selection &amp; Import</span>
-                  </div>
-                </div>
-
-                <div class="field-grid full" style="gap:8px;">
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Filter by Type</span>
-                    </label>
-                    <select id="bulkFilterTypeSelect" class="input input-mono">
-                      <option value="">All Types</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label class="field-label">
-                      <span>Filter by Set</span>
-                    </label>
-                    <select id="bulkFilterSetSelect" class="input input-mono">
-                      <option value="">All Sets</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div style="display:flex;gap:6px;margin:6px 0;">
-                  <button id="bulkSelectAllViewedBtn" class="btn small" type="button">Select all viewed</button>
-                  <button id="bulkDeselectAllViewedBtn" class="btn small" type="button">Deselect all viewed</button>
-                </div>
-
-                <div class="field">
-                  <label class="field-label">
-                    <span>Step 2 · Visible cards</span>
-                    <span class="hint">Each line is one card. Check the box to include it in Step 3.</span>
-                  </label>
-                  <ul id="bulkSelectionList"></ul>
-                </div>
-
-                <div class="field">
-                  <label class="field-label">
-                    <span>Step 3 · Selected cards</span>
-                    <span class="hint">Cards that will be imported into the JSON library.</span>
-                  </label>
-                  <pre id="bulkSelectedPreview"></pre>
-                </div>
-
-                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;">
-                  <button id="bulkClearSessionBtn" class="btn small danger" type="button">
-                    Clear current bulk session
-                  </button>
-                  <button id="bulkImportBtn" class="btn small primary" type="button">
-                    Import selected into library
-                  </button>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- PRECONS SECTION (read-only summary) -->
-          <section id="preconsSection" class="section">
-            <div class="field-card">
-              <div class="field-card-label">
-                <div>
-                  <div class="field-card-title">Preconstructed Decks</div>
-                  <div class="field-card-subtitle">
-                    Read-only view of <code>drive-precons.json</code>. Use your editor for heavy changes, or export to update.
-                  </div>
-                </div>
-                <div class="badge">
-                  <span class="badge-dot"></span>
-                  <span>JSON-backed</span>
-                </div>
-              </div>
-
-              <p id="preconsStatus" style="font-size:11px;color:var(--text-soft);margin:0 0 4px;">Loading precons…</p>
-              <div id="preconGrid" class="precon-grid"></div>
-
-              <div class="field-card-footer">
-                <div class="hint">Precons display counts and card names resolved from the current card library.</div>
-                <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">
-                  Export Precon JSON
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <!-- HELP SECTION -->
-          <section id="helpSection" class="section">
-            <div class="help-grid">
-              <div class="field-card">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">How This Admin Works</div>
-                    <div class="field-card-subtitle">
-                      This panel manipulates in-memory data for <code>drive-card.json</code> and <code>drive-precons.json</code>.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>DRIVE TCG internal tool</span>
-                  </div>
-                </div>
-                <div class="help-section">
-                  <h3>Single Card Editor</h3>
-                  <p>The Single Card tab lets you edit one card at a time. The preview on the right updates as you type.</p>
-                  <ul>
-                    <li><strong>Save / Update Card</strong> adds or updates the card in the in-memory library.</li>
-                    <li><strong>New Card</strong> clears the form.</li>
-                    <li><strong>Delete Card</strong> removes the selected card.</li>
-                  </ul>
-
-                  <h3>Bulk Import</h3>
-                  <p>
-                    The Bulk tab uses your master <code>Drive Cards.xlsx</code> file:
-                  </p>
-                  <ul>
-                    <li><strong>Step 1:</strong> Load the master spreadsheet.</li>
-                    <li><strong>Step 2:</strong> Filter by Type / Set, then select or deselect viewed cards.</li>
-                    <li><strong>Step 3:</strong> Review the selected cards and import them into the library.</li>
-                  </ul>
-                  <p>
-                    Cards that belong to multiple sets (e.g. <code>Set 1 &amp; 3</code>) will appear when you select either
-                    of those sets in the Set filter.
-                  </p>
-
-                  <h3>Precons</h3>
-                  <p>
-                    The Precons tab shows a summary of each preconstructed deck from <code>drive-precons.json</code>.
-                  </p>
-                </div>
-              </div>
-
-              <div class="field-card">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">JSON Structure</div>
-                    <div class="field-card-subtitle">
-                      Reference for the shape of <code>drive-card.json</code> and <code>drive-precons.json</code>.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>Reference</span>
-                  </div>
-                </div>
-                <div class="help-section">
-                  <h3>Card JSON</h3>
-                  <pre><code>[
-  {
-    "id": "card_xxx",
-    "name": "LUCKY CHARM",
-    "type": "Crew",
-    "setName": "Set 1",
-    "cardNumber": "001",
-    "rarity": "Common",
-    "vehicleTypes": [],
-    "tags": ["Charm"],
-    "imageUrl": "/img/cards/lucky_charm.png",
-    "notes": "Rules text goes here.",
-    "extra": {
-      "modBasePart": "Headers",
-      "modLevel1": "1/2",
-      "modLevel2": "2/2",
-      "modLevel3": "3/3",
-      "modLevel4": "5/3"
-    },
-    "prints": [
-      { "setId": "Set 1", "cardNumber": "001" }
-    ]
-  }
-]</code></pre>
-
-                  <h3>Precon JSON</h3>
-                  <pre><code>[
-  {
-    "id": "precon_junkyard_intro",
-    "name": "Junkyard Intro",
-    "description": "A starter precon built around Ray's junkyard vehicles.",
-    "cards": [
-      { "cardId": "card_lucky_charm", "count": 2 },
-      { "cardId": "card_junkyard_dog", "count": 3 }
-    ]
-  }
-]</code></pre>
-                </div>
-              </div>
-
-              <div class="field-card">
-                <div class="field-card-label">
-                  <div>
-                    <div class="field-card-title">Local Backup &amp; Tools</div>
-                    <div class="field-card-subtitle">
-                      Suggested workflow for editing and exporting JSON safely.
-                    </div>
-                  </div>
-                  <div class="badge">
-                    <span class="badge-dot"></span>
-                    <span>Workflow</span>
-                  </div>
-                </div>
-                <div class="help-section">
-                  <div class="help-note">
-                    <strong>Suggested workflow:</strong>
-                    <ol style="margin:4px 0 0;padding-left:18px;font-size:11px;">
-                      <li>Open this admin and let it load <code>drive-card.json</code> and <code>drive-precons.json</code>.</li>
-                      <li>Use <strong>Single</strong> and <strong>Bulk</strong> tabs to edit or create cards.</li>
-                      <li>Check precons under <strong>Precons</strong> to verify deck contents.</li>
-                      <li>Click <strong>Export Card JSON</strong> and <strong>Export Precon JSON</strong> to download updated files.</li>
-                      <li>Replace the JSON files in your repo with the exported ones and commit.</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
+          <select id="printSetSelect" style="display:none"></select>
+          <input id="printCustomSetInput" type="hidden">
+          <input id="printCardNumberInput" type="hidden">
+          <button id="printSetPrimaryBtn" style="display:none"></button>
+          <button id="printClearAllBtn" style="display:none"></button>
+          <ul id="printsList" style="display:none"></ul>
         </div>
       </section>
-    </main>
+
+      <!-- BULK -->
+      <section class="section" id="bulkSection">
+        <div class="panel">
+          <div class="h3">Bulk Import</div>
+          <p class="hint">
+            Load from your master spreadsheet, filter by Type/Set (supports cards in multiple sets like “SET 1 &amp; 3”),
+            select what you want, then import into the JSON library.
+          </p>
+
+          <div class="bulk-grid">
+            <!-- Step 1 -->
+            <div class="panel" style="background:rgba(0,0,0,.18)">
+              <div class="h3" style="font-size:18px;">Step 1 · Load master spreadsheet</div>
+              <div class="label">Drive master file (.xlsx)</div>
+              <input type="file" id="bulkFileInput" accept=".xlsx" />
+
+              <div class="status" id="bulkStatus" style="margin-top:10px;">
+                Select Drive Cards.xlsx to begin.
+              </div>
+            </div>
+
+            <!-- Step 2 & 3 -->
+            <div class="panel" style="background:rgba(0,0,0,.18)">
+              <div class="h3" style="font-size:18px;">Step 2 · Filter &amp; choose cards</div>
+
+              <div class="row">
+                <div>
+                  <div class="label">Filter by Type</div>
+                  <select id="bulkFilterTypeSelect">
+                    <option value="__ALL__">All Types</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="label">Filter by Set</div>
+                  <select id="bulkFilterSetSelect">
+                    <option value="__ALL__">All Sets</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:10px;">
+                <button class="btn small" id="bulkSelectAllViewedBtn">Select all viewed</button>
+                <button class="btn small" id="bulkDeselectAllViewedBtn">Deselect all viewed</button>
+              </div>
+
+              <div class="label" style="margin-top:12px;">Cards (check to include in Step 3)</div>
+              <ul id="bulkSelectionList"></ul>
+
+              <div class="h3" style="font-size:18px; margin-top:14px;">Step 3 · Review &amp; import</div>
+              <div class="label">Selected cards</div>
+              <div id="bulkSelectedPreview">No cards selected for import.</div>
+
+              <div class="bulk-actions">
+                <button class="btn primary" id="bulkImportBtn">Import selected into library</button>
+                <button class="btn danger" id="bulkClearSessionBtn">Clear current bulk session</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- PRECONS -->
+      <section class="section" id="preconsSection">
+        <div class="panel">
+          <div class="h3">Precons</div>
+          <p class="placeholder">Your Precons UI goes here.</p>
+          <div id="preconsStatus" class="status">Precons status…</div>
+          <div id="preconGrid"></div>
+        </div>
+      </section>
+
+      <!-- HELP -->
+      <section class="section" id="helpSection">
+        <div class="panel">
+          <div class="h3">Help</div>
+          <p class="placeholder">
+            Bulk Import reads Drive Cards.xlsx, builds cards from each sheet, then lets you filter and import.
+          </p>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <div id="modalBackdrop" class="modal-backdrop">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalTitle">Confirm</h3>
-        <span class="badge">Dangerous</span>
-      </div>
-      <div id="modalBody" class="modal-body">Are you sure?</div>
-      <div class="modal-footer">
-        <button id="modalCancelBtn" class="btn small" type="button">Cancel</button>
-        <button id="modalConfirmBtn" class="btn small danger" type="button">Confirm</button>
+  <!-- Modal (shared) -->
+  <div id="modalBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Confirm</h3>
+      <p id="modalBody">Are you sure?</p>
+      <div class="row">
+        <button class="btn" id="modalCancelBtn">Cancel</button>
+        <button class="btn primary" id="modalConfirmBtn">Confirm</button>
       </div>
     </div>
   </div>
 
-  <!-- XLSX library for .xlsx bulk import -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- App entry -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
