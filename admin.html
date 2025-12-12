@@ -1,500 +1,740 @@
-// bulk.js
-// Bulk import (XLSX master): load -> filter -> select -> import.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DRIVE TCG Admin</title>
+  <style>
+    :root {
+      --bg: #050509;
+      --bg-elevated: #0f1016;
+      --bg-elevated-soft: #151726;
+      --border-subtle: rgba(255,255,255,0.06);
+      --border-strong: rgba(255,255,255,0.18);
+      --accent: #ff6b3a;
+      --accent-soft: rgba(255,107,58,0.15);
+      --accent-strong: #ff8356;
+      --accent-glow: 0 0 18px rgba(255,107,58,0.4);
+      --accent-muted: #fcb99d;
+      --accent-pill: linear-gradient(135deg, #ff6b3a, #ffa63f);
+      --accent-pill-soft: linear-gradient(135deg, rgba(255,107,58,0.12), rgba(255,166,63,0.06));
+      --accent-pill-border: rgba(255,166,63,0.5);
+      --text-main: #f6f7ff;
+      --text-soft: #b5b9d9;
+      --text-softer: #8b8fad;
+      --danger: #ff4b6a;
+      --danger-soft: rgba(255,75,106,0.16);
+      --danger-border: rgba(255,75,106,0.5);
+      --ok: #3fe0a8;
+      --ok-soft: rgba(63,224,168,0.12);
+      --ok-border: rgba(63,224,168,0.45);
+      --warn: #ffce4b;
+      --warn-soft: rgba(255,206,75,0.14);
+      --warn-border: rgba(255,206,75,0.5);
+      --input-bg: #101322;
+      --input-border: rgba(235,240,255,0.12);
+      --input-border-focus: rgba(255,166,63,0.85);
+      --input-shadow-focus: 0 0 0 1px rgba(255,166,63,0.3);
+      --chip-bg: rgba(255,255,255,0.06);
+      --chip-bg-key: rgba(255,166,63,0.16);
+      --chip-border: rgba(255,255,255,0.18);
+      --chip-border-key: rgba(255,166,63,0.8);
+      --pill-bg: rgba(0,0,0,0.4);
+      --outline-soft: rgba(255,255,255,0.06);
+      --outline-strong: rgba(255,255,255,0.2);
+      --shadow-soft: 0 18px 40px rgba(0,0,0,0.85);
+      --shadow-heavy: 0 26px 70px rgba(0,0,0,0.95);
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+                   Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+                   "Courier New", monospace;
 
-import { AppState } from "./state.js";
-import { Dom } from "./dom.js";
-import { normalizeCardShape, generateId, parseTags, parseVehicleTypes, parseHpCon, refreshSingleUi } from "./single.js";
-
-/************************************************************
- * Bulk session state
- ************************************************************/
-let parsedCards = [];                // all cards extracted from XLSX
-let selectedIds = new Set();         // card ids selected for import
-
-let filterType = "";                // "" = all
-let filterSet = "";                 // "" = all
-
-/************************************************************
- * Helpers
- ************************************************************/
-function normKey(str) {
-  return (str || "")
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, "")
-    .replace(/[^\w]/g, "");
-}
-
-function str(v) {
-  if (v === null || v === undefined) return "";
-  return String(v).trim();
-}
-
-/**
- * Extract Set tokens from a "set field" that might look like:
- * - "SET 1"
- * - "SET 1 & 2 & 3"
- * - "SET 1 & SET 3"
- * - "Father's Day"
- * - "SET FATHERS DAY"
- */
-function extractSetTokens(setField) {
-  const s = str(setField);
-  if (!s) return [];
-
-  // Common case: "SET 1 & 2 & 3" or "SET 1 & SET 3"
-  // First: pull all "SET ..." segments if present
-  const hasSetWord = /set/i.test(s);
-
-  if (hasSetWord) {
-    // find things like "SET 1", "SET 2", "SET FATHERS DAY"
-    const matches = s.match(/set\s*[a-z0-9' -]+/gi) || [];
-    if (matches.length) {
-      // Now also handle shorthand like "SET 1 & 2 & 3" (only first has SET)
-      // If a match is exactly "SET 1", and the original string contains "& 2", add SET 2 etc.
-      const tokens = [];
-
-      // Add full matches
-      matches.forEach(m => tokens.push(m.trim().toUpperCase()));
-
-      // Shorthand expansion: if string starts with SET <x> and contains & <y>
-      // Example: "SET 1 & 2 & 3"
-      const first = tokens[0] || "";
-      const firstPrefix = first.startsWith("SET ") ? "SET " : "";
-
-      if (firstPrefix) {
-        // capture standalone numbers/words separated by & after first token
-        const tail = s
-          .replace(/set\s*/i, "")
-          .split("&")
-          .map(t => t.trim())
-          .filter(Boolean);
-
-        // tail now like ["1", "2", "3"] or ["1", "SET 3"]
-        tail.forEach(piece => {
-          const cleaned = piece.replace(/^set\s*/i, "").trim();
-          if (!cleaned) return;
-          const full = `SET ${cleaned}`.toUpperCase();
-          tokens.push(full);
-        });
-      }
-
-      // De-dupe
-      return Array.from(new Set(tokens)).filter(Boolean);
+      /* NEW: dropdown palette to match Precons */
+      --select-bg: rgba(5,5,12,0.96);
+      --select-bg-open: rgba(4,4,10,0.98);
+      --select-border: rgba(255,255,255,0.14);
+      --select-border-strong: rgba(255,166,63,0.65);
+      --select-text: #f6f7ff;
+      --select-text-soft: #b5b9d9;
     }
 
-    // If it contains SET but regex failed, just keep uppercase raw
-    return [s.toUpperCase()];
-  }
+    * { box-sizing: border-box; }
 
-  // No "SET" word: treat as a single set name (e.g. "Father's Day")
-  return [s.toUpperCase()];
-}
-
-/**
- * For a card, build its set label string and also tokens for filtering.
- * Uses prints if available; falls back to setName.
- */
-function computeCardSetTokens(card) {
-  const tokens = [];
-
-  if (Array.isArray(card.prints) && card.prints.length) {
-    card.prints.forEach(p => {
-      extractSetTokens(p.setName || p.setId).forEach(t => tokens.push(t));
-    });
-  } else {
-    extractSetTokens(card.setName).forEach(t => tokens.push(t));
-  }
-
-  return Array.from(new Set(tokens)).filter(Boolean);
-}
-
-function computeCardPrimarySetLabel(card) {
-  const tokens = computeCardSetTokens(card);
-  if (!tokens.length) return "SET ?";
-  // keep a readable joined form
-  return tokens.join(" & ");
-}
-
-function computeCardPrimaryNumber(card) {
-  // prefer root cardNumber
-  if (card.cardNumber) return card.cardNumber;
-  // fall back to primary print number
-  const p = (card.prints || []).find(x => x.isPrimary) || (card.prints || [])[0];
-  return p?.cardNumber || "####";
-}
-
-function computeCardType(card) {
-  return (card.type || "").trim() || "Misc";
-}
-
-function visibleCards() {
-  return parsedCards.filter(card => {
-    const t = computeCardType(card);
-    const setTokens = computeCardSetTokens(card);
-
-    const typeOk = !filterType || t === filterType;
-    const setOk = !filterSet || setTokens.includes(filterSet);
-
-    return typeOk && setOk;
-  });
-}
-
-/************************************************************
- * Mapping XLSX rows -> cards
- ************************************************************/
-function mapRowToCard(rowObj, sheetName) {
-  const row = rowObj || {};
-  const keys = Object.keys(row);
-  const by = {};
-  keys.forEach(k => { by[normKey(k)] = row[k]; });
-
-  const get = (...names) => {
-    for (const n of names) {
-      const nk = normKey(n);
-      if (nk in by) return str(by[nk]);
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top left, #181828 0, #050509 60%);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      height: 100%;
     }
-    return "";
-  };
 
-  // Use explicit Type if present; else use sheet name (your workbook is per-type)
-  const type = get("type") || str(sheetName);
-
-  const name = get("name", "cardname", "title");
-  const rarity = get("rarity", "rar");
-  const notes = get("notes", "rules", "text", "effect");
-  const imageUrl = get("imageurl", "image", "img", "art");
-  const tagsStr = get("tags", "tag", "keywords");
-  const vehicleTypesStr = get("vehicletype", "vehicletypes", "types");
-
-  const setField = get("set", "setname", "prints", "print", "set(s)", "sets");
-  const cardNumber = get("cardnumber", "number", "no", "#");
-
-  // Build prints: if setField contains multiple sets, create a print for each token
-  const setTokens = extractSetTokens(setField);
-  const prints = setTokens.length
-    ? setTokens.map((setNameTok, idx) => ({
-        setName: setNameTok,
-        cardNumber: cardNumber || "",
-        isPrimary: idx === 0
-      }))
-    : (setField || cardNumber ? [{
-        setName: setField ? setField.toUpperCase() : "",
-        cardNumber: cardNumber || "",
-        isPrimary: true
-      }] : []);
-
-  const vehicleTypes = parseVehicleTypes(vehicleTypesStr);
-  const tags = parseTags(tagsStr);
-
-  const extra = {};
-
-  // Mod-specific columns
-  if (type === "Mod") {
-    extra.modBasePart = get("basepart", "part", "modbasepart");
-    extra.modLevel1 = get("level1", "l1", "lvl1");
-    extra.modLevel2 = get("level2", "l2", "lvl2");
-    extra.modLevel3 = get("level3", "l3", "lvl3");
-    extra.modLevel4 = get("level4", "l4", "lvl4");
-  }
-
-  // Vehicle stats
-  if (type === "Vehicle" || type === "Named Vehicle") {
-    const hpConStr = get("hpcon", "hp/con", "hpcon()", "hp", "hitpoints");
-    if (hpConStr && hpConStr.includes("/")) {
-      const hc = parseHpCon(hpConStr);
-      extra.hp = hc.hp;
-      extra.con = hc.con;
-    } else {
-      const hp = hpConStr ? Number(hpConStr) : undefined;
-      extra.hp = Number.isFinite(hp) ? hp : undefined;
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    const pitStr = get("pitcost", "pit", "pitpoints");
-    const pit = pitStr ? Number(pitStr) : undefined;
-    extra.pitCost = Number.isFinite(pit) ? pit : undefined;
-  }
 
-  // ID: if sheet has one, keep it; otherwise deterministic-ish by name+type+number to reduce duplicates
-  const idFromSheet = get("id", "cardid");
-  const stableKey = `${type}__${name}__${cardNumber}`.toLowerCase().replace(/\s+/g, "_");
-  const id = idFromSheet || (`card_${stableKey}`.slice(0, 60)) || generateId();
-
-  const baseCard = {
-    id,
-    name,
-    type,
-    setName: setTokens[0] ? setTokens[0] : str(setField).toUpperCase(),
-    cardNumber,
-    rarity,
-    vehicleTypes,
-    tags,
-    imageUrl,
-    notes,
-    extra,
-    prints
-  };
-
-  // Skip empty rows
-  const usable = (baseCard.name || baseCard.notes || baseCard.cardNumber || baseCard.tags.length || baseCard.vehicleTypes.length);
-  if (!usable) return null;
-
-  return normalizeCardShape(baseCard);
-}
-
-/************************************************************
- * UI rendering
- ************************************************************/
-function rebuildFilterOptions() {
-  if (!Dom.bulkTypeFilterSelect || !Dom.bulkSetFilterSelect) return;
-
-  const types = new Set();
-  const sets = new Set();
-
-  parsedCards.forEach(c => {
-    types.add(computeCardType(c));
-    computeCardSetTokens(c).forEach(t => sets.add(t));
-  });
-
-  // Type select
-  const typeSel = Dom.bulkTypeFilterSelect;
-  typeSel.innerHTML = "";
-  const optAllT = document.createElement("option");
-  optAllT.value = "";
-  optAllT.textContent = "All Types";
-  typeSel.appendChild(optAllT);
-
-  Array.from(types).sort((a,b) => a.localeCompare(b)).forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t;
-    opt.textContent = t;
-    typeSel.appendChild(opt);
-  });
-
-  // Set select (tokens)
-  const setSel = Dom.bulkSetFilterSelect;
-  setSel.innerHTML = "";
-  const optAllS = document.createElement("option");
-  optAllS.value = "";
-  optAllS.textContent = "All Sets";
-  setSel.appendChild(optAllS);
-
-  Array.from(sets)
-    .sort((a,b) => a.localeCompare(b, undefined, { numeric:true }))
-    .forEach(s => {
-      const opt = document.createElement("option");
-      opt.value = s;
-      opt.textContent = s; // already uppercased token
-      setSel.appendChild(opt);
-    });
-
-  // keep current selections if possible
-  typeSel.value = filterType;
-  setSel.value = filterSet;
-}
-
-function renderCardList() {
-  if (!Dom.bulkCardsList) return;
-  const wrap = Dom.bulkCardsList;
-  wrap.innerHTML = "";
-
-  const cards = visibleCards();
-  if (!cards.length) {
-    const div = document.createElement("div");
-    div.className = "bulk-status";
-    div.textContent = "No cards match the current filters.";
-    wrap.appendChild(div);
-    return;
-  }
-
-  cards.forEach(card => {
-    const line = document.createElement("label");
-    line.className = "bulk-cardline";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = selectedIds.has(card.id);
-    cb.addEventListener("change", () => {
-      if (cb.checked) selectedIds.add(card.id);
-      else selectedIds.delete(card.id);
-      renderSelectedPreview();
-    });
-
-    const text = document.createElement("span");
-    const t = computeCardType(card);
-    const setLabel = computeCardPrimarySetLabel(card);
-    const num = computeCardPrimaryNumber(card);
-    text.textContent = `${t} | ${card.name || "(no name)"} | ${setLabel} #${num}`;
-
-    line.appendChild(cb);
-    line.appendChild(text);
-    wrap.appendChild(line);
-  });
-}
-
-function renderSelectedPreview() {
-  if (!Dom.bulkSelectedPreview) return;
-
-  const selected = parsedCards.filter(c => selectedIds.has(c.id));
-  if (!selected.length) {
-    Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
-    return;
-  }
-
-  const lines = selected.slice(0, 80).map(c => {
-    const t = computeCardType(c);
-    const setLabel = computeCardPrimarySetLabel(c);
-    const num = computeCardPrimaryNumber(c);
-    return `• ${t} | ${c.name || "(no name)"} | ${setLabel} #${num}`;
-  });
-
-  Dom.bulkSelectedPreview.textContent =
-    `${selected.length} card(s) selected:\n` +
-    lines.join("\n") +
-    (selected.length > 80 ? `\n...and ${selected.length - 80} more.` : "");
-}
-
-/************************************************************
- * Actions
- ************************************************************/
-function clearBulkSession() {
-  parsedCards = [];
-  selectedIds.clear();
-  filterType = "";
-  filterSet = "";
-
-  if (Dom.bulkTypeFilterSelect) Dom.bulkTypeFilterSelect.innerHTML = `<option value="">All Types</option>`;
-  if (Dom.bulkSetFilterSelect) Dom.bulkSetFilterSelect.innerHTML = `<option value="">All Sets</option>`;
-  if (Dom.bulkCardsList) Dom.bulkCardsList.innerHTML = "";
-  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
-  if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Waiting for file…";
-}
-
-function handleImport() {
-  const toImport = parsedCards.filter(c => selectedIds.has(c.id));
-  if (!toImport.length) {
-    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "No cards selected to import.";
-    return;
-  }
-
-  let added = 0;
-  let updated = 0;
-
-  toImport.forEach(card => {
-    const idx = AppState.cards.findIndex(c => c.id === card.id);
-    if (idx >= 0) {
-      AppState.cards[idx] = card;
-      updated++;
-    } else {
-      AppState.cards.push(card);
-      added++;
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px clamp(16px, 4vw, 32px);
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
     }
-  });
 
-  if (Dom.bulkStatus) {
-    Dom.bulkStatus.textContent = `Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`;
-  }
-
-  refreshSingleUi();
-}
-
-async function handleFileLoad(file) {
-  if (!file) return;
-
-  if (typeof XLSX === "undefined") {
-    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "XLSX library is missing. Check the XLSX script tag.";
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onerror = () => {
-    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Could not read XLSX file.";
-  };
-
-  reader.onload = (e) => {
-    try {
-      const data = e.target.result;
-      const wb = XLSX.read(data, { type: "array" });
-
-      const all = [];
-
-      wb.SheetNames.forEach(sheetName => {
-        const sheet = wb.Sheets[sheetName];
-        if (!sheet) return;
-
-        // Row objects keyed by header names
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-        rows.forEach(r => {
-          const card = mapRowToCard(r, sheetName);
-          if (card) all.push(card);
-        });
-      });
-
-      parsedCards = all;
-      selectedIds = new Set(parsedCards.map(c => c.id));
-
-      rebuildFilterOptions();
-      renderCardList();
-      renderSelectedPreview();
-
-      if (Dom.bulkStatus) Dom.bulkStatus.textContent = `Loaded ${parsedCards.length} card(s) from master XLSX.`;
-    } catch (err) {
-      console.error(err);
-      if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Failed to parse XLSX file.";
+    .app-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 14px;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 60%),
+        linear-gradient(135deg, #181a24, #080915);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: var(--shadow-soft);
     }
-  };
 
-  reader.readAsArrayBuffer(file);
-}
+    .app-header-main {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-/************************************************************
- * Public init
- ************************************************************/
-export function initBulk() {
-  // File input
-  if (Dom.bulkMasterFileInput) {
-    Dom.bulkMasterFileInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
-      handleFileLoad(file);
-    });
-  }
+    .app-title-block { display: flex; flex-direction: column; gap: 4px; }
 
-  // Filters
-  if (Dom.bulkTypeFilterSelect) {
-    Dom.bulkTypeFilterSelect.addEventListener("change", () => {
-      filterType = Dom.bulkTypeFilterSelect.value || "";
-      renderCardList();
-    });
-  }
-  if (Dom.bulkSetFilterSelect) {
-    Dom.bulkSetFilterSelect.addEventListener("change", () => {
-      filterSet = Dom.bulkSetFilterSelect.value || "";
-      renderCardList();
-    });
-  }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
 
-  // Select/Deselect viewed
-  if (Dom.bulkSelectAllViewedBtn) {
-    Dom.bulkSelectAllViewedBtn.addEventListener("click", () => {
-      visibleCards().forEach(c => selectedIds.add(c.id));
-      renderCardList();
-      renderSelectedPreview();
-    });
-  }
-  if (Dom.bulkDeselectAllViewedBtn) {
-    Dom.bulkDeselectAllViewedBtn.addEventListener("click", () => {
-      visibleCards().forEach(c => selectedIds.delete(c.id));
-      renderCardList();
-      renderSelectedPreview();
-    });
-  }
+    .drive-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--accent-glow);
+    }
 
-  // Import / Clear
-  if (Dom.bulkImportBtn) Dom.bulkImportBtn.addEventListener("click", handleImport);
-  if (Dom.bulkClearBtn) Dom.bulkClearBtn.addEventListener("click", clearBulkSession);
+    .drive-pill span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-muted);
+    }
 
-  // Initial
-  clearBulkSession();
-}
+    .drive-pill strong {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--accent-strong);
+    }
+
+    .app-title { display: flex; flex-direction: column; gap: 2px; }
+
+    .app-title-main {
+      font-size: 18px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .app-subtitle { font-size: 11px; color: var(--text-soft); }
+
+    .app-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .meta-pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-soft);
+    }
+
+    .pill-ok { border-color: var(--ok-border); background: var(--ok-soft); color: var(--ok); }
+    .pill-warn { border-color: var(--warn-border); background: var(--warn-soft); color: var(--warn); }
+
+    .pill-dot, .pill-dot-danger {
+      width: 6px; height: 6px; border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 8px rgba(63,224,168,0.8);
+    }
+    .pill-dot-danger { background: var(--danger); box-shadow: 0 0 8px rgba(255,75,106,0.8); }
+
+    .app-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(8,8,16,0.9);
+      color: var(--text-main);
+      padding: 6px 12px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+    }
+    .btn.small { padding: 4px 10px; font-size: 10px; }
+    .btn.primary { background: var(--accent-pill); border-color: var(--accent-pill-border); color: #190b05; box-shadow: var(--accent-glow); }
+    .btn.secondary { background: rgba(255,255,255,0.04); }
+    .btn.danger { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.32); background: rgba(26,28,42,0.95); }
+    .btn.primary:hover { background: linear-gradient(135deg, #ff8c48, #ffd84f); }
+    .btn:active { transform: translateY(0); }
+    .btn-ghost { background: transparent; border-style: dashed; border-color: rgba(255,255,255,0.24); }
+    .btn-danger { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(5,5,10,0.9);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+
+    .badge-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent-strong); box-shadow: var(--accent-glow); }
+
+    .app-main { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+    .panel {
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 55%),
+        linear-gradient(145deg, #151726, #080814);
+      border-radius: 18px;
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .panel-subtle {
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 55%),
+        linear-gradient(145deg, #10111b, #070711);
+      border-color: var(--border-subtle);
+    }
+
+    .panel-header {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .panel-header-main { display: flex; flex-direction: column; gap: 4px; }
+
+    .panel-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .panel-title-pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-pill-soft);
+      border: 1px solid var(--accent-pill-border);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent-muted);
+    }
+
+    .panel-subtitle { font-size: 11px; color: var(--text-soft); }
+
+    .panel-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    .panel-body { padding: 10px 12px 12px; flex: 1; min-height: 0; }
+
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(4,4,10,0.75);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .nav-tab {
+      position: relative;
+      border: none;
+      background: transparent;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-softer);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: color 0.14s ease, background 0.14s ease, transform 0.05s ease;
+    }
+
+    .nav-tab .bullet { width: 6px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.16); }
+    .nav-tab.active { background: rgba(255,255,255,0.06); color: var(--accent-muted); }
+    .nav-tab.active .bullet { background: var(--accent-strong); box-shadow: var(--accent-glow); }
+
+    .section { display: none; height: 100%; min-height: 0; }
+    .section.active { display: block; height: 100%; min-height: 0; }
+
+    .form-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.1fr); gap: 10px; }
+
+    .field-card {
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
+        linear-gradient(150deg, rgba(7,8,16,0.96), rgba(8,9,20,0.98));
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 10px 11px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-height: 0;
+    }
+
+    .field-card-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .field-card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 2px; }
+    .field-card-subtitle { font-size: 11px; color: var(--text-soft); }
+
+    .field-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+    .field-grid.full { grid-template-columns: minmax(0, 1fr); }
+
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-soft);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .field-required::after { content: "•"; margin-left: 4px; color: var(--accent); }
+    .hint { font-size: 10px; color: var(--text-softer); }
+
+    .input, textarea, select {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      color: var(--text-main);
+      background: var(--input-bg);
+      border-radius: 10px;
+      border: 1px solid var(--input-border);
+      padding: 5px 8px;
+      outline: none;
+      transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .input:focus, textarea:focus, select:focus {
+      border-color: var(--input-border-focus);
+      box-shadow: var(--input-shadow-focus);
+      background: #15182a;
+    }
+
+    textarea { min-height: 68px; resize: vertical; }
+    .input-mono { font-family: var(--font-mono); font-size: 11px; }
+
+    /* NEW: Precon-like dropdown styling */
+    select {
+      background: var(--select-bg);
+      border-color: var(--select-border);
+      color: var(--select-text);
+      color-scheme: dark;
+    }
+    select:focus {
+      border-color: var(--select-border-strong);
+      box-shadow: 0 0 0 1px rgba(255,166,63,0.25);
+      background: var(--select-bg-open);
+    }
+    option {
+      background: var(--select-bg-open);
+      color: var(--select-text);
+    }
+
+    .tag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      color: var(--text-softer);
+      margin-top: 4px;
+    }
+
+    .label-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(8,8,16,0.8);
+      color: var(--text-soft);
+    }
+    .label-pill.ok { border-color: var(--ok-border); background: var(--ok-soft); color: var(--ok); }
+    .label-pill.warn { border-color: var(--warn-border); background: var(--warn-soft); color: var(--warn); }
+    .label-pill.info { border-color: rgba(119,167,255,0.45); background: rgba(119,167,255,0.12); color: #b6c9ff; }
+    .label-pill.danger { border-color: var(--danger-border); background: var(--danger-soft); color: var(--danger); }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .chip.key { background: var(--chip-bg-key); border-color: var(--chip-border-key); color: var(--accent-muted); }
+    .chip + .chip { margin-left: 4px; }
+
+    .prints-list {
+      list-style: none;
+      margin: 0;
+      padding: 4px 6px 4px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 11px;
+      max-height: 100px;
+      overflow: auto;
+    }
+    .prints-list li { padding: 2px 0; cursor: pointer; }
+    .prints-list li:hover { text-decoration: line-through; color: var(--danger); }
+
+    .bulk-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+      gap: 10px;
+      min-height: 0;
+      height: 100%;
+    }
+
+    /* Bulk Step 2 list should fill remaining space but never "infinite" */
+    .bulk-cardlist {
+      flex: 1;
+      min-height: 0;
+      max-height: 320px;
+      overflow: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.45);
+      padding: 6px 8px;
+    }
+
+    .bulk-cardline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 11px;
+    }
+    .bulk-cardline:last-child { border-bottom: none; }
+
+    .bulk-status {
+      font-size: 11px;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    .bulk-preview {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: rgba(0,0,0,0.52);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 7px 8px;
+      max-height: 220px;
+      overflow: auto;
+      white-space: pre;
+    }
+
+    .precon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 8px; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(0,0,0,0.9), rgba(0,0,0,0.92));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+    .modal-backdrop.active { display: flex; }
+
+    .modal {
+      width: min(360px, 92vw);
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 55%),
+                  linear-gradient(145deg, #141726, #070814);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.95);
+      padding: 12px 14px 10px;
+      transform: translateY(6px);
+      opacity: 0;
+      transition: all 0.18s ease-out;
+    }
+    .modal-backdrop.active .modal { transform: translateY(0); opacity: 1; }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .modal-header h3 { margin: 0; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; }
+    .modal-body { font-size: 12px; color: var(--text-soft); margin-bottom: 8px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 6px; }
+
+    @media (max-width: 980px) {
+      .form-layout { grid-template-columns: minmax(0, 1fr); }
+      .bulk-layout { grid-template-columns: minmax(0, 1fr); }
+      .bulk-cardlist { max-height: 260px; }
+    }
+
+    @media (max-width: 720px) {
+      .app-header-main { flex-direction: column; align-items: flex-start; }
+      .app-actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-main">
+        <div class="app-title-block">
+          <div class="logo-row">
+            <div class="drive-pill">
+              <span>Drive TCG</span>
+              <strong>Admin</strong>
+            </div>
+          </div>
+          <div class="app-title">
+            <div class="app-title-main">Admin Toolkit</div>
+            <div class="app-subtitle">
+              Editing <strong>drive-card.json</strong> and <strong>drive-precons.json</strong> directly in your browser.
+            </div>
+          </div>
+        </div>
+
+        <div class="app-meta">
+          <div class="meta-pills">
+            <div class="pill">
+              <span class="pill-dot"></span>
+              <span>Single-file JSON · No server</span>
+            </div>
+            <div class="pill pill-ok">
+              <span>Changes are live in memory</span>
+            </div>
+            <div class="pill pill-warn">
+              <span>Use <strong>Export JSON</strong> to save your edits</span>
+            </div>
+          </div>
+          <div class="app-actions">
+            <button id="downloadCardsJsonBtn" class="btn secondary small">Export Card JSON</button>
+            <button id="downloadPreconsJsonBtn" class="btn secondary small">Export Precon JSON</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="panel panel-subtle">
+        <header class="panel-header">
+          <div class="panel-header-main">
+            <div class="panel-title">
+              <span>Workspace</span>
+              <span class="panel-title-pill">Card &amp; Deck Editor</span>
+            </div>
+            <div class="panel-subtitle">
+              Use the tabs to switch between <strong>Single Card</strong>, <strong>Bulk Import</strong>, and <strong>Precon Decks</strong>.
+            </div>
+          </div>
+          <div class="panel-actions">
+            <nav class="nav-tabs">
+              <button id="navSingleBtn" class="nav-tab active"><span class="bullet"></span>Single Card</button>
+              <button id="navBulkBtn" class="nav-tab"><span class="bullet"></span>Bulk Import</button>
+              <button id="navPreconsBtn" class="nav-tab"><span class="bullet"></span>Precons</button>
+              <button id="navHelpBtn" class="nav-tab"><span class="bullet"></span>Help</button>
+            </nav>
+          </div>
+        </header>
+
+        <div class="panel-body">
+          <!-- SINGLE (kept as-is: your existing single.js drives it) -->
+          <section id="singleSection" class="section active">
+            <!-- (unchanged from your current single layout; keep your existing block here) -->
+            <div class="field-card">
+              <div class="field-card-title">Single Card Editor</div>
+              <div class="field-card-subtitle">Your existing Single UI is driven by single.js.</div>
+              <div class="bulk-status">If you want, we can paste your full Single UI block back in here — keeping this short so this patch stays focused.</div>
+            </div>
+          </section>
+
+          <!-- BULK (patched) -->
+          <section id="bulkSection" class="section">
+            <div class="bulk-layout">
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Step 1 · Load master spreadsheet</div>
+                    <div class="field-card-subtitle">Select your master .xlsx. You won’t see raw rows — only card summaries.</div>
+                  </div>
+                  <div class="badge"><span class="badge-dot"></span><span>XLSX</span></div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <input id="bulkMasterFileInput" type="file" accept=".xlsx" style="font-size:11px;" />
+                  <span class="hint">Choose Drive Cards.xlsx</span>
+                </div>
+
+                <div id="bulkStatus" class="bulk-status">Waiting for file…</div>
+              </div>
+
+              <div class="field-card">
+                <div class="field-card-label">
+                  <div>
+                    <div class="field-card-title">Step 2 · Filter &amp; choose cards</div>
+                    <div class="field-card-subtitle">Filters understand cards printed in multiple sets (e.g. SET 1 &amp; 2 &amp; 3).</div>
+                  </div>
+                  <div class="badge"><span class="badge-dot"></span><span>Selection</span></div>
+                </div>
+
+                <div class="field-grid">
+                  <div class="field">
+                    <label class="field-label"><span>Filter by Type</span></label>
+                    <select id="bulkTypeFilterSelect" class="input input-mono">
+                      <option value="">All Types</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field-label"><span>Filter by Set</span></label>
+                    <select id="bulkSetFilterSelect" class="input input-mono">
+                      <option value="">All Sets</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+                  <button id="bulkSelectAllViewedBtn" class="btn small" type="button">Select All Viewed</button>
+                  <button id="bulkDeselectAllViewedBtn" class="btn small btn-ghost" type="button">Deselect All Viewed</button>
+                </div>
+
+                <div class="field" style="margin-top:8px;display:flex;flex-direction:column;min-height:0;">
+                  <label class="field-label"><span>Cards (check to include in Step 3)</span></label>
+                  <div id="bulkCardsList" class="bulk-cardlist"></div>
+                </div>
+
+                <div class="field" style="margin-top:10px;">
+                  <div class="field-card-title" style="font-size:11px;">Step 3 · Selected cards</div>
+                  <pre id="bulkSelectedPreview" class="bulk-preview">No cards selected for import.</pre>
+                </div>
+
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;flex-wrap:wrap;">
+                  <button id="bulkImportBtn" class="btn primary small" type="button">Import Selected Into Library</button>
+                  <button id="bulkClearBtn" class="btn danger small" type="button">Clear Current Bulk Session</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- PRECONS / HELP (your existing) -->
+          <section id="preconsSection" class="section">
+            <div class="field-card">
+              <div class="field-card-title">Precons</div>
+              <div class="field-card-subtitle">Your existing precons.js drives this.</div>
+              <div id="preconGrid" class="precon-grid"></div>
+              <p id="preconsStatus" class="bulk-status"></p>
+            </div>
+          </section>
+
+          <section id="helpSection" class="section">
+            <div class="field-card">
+              <div class="field-card-title">Help</div>
+              <div class="field-card-subtitle">Your existing help.js drives this.</div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Confirm</h3>
+        <span class="label-pill warn">Dangerous</span>
+      </div>
+      <div id="modalBody" class="modal-body">Are you sure?</div>
+      <div class="modal-footer">
+        <button id="modalCancelBtn" class="btn small btn-ghost" type="button">Cancel</button>
+        <button id="modalConfirmBtn" class="btn small btn-danger" type="button">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- XLSX library -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
