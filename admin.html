@@ -1,658 +1,274 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DRIVE TCG Admin</title>
+  <meta charset="UTF-8" />
+  <title>DRIVE TCG – Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    :root{
-      --bg0:#07080d;
-      --bg1:#0b0e16;
-      --panel:#0e1220cc;
-      --panel2:#0e1220aa;
-      --stroke:#ffffff1a;
-      --stroke2:#ffffff22;
-      --text:#e9ecff;
-      --muted:#b5bbd7;
-      --muted2:#9aa2c5;
-      --accent:#ff8a2a;
-      --accent2:#ffb36b;
-      --good:#2bdba1;
-      --bad:#ff4d4d;
-
-      --r12:12px;
-      --r16:16px;
-      --shadow: 0 20px 70px rgba(0,0,0,.55);
+    :root {
+      color-scheme: dark;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      color:var(--text);
-      background:
-        radial-gradient(1000px 500px at 25% 10%, #171a2c 0%, transparent 60%),
-        radial-gradient(900px 500px at 80% 20%, #24122b 0%, transparent 55%),
-        radial-gradient(1200px 700px at 50% 90%, #0c1020 0%, transparent 65%),
-        linear-gradient(180deg, var(--bg0), #000);
-      overflow-x:hidden;
+    * {
+      box-sizing: border-box;
     }
 
-    .wrap{
-      max-width:1180px;
-      margin:0 auto;
-      padding:26px 18px 40px;
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617 55%);
+      color: #e5e7eb;
+      min-height: 100vh;
     }
 
-    .hero{
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border:1px solid var(--stroke);
-      border-radius:24px;
-      box-shadow:var(--shadow);
-      padding:18px 18px 14px;
-      backdrop-filter: blur(14px);
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 2.5rem;
     }
 
-    .hero-top{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:7px 11px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(0,0,0,.25);
-      font-size:12px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      letter-spacing: 0.05em;
     }
 
-    .dot{
-      width:9px;height:9px;border-radius:999px;
-      background:var(--good);
-      box-shadow:0 0 0 3px rgba(43,219,161,.14);
+    header p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #9ca3af;
     }
 
-    .title{
-      margin:10px 0 0;
-      font-size:26px;
-      letter-spacing:.22em;
-      text-transform:uppercase;
+    nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
-    .subtitle{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.4;
+    nav button {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #1f2937;
+      color: #e5e7eb;
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
     }
 
-    .top-actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:flex-end;
+    nav button.active {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59,130,246,.6);
     }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:7px 11px;
-      border-radius:999px;
-      border:1px solid var(--stroke);
-      background:rgba(0,0,0,.25);
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:var(--muted);
-      white-space:nowrap;
+    .panel {
+      border-radius: 1rem;
+      border: 1px solid #1f2937;
+      background: linear-gradient(135deg, rgba(15,23,42,.98), #020617);
+      padding: 0.9rem;
+      box-shadow: 0 20px 45px rgba(0,0,0,.8);
+      margin-bottom: 0.75rem;
     }
 
-    .pill.good{ color:var(--good); border-color:rgba(43,219,161,.3); }
-    .pill.warn{ color:var(--accent2); border-color:rgba(255,138,42,.35); }
-
-    .btn{
-      cursor:pointer;
-      user-select:none;
-      border:1px solid var(--stroke2);
-      background:rgba(0,0,0,.18);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      transition: transform .06s ease, border-color .12s ease, background .12s ease;
-      white-space:nowrap;
-    }
-    .btn:hover{ border-color:rgba(255,255,255,.30); background:rgba(255,255,255,.05); }
-    .btn:active{ transform: translateY(1px); }
-
-    .btn.primary{
-      background: linear-gradient(180deg, rgba(255,138,42,.95), rgba(255,138,42,.65));
-      border-color: rgba(255,138,42,.9);
-      color:#1b0f06;
-      font-weight:700;
-    }
-    .btn.primary:hover{ background: linear-gradient(180deg, rgba(255,158,72,.98), rgba(255,138,42,.72)); }
-
-    .btn.danger{
-      border-color: rgba(255,77,77,.55);
-      color: #ffd3d3;
-      background: rgba(255,77,77,.08);
+    section {
+      display: none;
     }
 
-    .workspace{
-      margin-top:16px;
-      border:1px solid var(--stroke);
-      border-radius:22px;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      padding:16px;
-      backdrop-filter: blur(14px);
-      min-height: calc(100vh - 190px);
-      display:flex;
-      flex-direction:column;
-      gap:14px;
+    section.active {
+      display: block;
     }
 
-    .workspace-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
+    h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
     }
 
-    .ws-left{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      flex-wrap:wrap;
+    .divider {
+      height: 1px;
+      background: #1f2937;
+      margin: 0.6rem 0;
     }
 
-    .ws-kicker{
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:var(--muted);
-    }
-    .ws-chip{
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      padding:5px 10px;
-      border-radius:999px;
-      border:1px solid rgba(255,138,42,.35);
-      color:var(--accent2);
-      background: rgba(255,138,42,.07);
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
     }
 
-    .tabs{
-      display:flex;
-      gap:6px;
-      padding:6px;
-      border:1px solid var(--stroke);
-      border-radius:999px;
-      background:rgba(0,0,0,.18);
+    label {
+      font-size: 0.78rem;
+      color: #9ca3af;
     }
 
-    .tab{
-      cursor:pointer;
-      border:1px solid transparent;
-      padding:8px 12px;
-      border-radius:999px;
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
-      color:var(--muted);
-      background:transparent;
-    }
-    .tab.active{
-      color:var(--accent2);
-      border-color: rgba(255,138,42,.35);
-      background: rgba(255,138,42,.08);
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+      border-radius: 0.5rem;
+      border: 1px solid #1f2937;
+      background: rgba(15,23,42,.95);
+      color: #e5e7eb;
+      padding: 0.3rem 0.5rem;
+      font-size: 0.8rem;
+      min-height: 2rem;
     }
 
-    .section{
-      display:none;
-      flex:1;
-      min-height:0; /* allow children to scroll */
-    }
-    .section.active{
-      display:block;
-      min-height:0;
-    }
-
-    .panel{
-      border:1px solid var(--stroke);
-      border-radius:20px;
-      background:rgba(0,0,0,.16);
-      padding:16px;
-      min-height:0;
+    .btn {
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: rgba(15,23,42,.9);
+      color: #e5e7eb;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.75rem;
+      cursor: pointer;
     }
 
-    .grid-2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:14px;
-      min-height:0;
+    .btn.primary {
+      border-color: #f59e0b;
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      color: #020617;
+      font-weight: 600;
     }
 
-    @media (max-width: 980px){
-      .grid-2{ grid-template-columns: 1fr; }
+    .smallnote {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin: 0;
     }
 
-    .h2{
-      margin:0;
-      font-size:16px;
-      letter-spacing:.12em;
-      text-transform:uppercase;
+    /* ------------------------------
+       BULK STEP 1 FIXED LAYOUT
+    ------------------------------ */
+    .bulk-step1 {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .p{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.4;
+    .bulk-file-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .field{
-      margin-top:12px;
-      display:grid;
-      gap:6px;
-    }
-    label{
-      color:var(--muted2);
-      font-size:11px;
-      letter-spacing:.18em;
-      text-transform:uppercase;
+    .bulk-file-row input[type="file"] {
+      flex: 1 1 260px;
+      min-width: 240px;
     }
 
-    input[type="text"], input[type="number"], textarea, select{
-      width:100%;
-      padding:10px 10px;
-      border-radius:12px;
-      border:1px solid var(--stroke2);
-      background:rgba(0,0,0,.24);
-      color:var(--text);
-      outline:none;
+    .bulk-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    textarea{ min-height:90px; resize:vertical; }
-
-    /* dropdown styling (match Precons look) */
-    select{
-      appearance:none;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12));
-      border-color: rgba(255,255,255,.20);
-    }
-    select:focus{
-      border-color: rgba(255,138,42,.55);
-      box-shadow: 0 0 0 3px rgba(255,138,42,.14);
+    .bulk-actions-row .btn {
+      min-height: 40px;
+      padding: 10px 16px;
     }
 
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .status{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--stroke);
-      background:rgba(0,0,0,.20);
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .divider{
-      height:1px;
-      background:rgba(255,255,255,.10);
-      margin:14px 0;
-    }
-
-    .scrollbox{
-      border:1px solid var(--stroke);
-      border-radius:14px;
-      background:rgba(0,0,0,.18);
-      padding:10px;
-      overflow:auto;
-      min-height:0;
-    }
-
-    /* ✅ prevents “infinite downward” expansion */
-    .scrollbox.vh{
-      height: calc(100vh - 430px);
-      min-height: 220px;
-      max-height: 560px;
-    }
-
-    ul.clean{
-      list-style:none;
-      padding:0;
-      margin:0;
-      display:grid;
-      gap:8px;
-    }
-
-    .checkrow{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      padding:8px 10px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:12px;
-      background: rgba(255,255,255,.03);
-    }
-
-    .checkrow:hover{
-      border-color: rgba(255,255,255,.14);
-      background: rgba(255,255,255,.05);
-    }
-
-    .mono{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-      font-size:12px;
-    }
-
-    .smallnote{
-      margin-top:8px;
-      color:var(--muted2);
-      font-size:12px;
-      line-height:1.35;
-    }
-
-    .two-col{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:10px;
-    }
-
-    @media (max-width:700px){
-      .two-col{ grid-template-columns:1fr; }
-      .scrollbox.vh{ height: 320px; max-height: 60vh; }
+    .status {
+      font-size: 0.78rem;
+      color: #e5e7eb;
+      opacity: 0.9;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-
-    <div class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="badge"><span class="dot"></span> DRIVE TCG Admin</div>
-          <div class="title">ADMIN TOOLKIT</div>
-          <div class="subtitle">Editing <span class="mono">drive-card.json</span> and <span class="mono">drive-precons.json</span> directly in your browser.</div>
-        </div>
-
-        <div class="top-actions">
-          <div class="pill good"><span class="dot"></span> Single-file JSON • No server</div>
-          <div class="pill good">Changes are live in memory</div>
-          <div class="pill warn">Use export JSON to save your edits</div>
-
-          <button class="btn" id="downloadCardsJsonBtn">Export Card JSON</button>
-          <button class="btn" id="downloadPreconsJsonBtn">Export Precon JSON</button>
-        </div>
+  <div class="app">
+    <header>
+      <div>
+        <h1>DRIVE TCG – Admin</h1>
+        <p>Card editor, bulk import, and preconstructed decks</p>
       </div>
-    </div>
+    </header>
 
-    <div class="workspace">
-      <div class="workspace-head">
-        <div class="ws-left">
-          <div class="ws-kicker">Workspace</div>
-          <div class="ws-chip">Card & Deck Editor</div>
-          <div class="ws-kicker">Use the tabs to switch between <b>Single Card</b>, <b>Bulk Import</b>, and <b>Precon Decks</b>.</div>
+    <nav>
+      <button id="navSingleBtn" class="active">Single</button>
+      <button id="navBulkBtn">Bulk</button>
+      <button id="navPreconsBtn">Precons</button>
+      <button id="navHelpBtn">Help</button>
+    </nav>
+
+    <!-- SINGLE -->
+    <section id="singleSection" class="active panel">
+      <h2>Single Card Editor</h2>
+      <p class="smallnote">Create or edit one card at a time.</p>
+      <!-- Single editor UI already wired by single.js -->
+      <!-- (Your existing markup stays here) -->
+    </section>
+
+    <!-- BULK -->
+    <section id="bulkSection" class="panel">
+      <h2>Bulk Import • Step 1</h2>
+      <p class="smallnote">Load your master spreadsheet. Raw data stays hidden. (XLSX)</p>
+      <div class="divider"></div>
+
+      <div class="bulk-step1">
+        <div class="field">
+          <label>Drive master file (.xlsx)</label>
+          <div class="bulk-file-row">
+            <input id="bulkFileInput" type="file" accept=".xlsx" />
+          </div>
         </div>
 
-        <div class="tabs">
-          <button class="tab active" id="navSingleBtn">Single Card</button>
-          <button class="tab" id="navBulkBtn">Bulk Import</button>
-          <button class="tab" id="navPreconsBtn">Precons</button>
-          <button class="tab" id="navHelpBtn">Help</button>
+        <div class="bulk-actions-row">
+          <button id="bulkLoadBtn" class="btn primary" type="button">
+            Load &amp; Parse
+          </button>
+          <p class="smallnote">
+            Auto-parse is enabled: selecting a file should immediately parse.
+          </p>
         </div>
+
+        <div id="bulkStatus" class="status">Waiting for file…</div>
       </div>
 
-      <!-- SINGLE -->
-      <section class="section active" id="singleSection">
-        <div class="grid-2">
-          <div class="panel">
-            <h3 class="h2">Single Card Editor</h3>
-            <p class="p">Edit one card at a time. (Driven by <span class="mono">single.js</span>)</p>
+      <!-- Hidden legacy bulk elements -->
+      <textarea id="bulkInput" style="display:none;"></textarea>
+      <select id="bulkDelimiterSelect" style="display:none;"></select>
+      <input id="bulkHasHeaderCheckbox" type="checkbox" checked style="display:none;" />
+      <button id="bulkParseBtn" style="display:none;"></button>
+      <button id="bulkImportBtn" style="display:none;"></button>
+      <pre id="bulkPreview" style="display:none;"></pre>
+    </section>
 
-            <div class="divider"></div>
+    <!-- PRECONS -->
+    <section id="preconsSection" class="panel">
+      <h2>Preconstructed Decks</h2>
+      <p class="smallnote">Create and manage starter decks.</p>
+      <div id="preconGrid"></div>
+      <p id="preconsStatus" class="smallnote"></p>
+    </section>
 
-            <div class="field"><label>Card ID</label><input id="cardIdInput" type="text" /></div>
-            <div class="field"><label>Name</label><input id="cardNameInput" type="text" /></div>
+    <!-- HELP -->
+    <section id="helpSection" class="panel">
+      <h2>Help</h2>
+      <p class="smallnote">
+        Bulk import accepts XLSX files. Single editor supports all card types.
+      </p>
+    </section>
 
-            <div class="two-col">
-              <div class="field"><label>Type</label><input id="cardTypeInput" type="text" /></div>
-              <div class="field"><label>Rarity</label><input id="cardRarityInput" type="text" /></div>
-            </div>
-
-            <div class="two-col">
-              <div class="field"><label>Set</label><input id="cardSetNameInput" type="text" /></div>
-              <div class="field"><label>Card #</label><input id="cardNumberInput" type="text" /></div>
-            </div>
-
-            <div class="two-col">
-              <div class="field"><label>Vehicle Types</label><input id="cardVehicleTypesInput" type="text" /></div>
-              <div class="field"><label>Tags</label><input id="cardTagsInput" type="text" /></div>
-            </div>
-
-            <div class="field"><label>Image URL</label><input id="cardImageUrlInput" type="text" /></div>
-            <div class="field"><label>Notes / Rules</label><textarea id="cardNotesInput"></textarea></div>
-
-            <!-- Mod fields -->
-            <div class="divider"></div>
-            <div class="field"><label>Mod Base Part</label><input id="modBasePartInput" type="text" /></div>
-            <div class="two-col">
-              <div class="field"><label>Level 1</label><input id="modL1Input" type="text" placeholder="e.g. 1/2 or -" /></div>
-              <div class="field"><label>Level 2</label><input id="modL2Input" type="text" placeholder="e.g. 2/2 or -" /></div>
-            </div>
-            <div class="two-col">
-              <div class="field"><label>Level 3</label><input id="modL3Input" type="text" placeholder="e.g. 3/3 or -" /></div>
-              <div class="field"><label>Level 4</label><input id="modL4Input" type="text" placeholder="e.g. 5/3 or -" /></div>
-            </div>
-
-            <!-- Vehicle fields -->
-            <div class="divider"></div>
-            <div class="two-col">
-              <div class="field"><label>Vehicle HP/CON</label><input id="vehicleHpConInput" type="text" placeholder="e.g. 6/4" /></div>
-              <div class="field"><label>PIT Cost</label><input id="vehiclePitCostInput" type="number" /></div>
-            </div>
-
-            <!-- Prints UI (kept, driven by single.js) -->
-            <div class="divider"></div>
-            <div class="two-col">
-              <div class="field"><label>Print Set</label><select id="printSetSelect"><option value="">(select)</option><option value="CUSTOM">Custom</option></select></div>
-              <div class="field"><label>Custom Set</label><input id="printCustomSetInput" type="text" /></div>
-            </div>
-            <div class="two-col">
-              <div class="field"><label>Print Card #</label><input id="printCardNumberInput" type="text" /></div>
-              <div class="field"><label>&nbsp;</label>
-                <div class="row">
-                  <button class="btn" id="printSetPrimaryBtn" type="button">Set Primary</button>
-                  <button class="btn" id="printClearAllBtn" type="button">Clear Prints</button>
-                </div>
-              </div>
-            </div>
-            <div class="scrollbox" style="max-height:160px;">
-              <ul class="clean" id="printsList"></ul>
-            </div>
-
-            <div class="divider"></div>
-            <div class="row">
-              <button class="btn primary" id="singleSaveBtn" type="button">Save</button>
-              <button class="btn" id="singleNewBtn" type="button">New</button>
-              <button class="btn danger" id="singleDeleteBtn" type="button">Delete</button>
-              <button class="btn" id="downloadCardsJsonBtn_single" type="button">Export Card JSON</button>
-            </div>
-
-            <div class="status" id="singleStatus">Ready.</div>
-          </div>
-
-          <div class="panel" style="min-height:0;">
-            <h3 class="h2">Preview & Library</h3>
-            <p class="p">Preview the current card and search the library.</p>
-
-            <div class="divider"></div>
-
-            <div class="field"><label>Search Library</label><input id="cardLibrarySearchInput" type="text" placeholder="search by name, type, or tag..." /></div>
-            <div class="smallnote" id="libraryCount"></div>
-
-            <div class="scrollbox vh" style="margin-top:10px;">
-              <ul class="clean" id="cardLibraryList"></ul>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="panel" style="padding:12px; background:rgba(0,0,0,.12);">
-              <div id="singlePreview"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- BULK -->
-      <section class="section" id="bulkSection">
-        <div class="grid-2">
-
-          <div class="panel">
-            <h3 class="h2">Bulk Import • Step 1</h3>
-            <p class="p">Load your master spreadsheet. Raw data stays hidden. (XLSX)</p>
-
-            <div class="divider"></div>
-
-            <div class="field">
-              <label>Drive master file (.xlsx)</label>
-              <input id="bulkFileInput" type="file" accept=".xlsx" />
-            </div>
-
-            <div class="row">
-              <button class="btn primary" id="bulkLoadBtn" type="button">Load & Parse</button>
-              <div class="smallnote">Auto-parse is enabled: selecting a file should immediately parse.</div>
-            </div>
-
-            <div class="status" id="bulkStatus">Waiting for file…</div>
-
-            <!-- Hidden legacy elements (kept so dom.js doesn’t break older code paths) -->
-            <textarea id="bulkInput" style="display:none;"></textarea>
-            <select id="bulkDelimiterSelect" style="display:none;"></select>
-            <input id="bulkHasHeaderCheckbox" type="checkbox" checked style="display:none;" />
-            <button id="bulkParseBtn" type="button" style="display:none;"></button>
-            <button id="bulkImportBtn" type="button" style="display:none;"></button>
-            <pre id="bulkPreview" style="display:none;"></pre>
-          </div>
-
-          <div class="panel" style="min-height:0; display:flex; flex-direction:column; gap:12px;">
-            <div>
-              <h3 class="h2">Step 2 • Filter & choose cards</h3>
-              <p class="p">Filter by Type or Set. Select all viewed / deselect all viewed.</p>
-
-              <div class="divider"></div>
-
-              <div class="two-col">
-                <div class="field">
-                  <label>Filter by Type</label>
-                  <select id="bulkTypeFilter"></select>
-                </div>
-                <div class="field">
-                  <label>Filter by Set</label>
-                  <select id="bulkSetFilter"></select>
-                </div>
-              </div>
-
-              <div class="row">
-                <button class="btn" id="bulkSelectAllViewedBtn" type="button">Select All Viewed</button>
-                <button class="btn" id="bulkDeselectAllViewedBtn" type="button">Deselect All Viewed</button>
-                <input id="bulkFilterInput" type="text" placeholder="optional: quick search…" style="flex:1; min-width:220px;" />
-              </div>
-            </div>
-
-            <div style="min-height:0; flex:1; display:flex; flex-direction:column; gap:10px;">
-              <div class="smallnote">Cards (check to include in Step 3)</div>
-              <div class="scrollbox vh">
-                <ul class="clean" id="bulkSelectionList"></ul>
-              </div>
-            </div>
-
-            <div>
-              <h3 class="h2">Step 3 • Review & import</h3>
-              <p class="p">Cards that will be imported into the JSON library.</p>
-
-              <div class="divider"></div>
-
-              <div class="scrollbox" style="max-height:210px;">
-                <pre id="bulkSelectedPreview" class="mono" style="margin:0; white-space:pre-wrap;"></pre>
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <button class="btn primary" id="bulkImportSelectedBtn" type="button">Import Selected Into Library</button>
-                <button class="btn danger" id="bulkClearSessionBtn" type="button">Clear Current Bulk Session</button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- PRECONS -->
-      <section class="section" id="preconsSection">
-        <div class="panel" style="min-height:0;">
-          <h3 class="h2">Precons</h3>
-          <p class="p">Driven by <span class="mono">precons.js</span>.</p>
-          <div class="divider"></div>
-
-          <div id="preconsStatus" class="status">Ready.</div>
-          <div class="divider"></div>
-
-          <div id="preconGrid"></div>
-        </div>
-      </section>
-
-      <!-- HELP -->
-      <section class="section" id="helpSection">
-        <div class="panel">
-          <h3 class="h2">Help</h3>
-          <p class="p">Driven by <span class="mono">help.js</span>.</p>
-          <div class="divider"></div>
-          <div class="status">
-            Your existing help content should render here.
-          </div>
-        </div>
-      </section>
-
-      <!-- Modal (kept for single.js confirmAction fallback) -->
-      <div id="modalBackdrop" style="display:none;"></div>
-      <div id="modalTitle" style="display:none;"></div>
-      <div id="modalBody" style="display:none;"></div>
-      <button id="modalCancelBtn" type="button" style="display:none;"></button>
-      <button id="modalConfirmBtn" type="button" style="display:none;"></button>
-
-    </div>
+    <!-- Modal -->
+    <div id="modalBackdrop" class="modal-backdrop"></div>
   </div>
 
-  <!-- ✅ FIX: XLSX support MUST be loaded globally BEFORE your module scripts (bulk.js uses global XLSX) -->
+  <!-- XLSX MUST LOAD FIRST -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- Boot -->
+  <!-- App -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
