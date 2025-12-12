@@ -9,85 +9,143 @@ import { initPrecons, loadPrecons } from "./precons.js";
 import { initHelp } from "./help.js";
 
 /************************************************************
+ * Tiny safety helpers (prevents one crash from killing the app)
+ ************************************************************/
+function safeOn(el, evt, fn, label = "handler") {
+  if (!el) {
+    console.warn(`[admin] Missing DOM element for ${label}`);
+    return;
+  }
+  el.addEventListener(evt, fn);
+}
+
+function safeInit(name, fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error(`[admin] ${name} failed to init:`, err);
+  }
+}
+
+/************************************************************
  * Navigation & Sections
  ************************************************************/
 function showSection(which) {
   // Sections
-  Dom.singleSection.classList.remove("active");
-  Dom.bulkSection.classList.remove("active");
-  Dom.preconsSection.classList.remove("active");
-  Dom.helpSection.classList.remove("active");
+  Dom.singleSection?.classList.remove("active");
+  Dom.bulkSection?.classList.remove("active");
+  Dom.preconsSection?.classList.remove("active");
+  Dom.helpSection?.classList.remove("active");
 
   // Nav buttons
-  Dom.navSingleBtn.classList.remove("active");
-  Dom.navBulkBtn.classList.remove("active");
-  Dom.navPreconsBtn.classList.remove("active");
-  Dom.navHelpBtn.classList.remove("active");
+  Dom.navSingleBtn?.classList.remove("active");
+  Dom.navBulkBtn?.classList.remove("active");
+  Dom.navPreconsBtn?.classList.remove("active");
+  Dom.navHelpBtn?.classList.remove("active");
 
   if (which === "single") {
-    Dom.singleSection.classList.add("active");
-    Dom.navSingleBtn.classList.add("active");
+    Dom.singleSection?.classList.add("active");
+    Dom.navSingleBtn?.classList.add("active");
   } else if (which === "bulk") {
-    Dom.bulkSection.classList.add("active");
-    Dom.navBulkBtn.classList.add("active");
+    Dom.bulkSection?.classList.add("active");
+    Dom.navBulkBtn?.classList.add("active");
   } else if (which === "precons") {
-    Dom.preconsSection.classList.add("active");
-    Dom.navPreconsBtn.classList.add("active");
+    Dom.preconsSection?.classList.add("active");
+    Dom.navPreconsBtn?.classList.add("active");
   } else if (which === "help") {
-    Dom.helpSection.classList.add("active");
-    Dom.navHelpBtn.classList.add("active");
+    Dom.helpSection?.classList.add("active");
+    Dom.navHelpBtn?.classList.add("active");
   }
 }
 
 function initNav() {
-  Dom.navSingleBtn.addEventListener("click", () => showSection("single"));
-  Dom.navBulkBtn.addEventListener("click", () => showSection("bulk"));
-  Dom.navPreconsBtn.addEventListener("click", () => showSection("precons"));
-  Dom.navHelpBtn.addEventListener("click", () => showSection("help"));
+  safeOn(Dom.navSingleBtn, "click", () => showSection("single"), "navSingleBtn");
+  safeOn(Dom.navBulkBtn, "click", () => showSection("bulk"), "navBulkBtn");
+  safeOn(Dom.navPreconsBtn, "click", () => showSection("precons"), "navPreconsBtn");
+  safeOn(Dom.navHelpBtn, "click", () => showSection("help"), "navHelpBtn");
 }
 
 /************************************************************
  * Modal (shared)
  ************************************************************/
 function initModal() {
-  Dom.modalBackdrop.addEventListener("click", (e) => {
-    if (e.target === Dom.modalBackdrop) {
-      Dom.modalBackdrop.classList.remove("active");
-    }
-  });
+  safeOn(
+    Dom.modalBackdrop,
+    "click",
+    (e) => {
+      if (e.target === Dom.modalBackdrop) {
+        Dom.modalBackdrop.classList.remove("active");
+      }
+    },
+    "modalBackdrop"
+  );
 }
 
 /************************************************************
  * Global Download Buttons
  ************************************************************/
 function initExportButtons() {
-  Dom.downloadCardsJsonBtn.addEventListener("click", () => {
-    downloadJson(getCardsForExport(), "drive-card.json");
-  });
-  Dom.downloadCardsJsonBtn_single.addEventListener("click", () => {
-    downloadJson(getCardsForExport(), "drive-card.json");
-  });
+  safeOn(
+    Dom.downloadCardsJsonBtn,
+    "click",
+    () => downloadJson(getCardsForExport(), "drive-card.json"),
+    "downloadCardsJsonBtn"
+  );
+
+  safeOn(
+    Dom.downloadCardsJsonBtn_single,
+    "click",
+    () => downloadJson(getCardsForExport(), "drive-card.json"),
+    "downloadCardsJsonBtn_single"
+  );
+
+  // (Precon export button is in HTML; wire it here only if Dom has it.)
+  safeOn(
+    Dom.downloadPreconsJsonBtn,
+    "click",
+    () => {
+      // precons.js/state.js likely handles this; if you already wire elsewhere, remove.
+      console.warn("[admin] downloadPreconsJsonBtn clicked but no handler is defined here.");
+    },
+    "downloadPreconsJsonBtn"
+  );
 }
 
 /************************************************************
  * Kick everything off
  ************************************************************/
 (async function init() {
-  // UI wiring
-  initNav();
-  initSingle();
-  initBulk();
-  initPrecons();
-  initHelp();
-  initModal();
-  initExportButtons();
+  // Always wire nav/modal/export first (so UI isn't “dead”)
+  safeInit("initNav", initNav);
+  safeInit("initModal", initModal);
+  safeInit("initExportButtons", initExportButtons);
 
-  // Load core data
-  await loadCards();
-  refreshSingleUi();
+  // Load core data early so downstream modules can build filters, etc.
+  try {
+    await loadCards();
+  } catch (err) {
+    console.error("[admin] loadCards failed:", err);
+  }
 
-  // Load precons
-  await loadPrecons();
+  // Now init feature modules — isolated so one failure won't kill the rest
+  safeInit("initSingle", initSingle);
+  safeInit("initBulk", initBulk);
+  safeInit("initPrecons", initPrecons);
+  safeInit("initHelp", initHelp);
+
+  // Refresh UI (safe)
+  try {
+    refreshSingleUi();
+  } catch (err) {
+    console.error("[admin] refreshSingleUi failed:", err);
+  }
+
+  // Load precons (safe)
+  try {
+    await loadPrecons();
+  } catch (err) {
+    console.error("[admin] loadPrecons failed:", err);
+  }
 
   // Default view
   showSection("single");
