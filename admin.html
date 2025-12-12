@@ -1,556 +1,500 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>DRIVE TCG Admin</title>
+// bulk.js
+// Bulk import (XLSX master): load -> filter -> select -> import.
 
-  <!-- SheetJS (XLSX) - REQUIRED for bulk import -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+import { AppState } from "./state.js";
+import { Dom } from "./dom.js";
+import { normalizeCardShape, generateId, parseTags, parseVehicleTypes, parseHpCon, refreshSingleUi } from "./single.js";
 
-  <style>
-    :root{
-      --bg:#06060b;
-      --panel:#0b0b12;
-      --panel2:#0a0a10;
-      --text:#e9e9f2;
-      --muted:#a6a6bf;
-      --line:rgba(255,255,255,.10);
-      --line2:rgba(255,255,255,.08);
-      --accent:#ff8a2a;
-      --accent2:#ff4d5a;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 30% 0%, rgba(255,138,42,.12), transparent 60%),
-        radial-gradient(900px 450px at 70% 10%, rgba(255,77,90,.10), transparent 60%),
-        var(--bg);
-      min-height:100vh;
-    }
-    .wrap{
-      width:min(1180px, calc(100% - 32px));
-      margin:22px auto 36px;
-    }
+/************************************************************
+ * Bulk session state
+ ************************************************************/
+let parsedCards = [];                // all cards extracted from XLSX
+let selectedIds = new Set();         // card ids selected for import
 
-    /* Top header */
-    .top-card{
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:18px 18px 14px;
-      box-shadow: 0 16px 60px rgba(0,0,0,.45);
-    }
-    .top-title{
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .top-left h1{
-      margin:2px 0 4px;
-      letter-spacing:.12em;
-      font-size:18px;
-      font-weight:800;
-    }
-    .top-left .kicker{
-      font-size:12px;
-      color:var(--muted);
-      margin:0 0 2px;
-    }
-    .pill-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    .pill{
-      font-size:11px;
-      letter-spacing:.10em;
-      padding:6px 10px;
-      border-radius:999px;
-      border:1px solid var(--line2);
-      background:rgba(0,0,0,.22);
-      color:var(--muted);
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      text-transform:uppercase;
-    }
-    .pill .dot{
-      width:7px;
-      height:7px;
-      border-radius:999px;
-      background:#2fe27d;
-      box-shadow: 0 0 10px rgba(47,226,125,.6);
+let filterType = "";                // "" = all
+let filterSet = "";                 // "" = all
+
+/************************************************************
+ * Helpers
+ ************************************************************/
+function normKey(str) {
+  return (str || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "")
+    .replace(/[^\w]/g, "");
+}
+
+function str(v) {
+  if (v === null || v === undefined) return "";
+  return String(v).trim();
+}
+
+/**
+ * Extract Set tokens from a "set field" that might look like:
+ * - "SET 1"
+ * - "SET 1 & 2 & 3"
+ * - "SET 1 & SET 3"
+ * - "Father's Day"
+ * - "SET FATHERS DAY"
+ */
+function extractSetTokens(setField) {
+  const s = str(setField);
+  if (!s) return [];
+
+  // Common case: "SET 1 & 2 & 3" or "SET 1 & SET 3"
+  // First: pull all "SET ..." segments if present
+  const hasSetWord = /set/i.test(s);
+
+  if (hasSetWord) {
+    // find things like "SET 1", "SET 2", "SET FATHERS DAY"
+    const matches = s.match(/set\s*[a-z0-9' -]+/gi) || [];
+    if (matches.length) {
+      // Now also handle shorthand like "SET 1 & 2 & 3" (only first has SET)
+      // If a match is exactly "SET 1", and the original string contains "& 2", add SET 2 etc.
+      const tokens = [];
+
+      // Add full matches
+      matches.forEach(m => tokens.push(m.trim().toUpperCase()));
+
+      // Shorthand expansion: if string starts with SET <x> and contains & <y>
+      // Example: "SET 1 & 2 & 3"
+      const first = tokens[0] || "";
+      const firstPrefix = first.startsWith("SET ") ? "SET " : "";
+
+      if (firstPrefix) {
+        // capture standalone numbers/words separated by & after first token
+        const tail = s
+          .replace(/set\s*/i, "")
+          .split("&")
+          .map(t => t.trim())
+          .filter(Boolean);
+
+        // tail now like ["1", "2", "3"] or ["1", "SET 3"]
+        tail.forEach(piece => {
+          const cleaned = piece.replace(/^set\s*/i, "").trim();
+          if (!cleaned) return;
+          const full = `SET ${cleaned}`.toUpperCase();
+          tokens.push(full);
+        });
+      }
+
+      // De-dupe
+      return Array.from(new Set(tokens)).filter(Boolean);
     }
 
-    .btn{
-      cursor:pointer;
-      user-select:none;
-      border:1px solid var(--line);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:12px;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-      transition:transform .05s ease, border-color .15s ease, background .15s ease;
-      white-space:nowrap;
+    // If it contains SET but regex failed, just keep uppercase raw
+    return [s.toUpperCase()];
+  }
+
+  // No "SET" word: treat as a single set name (e.g. "Father's Day")
+  return [s.toUpperCase()];
+}
+
+/**
+ * For a card, build its set label string and also tokens for filtering.
+ * Uses prints if available; falls back to setName.
+ */
+function computeCardSetTokens(card) {
+  const tokens = [];
+
+  if (Array.isArray(card.prints) && card.prints.length) {
+    card.prints.forEach(p => {
+      extractSetTokens(p.setName || p.setId).forEach(t => tokens.push(t));
+    });
+  } else {
+    extractSetTokens(card.setName).forEach(t => tokens.push(t));
+  }
+
+  return Array.from(new Set(tokens)).filter(Boolean);
+}
+
+function computeCardPrimarySetLabel(card) {
+  const tokens = computeCardSetTokens(card);
+  if (!tokens.length) return "SET ?";
+  // keep a readable joined form
+  return tokens.join(" & ");
+}
+
+function computeCardPrimaryNumber(card) {
+  // prefer root cardNumber
+  if (card.cardNumber) return card.cardNumber;
+  // fall back to primary print number
+  const p = (card.prints || []).find(x => x.isPrimary) || (card.prints || [])[0];
+  return p?.cardNumber || "####";
+}
+
+function computeCardType(card) {
+  return (card.type || "").trim() || "Misc";
+}
+
+function visibleCards() {
+  return parsedCards.filter(card => {
+    const t = computeCardType(card);
+    const setTokens = computeCardSetTokens(card);
+
+    const typeOk = !filterType || t === filterType;
+    const setOk = !filterSet || setTokens.includes(filterSet);
+
+    return typeOk && setOk;
+  });
+}
+
+/************************************************************
+ * Mapping XLSX rows -> cards
+ ************************************************************/
+function mapRowToCard(rowObj, sheetName) {
+  const row = rowObj || {};
+  const keys = Object.keys(row);
+  const by = {};
+  keys.forEach(k => { by[normKey(k)] = row[k]; });
+
+  const get = (...names) => {
+    for (const n of names) {
+      const nk = normKey(n);
+      if (nk in by) return str(by[nk]);
     }
-    .btn:active{ transform:translateY(1px); }
-    .btn.primary{
-      border-color:rgba(255,138,42,.55);
-      background:rgba(255,138,42,.12);
+    return "";
+  };
+
+  // Use explicit Type if present; else use sheet name (your workbook is per-type)
+  const type = get("type") || str(sheetName);
+
+  const name = get("name", "cardname", "title");
+  const rarity = get("rarity", "rar");
+  const notes = get("notes", "rules", "text", "effect");
+  const imageUrl = get("imageurl", "image", "img", "art");
+  const tagsStr = get("tags", "tag", "keywords");
+  const vehicleTypesStr = get("vehicletype", "vehicletypes", "types");
+
+  const setField = get("set", "setname", "prints", "print", "set(s)", "sets");
+  const cardNumber = get("cardnumber", "number", "no", "#");
+
+  // Build prints: if setField contains multiple sets, create a print for each token
+  const setTokens = extractSetTokens(setField);
+  const prints = setTokens.length
+    ? setTokens.map((setNameTok, idx) => ({
+        setName: setNameTok,
+        cardNumber: cardNumber || "",
+        isPrimary: idx === 0
+      }))
+    : (setField || cardNumber ? [{
+        setName: setField ? setField.toUpperCase() : "",
+        cardNumber: cardNumber || "",
+        isPrimary: true
+      }] : []);
+
+  const vehicleTypes = parseVehicleTypes(vehicleTypesStr);
+  const tags = parseTags(tagsStr);
+
+  const extra = {};
+
+  // Mod-specific columns
+  if (type === "Mod") {
+    extra.modBasePart = get("basepart", "part", "modbasepart");
+    extra.modLevel1 = get("level1", "l1", "lvl1");
+    extra.modLevel2 = get("level2", "l2", "lvl2");
+    extra.modLevel3 = get("level3", "l3", "lvl3");
+    extra.modLevel4 = get("level4", "l4", "lvl4");
+  }
+
+  // Vehicle stats
+  if (type === "Vehicle" || type === "Named Vehicle") {
+    const hpConStr = get("hpcon", "hp/con", "hpcon()", "hp", "hitpoints");
+    if (hpConStr && hpConStr.includes("/")) {
+      const hc = parseHpCon(hpConStr);
+      extra.hp = hc.hp;
+      extra.con = hc.con;
+    } else {
+      const hp = hpConStr ? Number(hpConStr) : undefined;
+      extra.hp = Number.isFinite(hp) ? hp : undefined;
     }
-    .btn.danger{
-      border-color:rgba(255,77,90,.55);
-      background:rgba(255,77,90,.10);
+    const pitStr = get("pitcost", "pit", "pitpoints");
+    const pit = pitStr ? Number(pitStr) : undefined;
+    extra.pitCost = Number.isFinite(pit) ? pit : undefined;
+  }
+
+  // ID: if sheet has one, keep it; otherwise deterministic-ish by name+type+number to reduce duplicates
+  const idFromSheet = get("id", "cardid");
+  const stableKey = `${type}__${name}__${cardNumber}`.toLowerCase().replace(/\s+/g, "_");
+  const id = idFromSheet || (`card_${stableKey}`.slice(0, 60)) || generateId();
+
+  const baseCard = {
+    id,
+    name,
+    type,
+    setName: setTokens[0] ? setTokens[0] : str(setField).toUpperCase(),
+    cardNumber,
+    rarity,
+    vehicleTypes,
+    tags,
+    imageUrl,
+    notes,
+    extra,
+    prints
+  };
+
+  // Skip empty rows
+  const usable = (baseCard.name || baseCard.notes || baseCard.cardNumber || baseCard.tags.length || baseCard.vehicleTypes.length);
+  if (!usable) return null;
+
+  return normalizeCardShape(baseCard);
+}
+
+/************************************************************
+ * UI rendering
+ ************************************************************/
+function rebuildFilterOptions() {
+  if (!Dom.bulkTypeFilterSelect || !Dom.bulkSetFilterSelect) return;
+
+  const types = new Set();
+  const sets = new Set();
+
+  parsedCards.forEach(c => {
+    types.add(computeCardType(c));
+    computeCardSetTokens(c).forEach(t => sets.add(t));
+  });
+
+  // Type select
+  const typeSel = Dom.bulkTypeFilterSelect;
+  typeSel.innerHTML = "";
+  const optAllT = document.createElement("option");
+  optAllT.value = "";
+  optAllT.textContent = "All Types";
+  typeSel.appendChild(optAllT);
+
+  Array.from(types).sort((a,b) => a.localeCompare(b)).forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    typeSel.appendChild(opt);
+  });
+
+  // Set select (tokens)
+  const setSel = Dom.bulkSetFilterSelect;
+  setSel.innerHTML = "";
+  const optAllS = document.createElement("option");
+  optAllS.value = "";
+  optAllS.textContent = "All Sets";
+  setSel.appendChild(optAllS);
+
+  Array.from(sets)
+    .sort((a,b) => a.localeCompare(b, undefined, { numeric:true }))
+    .forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s; // already uppercased token
+      setSel.appendChild(opt);
+    });
+
+  // keep current selections if possible
+  typeSel.value = filterType;
+  setSel.value = filterSet;
+}
+
+function renderCardList() {
+  if (!Dom.bulkCardsList) return;
+  const wrap = Dom.bulkCardsList;
+  wrap.innerHTML = "";
+
+  const cards = visibleCards();
+  if (!cards.length) {
+    const div = document.createElement("div");
+    div.className = "bulk-status";
+    div.textContent = "No cards match the current filters.";
+    wrap.appendChild(div);
+    return;
+  }
+
+  cards.forEach(card => {
+    const line = document.createElement("label");
+    line.className = "bulk-cardline";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = selectedIds.has(card.id);
+    cb.addEventListener("change", () => {
+      if (cb.checked) selectedIds.add(card.id);
+      else selectedIds.delete(card.id);
+      renderSelectedPreview();
+    });
+
+    const text = document.createElement("span");
+    const t = computeCardType(card);
+    const setLabel = computeCardPrimarySetLabel(card);
+    const num = computeCardPrimaryNumber(card);
+    text.textContent = `${t} | ${card.name || "(no name)"} | ${setLabel} #${num}`;
+
+    line.appendChild(cb);
+    line.appendChild(text);
+    wrap.appendChild(line);
+  });
+}
+
+function renderSelectedPreview() {
+  if (!Dom.bulkSelectedPreview) return;
+
+  const selected = parsedCards.filter(c => selectedIds.has(c.id));
+  if (!selected.length) {
+    Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
+    return;
+  }
+
+  const lines = selected.slice(0, 80).map(c => {
+    const t = computeCardType(c);
+    const setLabel = computeCardPrimarySetLabel(c);
+    const num = computeCardPrimaryNumber(c);
+    return `• ${t} | ${c.name || "(no name)"} | ${setLabel} #${num}`;
+  });
+
+  Dom.bulkSelectedPreview.textContent =
+    `${selected.length} card(s) selected:\n` +
+    lines.join("\n") +
+    (selected.length > 80 ? `\n...and ${selected.length - 80} more.` : "");
+}
+
+/************************************************************
+ * Actions
+ ************************************************************/
+function clearBulkSession() {
+  parsedCards = [];
+  selectedIds.clear();
+  filterType = "";
+  filterSet = "";
+
+  if (Dom.bulkTypeFilterSelect) Dom.bulkTypeFilterSelect.innerHTML = `<option value="">All Types</option>`;
+  if (Dom.bulkSetFilterSelect) Dom.bulkSetFilterSelect.innerHTML = `<option value="">All Sets</option>`;
+  if (Dom.bulkCardsList) Dom.bulkCardsList.innerHTML = "";
+  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
+  if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Waiting for file…";
+}
+
+function handleImport() {
+  const toImport = parsedCards.filter(c => selectedIds.has(c.id));
+  if (!toImport.length) {
+    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "No cards selected to import.";
+    return;
+  }
+
+  let added = 0;
+  let updated = 0;
+
+  toImport.forEach(card => {
+    const idx = AppState.cards.findIndex(c => c.id === card.id);
+    if (idx >= 0) {
+      AppState.cards[idx] = card;
+      updated++;
+    } else {
+      AppState.cards.push(card);
+      added++;
     }
-    .btn.small{
-      font-size:11px;
-      padding:7px 10px;
+  });
+
+  if (Dom.bulkStatus) {
+    Dom.bulkStatus.textContent = `Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`;
+  }
+
+  refreshSingleUi();
+}
+
+async function handleFileLoad(file) {
+  if (!file) return;
+
+  if (typeof XLSX === "undefined") {
+    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "XLSX library is missing. Check the XLSX script tag.";
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onerror = () => {
+    if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Could not read XLSX file.";
+  };
+
+  reader.onload = (e) => {
+    try {
+      const data = e.target.result;
+      const wb = XLSX.read(data, { type: "array" });
+
+      const all = [];
+
+      wb.SheetNames.forEach(sheetName => {
+        const sheet = wb.Sheets[sheetName];
+        if (!sheet) return;
+
+        // Row objects keyed by header names
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        rows.forEach(r => {
+          const card = mapRowToCard(r, sheetName);
+          if (card) all.push(card);
+        });
+      });
+
+      parsedCards = all;
+      selectedIds = new Set(parsedCards.map(c => c.id));
+
+      rebuildFilterOptions();
+      renderCardList();
+      renderSelectedPreview();
+
+      if (Dom.bulkStatus) Dom.bulkStatus.textContent = `Loaded ${parsedCards.length} card(s) from master XLSX.`;
+    } catch (err) {
+      console.error(err);
+      if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Failed to parse XLSX file.";
     }
+  };
 
-    /* Workspace */
-    .workspace{
-      margin-top:14px;
-      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:14px;
-      box-shadow: 0 18px 70px rgba(0,0,0,.42);
-    }
-    .workspace-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:12px;
-      flex-wrap:wrap;
-      padding:4px 2px 10px;
-    }
-    .workspace-head .title{
-      display:flex;
-      align-items:baseline;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .workspace-head .title h2{
-      margin:0;
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:var(--muted);
-      font-weight:800;
-    }
-    .workspace-head .subtitle{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-    }
+  reader.readAsArrayBuffer(file);
+}
 
-    .tabs{
-      display:flex;
-      gap:8px;
-      padding:6px;
-      border:1px solid var(--line2);
-      background:rgba(0,0,0,.22);
-      border-radius:999px;
-    }
-    .tab{
-      border:1px solid transparent;
-      background:transparent;
-      color:var(--muted);
-      padding:7px 10px;
-      font-size:11px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      border-radius:999px;
-      cursor:pointer;
-      white-space:nowrap;
-    }
-    .tab.active{
-      color:var(--text);
-      border-color:rgba(255,138,42,.55);
-      background:rgba(255,138,42,.12);
-    }
+/************************************************************
+ * Public init
+ ************************************************************/
+export function initBulk() {
+  // File input
+  if (Dom.bulkMasterFileInput) {
+    Dom.bulkMasterFileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      handleFileLoad(file);
+    });
+  }
 
-    .section{ display:none; }
-    .section.active{ display:block; }
+  // Filters
+  if (Dom.bulkTypeFilterSelect) {
+    Dom.bulkTypeFilterSelect.addEventListener("change", () => {
+      filterType = Dom.bulkTypeFilterSelect.value || "";
+      renderCardList();
+    });
+  }
+  if (Dom.bulkSetFilterSelect) {
+    Dom.bulkSetFilterSelect.addEventListener("change", () => {
+      filterSet = Dom.bulkSetFilterSelect.value || "";
+      renderCardList();
+    });
+  }
 
-    /* Shared panels */
-    .panel{
-      background:rgba(0,0,0,.24);
-      border:1px solid var(--line2);
-      border-radius:14px;
-      padding:14px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
-    }
-    .grid2{
-      display:grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap:14px;
-    }
-    @media (max-width: 980px){
-      .grid2{ grid-template-columns:1fr; }
-    }
+  // Select/Deselect viewed
+  if (Dom.bulkSelectAllViewedBtn) {
+    Dom.bulkSelectAllViewedBtn.addEventListener("click", () => {
+      visibleCards().forEach(c => selectedIds.add(c.id));
+      renderCardList();
+      renderSelectedPreview();
+    });
+  }
+  if (Dom.bulkDeselectAllViewedBtn) {
+    Dom.bulkDeselectAllViewedBtn.addEventListener("click", () => {
+      visibleCards().forEach(c => selectedIds.delete(c.id));
+      renderCardList();
+      renderSelectedPreview();
+    });
+  }
 
-    /* Bulk layout */
-    .bulk-grid{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap:14px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .bulk-grid{ grid-template-columns:1fr; }
-    }
+  // Import / Clear
+  if (Dom.bulkImportBtn) Dom.bulkImportBtn.addEventListener("click", handleImport);
+  if (Dom.bulkClearBtn) Dom.bulkClearBtn.addEventListener("click", clearBulkSession);
 
-    .h3{
-      margin:0 0 8px;
-      font-size:16px;
-      font-weight:800;
-      letter-spacing:.02em;
-    }
-    .hint{
-      margin:0 0 10px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.45;
-    }
-    .label{
-      font-size:11px;
-      letter-spacing:.10em;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin:10px 0 6px;
-    }
-
-    select, input[type="text"]{
-      width:100%;
-      border-radius:10px;
-      border:1px solid var(--line2);
-      background:rgba(0,0,0,.28);
-      color:var(--text);
-      padding:9px 10px;
-      outline:none;
-    }
-
-    .row{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .row > *{ flex:1; }
-    .row .tight{ flex:0 0 auto; }
-
-    .status{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:10px;
-      border:1px solid var(--line2);
-      background:rgba(0,0,0,.22);
-      color:var(--muted);
-      font-size:12px;
-      min-height:38px;
-      display:flex;
-      align-items:center;
-    }
-
-    /* PATCH: prevent infinite height, scroll inside list boxes */
-    #bulkSelectionList,
-    #bulkSelectedPreview{
-      margin:0;
-      padding:0.25rem 0.5rem;
-      list-style:none;
-      background:#050509;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.08);
-      max-height: calc(100vh - 360px);
-      overflow-y:auto;
-      font-family:var(--mono);
-      font-size:11px;
-      line-height:1.4;
-    }
-    #bulkSelectedPreview{
-      white-space:pre-wrap;
-      padding:10px 12px;
-      list-style:none;
-    }
-    #bulkSelectionList li.bulk-row{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:4px 2px;
-      border-bottom:1px dashed rgba(255,255,255,.06);
-    }
-    #bulkSelectionList li.bulk-row:last-child{ border-bottom:none; }
-    #bulkSelectionList li.bulk-row .bulk-row-label{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      color:var(--text);
-    }
-
-    /* Buttons footer */
-    .bulk-actions{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-    .bulk-actions .btn{ flex:1; }
-    .bulk-actions .btn.tight{ flex:0 0 auto; }
-
-    /* Minimal placeholder styles for other sections */
-    .placeholder{
-      color:var(--muted);
-      font-size:13px;
-      line-height:1.5;
-    }
-
-    /* Modal */
-    #modalBackdrop{
-      position:fixed;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,.60);
-      z-index:50;
-      padding:18px;
-    }
-    #modalBackdrop.active{ display:flex; }
-    .modal{
-      width:min(520px, 100%);
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      padding:14px;
-      box-shadow: 0 26px 90px rgba(0,0,0,.60);
-    }
-    .modal h3{ margin:0 0 8px; }
-    .modal p{ margin:0 0 12px; color:var(--muted); }
-    .modal .row{ justify-content:flex-end; }
-    .modal .row .btn{ flex:0 0 auto; }
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-
-    <!-- Header -->
-    <div class="top-card">
-      <div class="top-title">
-        <div class="top-left">
-          <div class="kicker">DRIVE TCG Admin</div>
-          <h1>ADMIN TOOLKIT</h1>
-          <div class="pill-row">
-            <span class="pill"><span class="dot"></span> single-file json • no server</span>
-            <span class="pill">changes are live in memory</span>
-            <span class="pill">use export json to save your edits</span>
-          </div>
-        </div>
-
-        <div class="top-right" style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn" id="downloadCardsJsonBtn">Export Card JSON</button>
-          <button class="btn" id="downloadPreconsJsonBtn">Export Precon JSON</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Workspace -->
-    <div class="workspace">
-      <div class="workspace-head">
-        <div class="title">
-          <h2>Workspace</h2>
-          <p class="subtitle">Use the tabs to switch between Single Card, Bulk Import, and Precon Decks.</p>
-        </div>
-
-        <div class="tabs" aria-label="Workspace navigation">
-          <button class="tab active" id="navSingleBtn">Single Card</button>
-          <button class="tab" id="navBulkBtn">Bulk Import</button>
-          <button class="tab" id="navPreconsBtn">Precons</button>
-          <button class="tab" id="navHelpBtn">Help</button>
-        </div>
-      </div>
-
-      <!-- SINGLE -->
-      <section class="section active" id="singleSection">
-        <div class="panel">
-          <div class="h3">Single Card</div>
-          <p class="hint">Single editor UI is handled by your existing Single module. (No changes required here for the bulk patch.)</p>
-
-          <!-- Keep your existing Single HTML here if you already have it.
-               Minimal placeholders below so the page still loads if you paste this fresh file. -->
-
-          <div class="grid2">
-            <div class="panel" style="background:rgba(0,0,0,.18)">
-              <div class="label">Editor</div>
-              <div class="placeholder">
-                If you already have a full Single Editor section, paste it here and keep the element IDs
-                used by <code>dom.js</code> and <code>single.js</code>.
-              </div>
-
-              <!-- basic buttons (IDs used by app.js / single.js) -->
-              <div class="bulk-actions" style="margin-top:12px;">
-                <button class="btn primary" id="downloadCardsJsonBtn_single">Export Card JSON</button>
-                <button class="btn" id="singleSaveBtn">Save</button>
-                <button class="btn" id="singleNewBtn">New</button>
-                <button class="btn danger" id="singleDeleteBtn">Delete</button>
-              </div>
-
-              <div class="status" id="singleStatus">Single status…</div>
-            </div>
-
-            <div class="panel" style="background:rgba(0,0,0,.18)">
-              <div class="label">Preview</div>
-              <div id="singlePreview" class="placeholder">Single preview renders here…</div>
-
-              <div class="label" style="margin-top:12px;">Library</div>
-              <input id="cardLibrarySearchInput" type="text" placeholder="Search cards…" />
-              <div class="status" style="margin-top:8px;">
-                <span id="libraryCount">0 cards</span>
-              </div>
-              <ul id="cardLibraryList" style="margin:8px 0 0; padding:0; list-style:none;"></ul>
-            </div>
-          </div>
-
-          <!-- Hidden inputs referenced by dom.js/single.js; include if your current admin.html already has them.
-               If your existing file already includes them, keep yours and delete these. -->
-          <input id="cardIdInput" type="hidden">
-          <input id="cardNameInput" type="hidden">
-          <input id="cardTypeInput" type="hidden">
-          <input id="cardSetNameInput" type="hidden">
-          <input id="cardNumberInput" type="hidden">
-          <input id="cardRarityInput" type="hidden">
-          <input id="cardVehicleTypesInput" type="hidden">
-          <input id="cardTagsInput" type="hidden">
-          <input id="cardImageUrlInput" type="hidden">
-          <input id="modBasePartInput" type="hidden">
-          <input id="modL1Input" type="hidden">
-          <input id="modL2Input" type="hidden">
-          <input id="modL3Input" type="hidden">
-          <input id="modL4Input" type="hidden">
-          <input id="vehicleHpConInput" type="hidden">
-          <input id="vehiclePitCostInput" type="hidden">
-          <textarea id="cardNotesInput" style="display:none"></textarea>
-
-          <select id="printSetSelect" style="display:none"></select>
-          <input id="printCustomSetInput" type="hidden">
-          <input id="printCardNumberInput" type="hidden">
-          <button id="printSetPrimaryBtn" style="display:none"></button>
-          <button id="printClearAllBtn" style="display:none"></button>
-          <ul id="printsList" style="display:none"></ul>
-        </div>
-      </section>
-
-      <!-- BULK -->
-      <section class="section" id="bulkSection">
-        <div class="panel">
-          <div class="h3">Bulk Import</div>
-          <p class="hint">
-            Load from your master spreadsheet, filter by Type/Set (supports cards in multiple sets like “SET 1 &amp; 3”),
-            select what you want, then import into the JSON library.
-          </p>
-
-          <div class="bulk-grid">
-            <!-- Step 1 -->
-            <div class="panel" style="background:rgba(0,0,0,.18)">
-              <div class="h3" style="font-size:18px;">Step 1 · Load master spreadsheet</div>
-              <div class="label">Drive master file (.xlsx)</div>
-              <input type="file" id="bulkFileInput" accept=".xlsx" />
-
-              <div class="status" id="bulkStatus" style="margin-top:10px;">
-                Select Drive Cards.xlsx to begin.
-              </div>
-            </div>
-
-            <!-- Step 2 & 3 -->
-            <div class="panel" style="background:rgba(0,0,0,.18)">
-              <div class="h3" style="font-size:18px;">Step 2 · Filter &amp; choose cards</div>
-
-              <div class="row">
-                <div>
-                  <div class="label">Filter by Type</div>
-                  <select id="bulkFilterTypeSelect">
-                    <option value="__ALL__">All Types</option>
-                  </select>
-                </div>
-                <div>
-                  <div class="label">Filter by Set</div>
-                  <select id="bulkFilterSetSelect">
-                    <option value="__ALL__">All Sets</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row" style="margin-top:10px;">
-                <button class="btn small" id="bulkSelectAllViewedBtn">Select all viewed</button>
-                <button class="btn small" id="bulkDeselectAllViewedBtn">Deselect all viewed</button>
-              </div>
-
-              <div class="label" style="margin-top:12px;">Cards (check to include in Step 3)</div>
-              <ul id="bulkSelectionList"></ul>
-
-              <div class="h3" style="font-size:18px; margin-top:14px;">Step 3 · Review &amp; import</div>
-              <div class="label">Selected cards</div>
-              <div id="bulkSelectedPreview">No cards selected for import.</div>
-
-              <div class="bulk-actions">
-                <button class="btn primary" id="bulkImportBtn">Import selected into library</button>
-                <button class="btn danger" id="bulkClearSessionBtn">Clear current bulk session</button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- PRECONS -->
-      <section class="section" id="preconsSection">
-        <div class="panel">
-          <div class="h3">Precons</div>
-          <p class="placeholder">Your Precons UI goes here.</p>
-          <div id="preconsStatus" class="status">Precons status…</div>
-          <div id="preconGrid"></div>
-        </div>
-      </section>
-
-      <!-- HELP -->
-      <section class="section" id="helpSection">
-        <div class="panel">
-          <div class="h3">Help</div>
-          <p class="placeholder">
-            Bulk Import reads Drive Cards.xlsx, builds cards from each sheet, then lets you filter and import.
-          </p>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <!-- Modal (shared) -->
-  <div id="modalBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <h3 id="modalTitle">Confirm</h3>
-      <p id="modalBody">Are you sure?</p>
-      <div class="row">
-        <button class="btn" id="modalCancelBtn">Cancel</button>
-        <button class="btn primary" id="modalConfirmBtn">Confirm</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- App entry -->
-  <script type="module" src="./app.js"></script>
-</body>
-</html>
+  // Initial
+  clearBulkSession();
+}
