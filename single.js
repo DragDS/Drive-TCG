@@ -1,5 +1,6 @@
 // single.js
 // Single-card editor: inputs, preview, prints, and card library.
+// Hardened: safe when AppState.cards/currentSinglePrints are not initialized yet.
 
 import { AppState } from "./state.js";
 import { Dom } from "./dom.js";
@@ -14,7 +15,7 @@ export function generateId() {
 
 export function parseVehicleTypes(str) {
   if (!str) return [];
-  return str
+  return String(str)
     .split(/[;,]/)
     .map(s => s.trim())
     .filter(Boolean);
@@ -22,7 +23,7 @@ export function parseVehicleTypes(str) {
 
 export function parseTags(str) {
   if (!str) return [];
-  return str
+  return String(str)
     .split(/[;,]/)
     .map(s => s.trim())
     .filter(Boolean);
@@ -30,7 +31,7 @@ export function parseTags(str) {
 
 export function parseHpCon(str) {
   if (!str) return {};
-  const parts = str.split("/");
+  const parts = String(str).split("/");
   const hp = parts[0] !== undefined && parts[0] !== "" ? Number(parts[0]) : undefined;
   const con = parts[1] !== undefined && parts[1] !== "" ? Number(parts[1]) : undefined;
   return { hp, con };
@@ -45,22 +46,32 @@ function formatHpCon(extra) {
 }
 
 /**
- * Safe DOM helpers so missing inputs (like modL1–modL4) don’t crash.
+ * Safe DOM helpers so missing inputs don’t crash.
  */
 function getTrimmedValue(el) {
-  return el && typeof el.value === "string" ? el.value.trim() : "";
+  if (!el) return "";
+  const v = el.value;
+  return v == null ? "" : String(v).trim();
 }
 
 function setValue(el, val) {
   if (!el) return;
-  el.value = val;
+  el.value = val ?? "";
+}
+
+/**
+ * Ensure required AppState fields exist even before loadCards finishes.
+ */
+function ensureSingleState() {
+  if (!Array.isArray(AppState.cards)) AppState.cards = [];
+  if (!Array.isArray(AppState.currentSinglePrints)) AppState.currentSinglePrints = [];
 }
 
 function formatExtraForSummary(card) {
   const e = card.extra || {};
   if (card.type === "Mod") {
     const levels = [e.modLevel1, e.modLevel2, e.modLevel3, e.modLevel4]
-      .filter(Boolean)
+      .filter(v => v !== undefined && v !== null && String(v).trim() !== "")
       .join(" / ");
     return `Base: ${e.modBasePart || "?"}${levels ? " | Lvls: " + levels : ""}`;
   }
@@ -78,16 +89,11 @@ function formatExtraForSummary(card) {
 }
 
 /**
- * Normalize a raw card object from JSON or bulk import into the internal shape.
- * - Accepts old prints: [{ setId, cardNumber }]
- * - Accepts new prints: [{ setName, cardNumber }]
- * - If no prints array but setName/cardNumber fields exist, synthesizes one.
- * - Ensures card.setName/cardNumber are aligned with the first print.
+ * Normalize a raw card object into the internal shape.
  */
 export function normalizeCardShape(raw) {
   const base = raw || {};
 
-  // Vehicle types & tags
   const vehicleTypes = Array.isArray(base.vehicleTypes)
     ? base.vehicleTypes
     : (base.vehicleTypes ? [].concat(base.vehicleTypes) : []);
@@ -100,27 +106,27 @@ export function normalizeCardShape(raw) {
     ? { ...base.extra }
     : {};
 
-  // Normalize prints
   const printsRaw = Array.isArray(base.prints) ? base.prints : [];
-
   let prints = printsRaw
     .map(p => ({
-      setName: (p.setName || p.setId || "").trim(),
-      cardNumber: (p.cardNumber || "").trim()
+      setName: String((p.setName || p.setId || "")).trim(),
+      cardNumber: String((p.cardNumber || "")).trim(),
+      isPrimary: !!p.isPrimary
     }))
     .filter(p => p.setName || p.cardNumber);
 
-  // Try to infer from root fields if needed
-  let setName = (base.setName || base.setId || "").trim();
-  let cardNumber = (base.cardNumber || base.cardNo || "").trim();
+  let setName = String((base.setName || base.setId || "")).trim();
+  let cardNumber = String((base.cardNumber || base.cardNo || "")).trim();
 
   if (!prints.length && (setName || cardNumber)) {
-    prints = [{ setName, cardNumber }];
+    prints = [{ setName, cardNumber, isPrimary: true }];
   }
 
-  // If root fields are empty but we have prints, sync them from the first print
   if (!setName && prints[0]) setName = prints[0].setName || "";
   if (!cardNumber && prints[0]) cardNumber = prints[0].cardNumber || "";
+
+  // ensure there is a primary print if prints exist
+  if (prints.length && !prints.some(p => p.isPrimary)) prints[0].isPrimary = true;
 
   return {
     id: base.id || generateId(),
@@ -138,7 +144,7 @@ export function normalizeCardShape(raw) {
   };
 }
 
-// When exporting to drive-card.json, convert prints back to { setId, cardNumber }
+// Export prints as { setId, cardNumber }
 function serializeCardForExport(card) {
   const clean = JSON.parse(JSON.stringify(card));
   if (Array.isArray(clean.prints)) {
@@ -151,9 +157,14 @@ function serializeCardForExport(card) {
 }
 
 export function getCardsForExport() {
+  ensureSingleState();
   return AppState.cards.map(serializeCardForExport);
 }
 
+/**
+ * Optional feature: hide/show fields by type.
+ * (Your admin.html doesn't include .field-grid, so this is naturally a no-op.)
+ */
 function updateTypeFieldVisibility() {
   if (!Dom.cardTypeInput) return;
   const type = Dom.cardTypeInput.value || "";
@@ -161,11 +172,7 @@ function updateTypeFieldVisibility() {
   fields.forEach(field => {
     const typesAttr = field.dataset.forTypes || "";
     const allowed = typesAttr.split(",").map(t => t.trim()).filter(Boolean);
-    if (!allowed.length || allowed.includes(type)) {
-      field.style.display = "";
-    } else {
-      field.style.display = "none";
-    }
+    field.style.display = (!allowed.length || allowed.includes(type)) ? "" : "none";
   });
 }
 
@@ -173,6 +180,7 @@ function updateTypeFieldVisibility() {
  * Single Card Preview & Library
  ************************************************************/
 function renderSinglePreview() {
+  ensureSingleState();
   if (!Dom.cardNameInput || !Dom.singlePreview) return;
 
   const name = getTrimmedValue(Dom.cardNameInput) || "Untitled Card";
@@ -199,14 +207,12 @@ function renderSinglePreview() {
     extra.pitCost = pitVal ? Number(pitVal) : undefined;
   }
 
-  const prints = AppState.currentSinglePrints.length
-    ? AppState.currentSinglePrints
-    : (getTrimmedValue(Dom.cardSetNameInput) || getTrimmedValue(Dom.cardNumberInput)
-      ? [{
-        setName: setName,
-        cardNumber: getTrimmedValue(Dom.cardNumberInput)
-      }]
-      : []);
+  const prints =
+    (AppState.currentSinglePrints && AppState.currentSinglePrints.length)
+      ? AppState.currentSinglePrints
+      : ((getTrimmedValue(Dom.cardSetNameInput) || getTrimmedValue(Dom.cardNumberInput))
+        ? [{ setName, cardNumber: getTrimmedValue(Dom.cardNumberInput), isPrimary: true }]
+        : []);
 
   const card = {
     id: getTrimmedValue(Dom.cardIdInput) || "(not saved yet)",
@@ -226,6 +232,7 @@ function renderSinglePreview() {
   const container = Dom.singlePreview;
   container.innerHTML = "";
 
+  // Minimal preview (uses your existing CSS hooks if present)
   const frame = document.createElement("div");
   frame.className = "card-preview";
 
@@ -237,12 +244,14 @@ function renderSinglePreview() {
 
   const metaLine = document.createElement("div");
   metaLine.className = "meta-row";
+
   const leftMeta = document.createElement("div");
   leftMeta.className = "meta-left";
   const typeSpan = document.createElement("span");
   typeSpan.className = "chip";
   typeSpan.textContent = card.type || "Type ?";
   leftMeta.appendChild(typeSpan);
+
   if (card.rarity) {
     const rarSpan = document.createElement("span");
     rarSpan.className = "chip";
@@ -320,6 +329,7 @@ function renderSinglePreview() {
   footer.className = "card-preview-footer";
   const printsInfo = document.createElement("div");
   printsInfo.className = "meta-row";
+
   const printsLabel = document.createElement("span");
   printsLabel.textContent = "Prints:";
   printsInfo.appendChild(printsLabel);
@@ -328,8 +338,7 @@ function renderSinglePreview() {
     prints.forEach(p => {
       const chip = document.createElement("span");
       chip.className = "chip";
-      const primaryMark = p.isPrimary ? "★ " : "";
-      chip.textContent = `${primaryMark}${p.setName || p.setId || "SET ?"} #${p.cardNumber || "###"}`;
+      chip.textContent = `${p.isPrimary ? "★ " : ""}${p.setName || p.setId || "SET ?"} #${p.cardNumber || "###"}`;
       printsInfo.appendChild(chip);
     });
   } else {
@@ -350,13 +359,15 @@ function renderSinglePreview() {
 }
 
 function renderCardLibraryList() {
+  ensureSingleState();
   if (!Dom.cardLibraryList || !Dom.cardLibrarySearchInput || !Dom.libraryCount) return;
 
   const list = Dom.cardLibraryList;
-  const search = (Dom.cardLibrarySearchInput.value || "").toLowerCase();
+  const search = (Dom.cardLibrarySearchInput.value || "").toLowerCase().trim();
   list.innerHTML = "";
 
-  const filtered = AppState.cards.filter(c => {
+  const source = Array.isArray(AppState.cards) ? AppState.cards : [];
+  const filtered = source.filter(c => {
     const name = (c.name || "").toLowerCase();
     const type = (c.type || "").toLowerCase();
     const tags = (Array.isArray(c.tags) ? c.tags.join(" ") : String(c.tags || "")).toLowerCase();
@@ -379,6 +390,7 @@ function renderCardLibraryList() {
 
     const header = document.createElement("div");
     header.className = "header";
+
     const title = document.createElement("div");
     title.className = "title";
     title.textContent = card.name || "(no name)";
@@ -418,18 +430,16 @@ function renderCardLibraryList() {
     sub.textContent = [vt, tg].filter(Boolean).join(" • ");
     li.appendChild(sub);
 
-    li.addEventListener("click", () => {
-      fillSingleCardInputs(card);
-    });
-
+    li.addEventListener("click", () => fillSingleCardInputs(card));
     list.appendChild(li);
   });
 }
 
 /************************************************************
- * Prints Management (within Single Editor)
+ * Prints Management
  ************************************************************/
 function renderPrintsList() {
+  ensureSingleState();
   if (!Dom.printsList) return;
 
   const list = Dom.printsList;
@@ -444,12 +454,11 @@ function renderPrintsList() {
 
   AppState.currentSinglePrints.forEach((p, idx) => {
     const li = document.createElement("li");
-    const primaryMark = p.isPrimary ? "★ " : "";
-    li.textContent = `${primaryMark}${p.setName || "Set ?"} #${p.cardNumber || "###"}`;
+    li.textContent = `${p.isPrimary ? "★ " : ""}${p.setName || "Set ?"} #${p.cardNumber || "###"}`;
 
     li.addEventListener("click", () => {
       AppState.currentSinglePrints.splice(idx, 1);
-      if (!AppState.currentSinglePrints.some(pr => pr.isPrimary) && AppState.currentSinglePrints[0]) {
+      if (AppState.currentSinglePrints.length && !AppState.currentSinglePrints.some(pr => pr.isPrimary)) {
         AppState.currentSinglePrints[0].isPrimary = true;
       }
       renderPrintsList();
@@ -461,45 +470,17 @@ function renderPrintsList() {
 }
 
 function handleSetPrintPrimary() {
+  ensureSingleState();
   if (!AppState.currentSinglePrints.length) return;
   const idx = Math.max(0, AppState.currentSinglePrints.length - 1);
-  AppState.currentSinglePrints = AppState.currentSinglePrints.map((p, i) => ({
-    ...p,
-    isPrimary: i === idx
-  }));
+  AppState.currentSinglePrints = AppState.currentSinglePrints.map((p, i) => ({ ...p, isPrimary: i === idx }));
   renderPrintsList();
   renderSinglePreview();
 }
 
 function handleClearAllPrints() {
+  ensureSingleState();
   AppState.currentSinglePrints = [];
-  renderPrintsList();
-  renderSinglePreview();
-}
-
-function handlePrintAdd() {
-  if (!Dom.printSetSelect || !Dom.printCardNumberInput) return;
-
-  const selected = Dom.printSetSelect.value;
-  let setName = "";
-  if (selected === "CUSTOM") {
-    setName = getTrimmedValue(Dom.printCustomSetInput);
-  } else {
-    setName = selected || "";
-  }
-  const cardNumber = getTrimmedValue(Dom.printCardNumberInput);
-
-  if (!setName && !cardNumber) {
-    alert("Please provide at least a Set or Card Number for the print.");
-    return;
-  }
-
-  const isFirst = AppState.currentSinglePrints.length === 0;
-  AppState.currentSinglePrints.push({
-    setName,
-    cardNumber,
-    isPrimary: isFirst
-  });
   renderPrintsList();
   renderSinglePreview();
 }
@@ -508,6 +489,8 @@ function handlePrintAdd() {
  * Single Card Editor: Collect & Fill
  ************************************************************/
 function collectSingleCardFromInputs() {
+  ensureSingleState();
+
   const type = getTrimmedValue(Dom.cardTypeInput);
   const name = getTrimmedValue(Dom.cardNameInput);
   const setName = getTrimmedValue(Dom.cardSetNameInput);
@@ -532,14 +515,10 @@ function collectSingleCardFromInputs() {
     extra.pitCost = pitVal ? Number(pitVal) : undefined;
   }
 
-  const prints = AppState.currentSinglePrints.length
-    ? AppState.currentSinglePrints
-    : (setName || cardNumber
-      ? [{
-        setName,
-        cardNumber
-      }]
-      : []);
+  const prints =
+    AppState.currentSinglePrints.length
+      ? AppState.currentSinglePrints
+      : ((setName || cardNumber) ? [{ setName, cardNumber, isPrimary: true }] : []);
 
   const card = {
     id: getTrimmedValue(Dom.cardIdInput) || generateId(),
@@ -560,6 +539,7 @@ function collectSingleCardFromInputs() {
 }
 
 function fillSingleCardInputs(card) {
+  ensureSingleState();
   const c = normalizeCardShape(card);
 
   setValue(Dom.cardIdInput, c.id || "");
@@ -590,12 +570,7 @@ function fillSingleCardInputs(card) {
 
   if (c.type === "Vehicle" || c.type === "Named Vehicle") {
     setValue(Dom.vehicleHpConInput, formatHpCon(c.extra));
-    setValue(
-      Dom.vehiclePitCostInput,
-      (c.extra.pitCost !== undefined && c.extra.pitCost !== null)
-        ? String(c.extra.pitCost)
-        : ""
-    );
+    setValue(Dom.vehiclePitCostInput, (c.extra.pitCost ?? "") === "" ? "" : String(c.extra.pitCost));
   } else {
     setValue(Dom.vehicleHpConInput, "");
     setValue(Dom.vehiclePitCostInput, "");
@@ -605,6 +580,7 @@ function fillSingleCardInputs(card) {
   if (AppState.currentSinglePrints.length && !AppState.currentSinglePrints.some(p => p.isPrimary)) {
     AppState.currentSinglePrints[0].isPrimary = true;
   }
+
   renderPrintsList();
   updateTypeFieldVisibility();
   renderSinglePreview();
@@ -614,19 +590,16 @@ function fillSingleCardInputs(card) {
  * Single Card Editor: Save / New / Delete
  ************************************************************/
 async function handleSingleSave() {
+  ensureSingleState();
   const card = collectSingleCardFromInputs();
   const existingIndex = AppState.cards.findIndex(c => c.id === card.id);
 
   if (existingIndex >= 0) {
     AppState.cards[existingIndex] = card;
-    if (Dom.singleStatus) {
-      Dom.singleStatus.textContent = `Updated card: ${card.name} (${card.id})`;
-    }
+    if (Dom.singleStatus) Dom.singleStatus.textContent = `Updated card: ${card.name} (${card.id})`;
   } else {
     AppState.cards.push(card);
-    if (Dom.singleStatus) {
-      Dom.singleStatus.textContent = `Added new card: ${card.name} (${card.id})`;
-    }
+    if (Dom.singleStatus) Dom.singleStatus.textContent = `Added new card: ${card.name} (${card.id})`;
   }
 
   renderCardLibraryList();
@@ -634,6 +607,8 @@ async function handleSingleSave() {
 }
 
 async function handleSingleNew() {
+  ensureSingleState();
+
   setValue(Dom.cardIdInput, "");
   setValue(Dom.cardNameInput, "");
   setValue(Dom.cardTypeInput, "Crew");
@@ -653,9 +628,8 @@ async function handleSingleNew() {
   setValue(Dom.vehiclePitCostInput, "");
 
   AppState.currentSinglePrints = [];
-  if (Dom.singleStatus) {
-    Dom.singleStatus.textContent = "Ready to create a new card.";
-  }
+  if (Dom.singleStatus) Dom.singleStatus.textContent = "Ready to create a new card.";
+
   updateTypeFieldVisibility();
   renderPrintsList();
   renderSinglePreview();
@@ -663,10 +637,8 @@ async function handleSingleNew() {
 
 function confirmAction(title, body) {
   return new Promise(resolve => {
-    if (!Dom.modalTitle || !Dom.modalBody || !Dom.modalBackdrop ||
-        !Dom.modalCancelBtn || !Dom.modalConfirmBtn) {
-      const ok = window.confirm(`${title}\n\n${body}`);
-      resolve(ok);
+    if (!Dom.modalTitle || !Dom.modalBody || !Dom.modalBackdrop || !Dom.modalCancelBtn || !Dom.modalConfirmBtn) {
+      resolve(window.confirm(`${title}\n\n${body}`));
       return;
     }
 
@@ -690,33 +662,26 @@ function confirmAction(title, body) {
 }
 
 async function handleSingleDelete() {
+  ensureSingleState();
+
   const id = getTrimmedValue(Dom.cardIdInput);
   if (!id) {
-    if (Dom.singleStatus) {
-      Dom.singleStatus.textContent = "No card selected to delete.";
-    }
+    if (Dom.singleStatus) Dom.singleStatus.textContent = "No card selected to delete.";
     return;
   }
 
   const card = AppState.cards.find(c => c.id === id);
   const name = card ? card.name : id;
 
-  const ok = await confirmAction(
-    "Delete Card",
-    `Are you sure you want to delete "${name}"? This cannot be undone.`
-  );
-
+  const ok = await confirmAction("Delete Card", `Are you sure you want to delete "${name}"? This cannot be undone.`);
   if (!ok) {
-    if (Dom.singleStatus) {
-      Dom.singleStatus.textContent = "Delete cancelled.";
-    }
+    if (Dom.singleStatus) Dom.singleStatus.textContent = "Delete cancelled.";
     return;
   }
 
   AppState.cards = AppState.cards.filter(c => c.id !== id);
-  if (Dom.singleStatus) {
-    Dom.singleStatus.textContent = `Deleted card: ${name}`;
-  }
+  if (Dom.singleStatus) Dom.singleStatus.textContent = `Deleted card: ${name}`;
+
   await handleSingleNew();
   renderCardLibraryList();
 }
@@ -724,8 +689,9 @@ async function handleSingleDelete() {
 /************************************************************
  * Public Init + refresh hook
  ************************************************************/
-
 export function initSingle() {
+  ensureSingleState();
+
   updateTypeFieldVisibility();
   renderPrintsList();
   renderSinglePreview();
@@ -764,43 +730,19 @@ export function initSingle() {
     Dom.cardLibrarySearchInput.addEventListener("input", renderCardLibraryList);
   }
 
-  if (Dom.printSetPrimaryBtn) {
-    Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
-  }
-  if (Dom.printClearAllBtn) {
-    Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
-  }
-  if (Dom.printSetSelect) {
-    Dom.printSetSelect.addEventListener("change", () => {
-      if (Dom.printSetSelect.value === "CUSTOM" && Dom.printCustomSetInput) {
-        Dom.printCustomSetInput.focus();
-      }
-    });
-  }
-  if (Dom.printCardNumberInput) {
-    Dom.printCardNumberInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handlePrintAdd();
-      }
-    });
-  }
+  if (Dom.printSetPrimaryBtn) Dom.printSetPrimaryBtn.addEventListener("click", handleSetPrintPrimary);
+  if (Dom.printClearAllBtn) Dom.printClearAllBtn.addEventListener("click", handleClearAllPrints);
 
-  if (Dom.singleSaveBtn) {
-    Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
-  }
-  if (Dom.singleNewBtn) {
-    Dom.singleNewBtn.addEventListener("click", handleSingleNew);
-  }
-  if (Dom.singleDeleteBtn) {
-    Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
-  }
+  if (Dom.singleSaveBtn) Dom.singleSaveBtn.addEventListener("click", handleSingleSave);
+  if (Dom.singleNewBtn) Dom.singleNewBtn.addEventListener("click", handleSingleNew);
+  if (Dom.singleDeleteBtn) Dom.singleDeleteBtn.addEventListener("click", handleSingleDelete);
 }
 
 /**
  * Called after cards have changed (e.g. after loadCards or bulk import).
  */
 export function refreshSingleUi() {
+  ensureSingleState();
   renderSinglePreview();
   renderCardLibraryList();
 }
