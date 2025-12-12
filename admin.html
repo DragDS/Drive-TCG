@@ -822,19 +822,41 @@
       <!-- =========================
            HELP SECTION
            ========================= -->
-      <section id="helpSection" class="section">
-        <div class="card">
-          <h2>Help</h2>
-          <p class="desc">Driven by <span style="font-family:var(--mono);">help.js</span>.</p>
-          <div class="mutedBox">
-Your existing help content should render here.
-If help still looks empty after this patch, the issue is likely in help.js (not admin.html).
-          </div>
-        </div>
-      </section>
+     <section id="helpSection" class="section">
+  <div class="panel">
+    <h2>Help</h2>
 
-    </div>
+    <p>
+      This admin tool lets you manage <strong>DRIVE TCG</strong> cards and preconstructed decks
+      directly in your browser. All changes are kept in memory until you export JSON.
+    </p>
+
+    <h3>Single Card</h3>
+    <ul>
+      <li>Create and edit individual cards.</li>
+      <li>Supports Mods, Vehicles, Crew, Drivers, Conditions, Tracks, and more.</li>
+      <li>Changes update live in the card preview.</li>
+    </ul>
+
+    <h3>Bulk Import</h3>
+    <ul>
+      <li>Load the master Excel spreadsheet.</li>
+      <li>Filter cards by <strong>Type</strong> and <strong>Set</strong>.</li>
+      <li>Select which cards to import into the library.</li>
+    </ul>
+
+    <h3>Precons</h3>
+    <ul>
+      <li>Build and edit preconstructed decks.</li>
+      <li>Add cards from the library with quantities.</li>
+      <li>Export precon data to JSON.</li>
+    </ul>
+
+    <p class="muted">
+      Tip: Always export your JSON after making changes — edits are not saved automatically.
+    </p>
   </div>
+</section>
 
   <!-- Modal -->
   <div id="modalBackdrop">
