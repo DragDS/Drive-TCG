@@ -66,10 +66,11 @@ function initExportButtons(getCardsForExport) {
     downloadJson(getCardsForExport(), "drive-card.json");
   });
 
-  // Precon export is wired in precons.js in your setup; keep this noop-safe if button exists
+  // Precon export is wired in precons.js; keep this noop-safe if button exists
   Dom.downloadPreconsJsonBtn?.addEventListener("click", () => {
-    // precons.js may override / handle export; if not, you can add it later
-    console.warn("[admin] Precon export clicked. If nothing happens, wire it in precons.js/state.js.");
+    console.warn(
+      "[admin] Precon export clicked. If nothing happens, wire it in precons.js/state.js."
+    );
   });
 }
 
@@ -86,9 +87,17 @@ async function safeImport(path, label) {
 }
 
 /************************************************************
- * Kick everything off
+ * Kick everything off (DOM-safe)
  ************************************************************/
-(async function init() {
+async function boot() {
+  // Quick sanity check: if these are null, you're not loading the HTML you think you are
+  console.log("[admin] DOM check:", {
+    navSingleBtn: !!Dom.navSingleBtn,
+    singleSection: !!Dom.singleSection,
+    bulkFileInput: !!Dom.bulkFileInput,
+    bulkStatus: !!Dom.bulkStatus
+  });
+
   // UI wiring first
   initNav();
   initModal();
@@ -101,10 +110,10 @@ async function safeImport(path, label) {
   }
 
   // Import modules independently so one failure doesn't break the rest
-  const singleMod  = await safeImport("./single.js", "single");
-  const bulkMod    = await safeImport("./bulk.js", "bulk");
+  const singleMod = await safeImport("./single.js", "single");
+  const bulkMod = await safeImport("./bulk.js", "bulk");
   const preconsMod = await safeImport("./precons.js", "precons");
-  const helpMod    = await safeImport("./help.js", "help");
+  const helpMod = await safeImport("./help.js", "help");
 
   // Init modules (each guarded)
   try { singleMod?.initSingle?.(); } catch (e) { console.error("[admin] initSingle failed:", e); }
@@ -114,9 +123,11 @@ async function safeImport(path, label) {
 
   // Exports need getCardsForExport — provide a safe fallback if single.js is broken
   const getCardsForExport =
-    singleMod?.getCardsForExport
-    || (() => {
-      console.warn("[admin] getCardsForExport unavailable (single.js failed). Export may not work.");
+    singleMod?.getCardsForExport ||
+    (() => {
+      console.warn(
+        "[admin] getCardsForExport unavailable (single.js failed). Export may not work."
+      );
       return [];
     });
 
@@ -130,4 +141,11 @@ async function safeImport(path, label) {
 
   // Default view
   showSection("single");
-})();
+}
+
+// Ensure DOM exists before anything touches Dom.* elements
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}
