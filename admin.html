@@ -520,198 +520,199 @@
       <button id="downloadCardsJsonBtn_single" class="btn primary small" type="button">EXPORT (SINGLE)</button>
     </div>
 
-    <section class="panel">
-      <!-- =========================
-           SINGLE
-           ========================= -->
-      <div id="singleSection" class="section active">
-        <div class="section-header">
-          <h2>Single Card Editor</h2>
-          <p>Edit one card at a time. (Driven by <span class="mono">single.js</span>)</p>
-        </div>
+   <section class="panel">
+  <!-- =========================
+       SINGLE
+       ========================= -->
+  <div id="singleSection" class="section active">
+    <div class="section-header">
+      <h2>Single Card Editor</h2>
+      <p>Edit one card at a time. (Driven by <span class="mono">single.js</span>)</p>
+    </div>
 
-        <div class="grid-3">
-          <!-- Column 1: Editor -->
-          <div class="card">
-            <h3>Single Card Editor</h3>
-            <p class="sub">Fields toggle by type. Prints are managed below.</p>
+    <div class="grid-3">
+      <!-- Column 1: Editor -->
+      <div class="card">
+        <h3>Single Card Editor</h3>
+        <p class="sub">Fields toggle by type. Prints are managed below.</p>
 
-            <div class="field-grid">
-              <div class="field full">
-                <label for="cardIdInput">Card ID</label>
-                <input id="cardIdInput" type="text" placeholder="(auto)" />
-              </div>
-
-              <div class="field full">
-                <label for="cardNameInput">Name</label>
-                <input id="cardNameInput" type="text" placeholder="Card name" />
-              </div>
-
-              <div class="field">
-                <label for="cardTypeInput">Type</label>
-                <select id="cardTypeInput">
-                  <option>Driver</option>
-                  <option>Named Driver</option>
-                  <option>Vehicle</option>
-                  <option>Named Vehicle</option>
-                  <option>Mod</option>
-                  <option selected>Crew</option>
-                  <option>Track</option>
-                  <option>Condition</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="cardRarityInput">Rarity</label>
-                <select id="cardRarityInput">
-                  <option>Common</option>
-                  <option>Uncommon</option>
-                  <option>Rare</option>
-                  <option>Ultra Rare</option>
-                  <option>Promo</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="cardVehicleTypesInput">Vehicle Types</label>
-                <input id="cardVehicleTypesInput" type="text" placeholder="Drag, Drift, Off-Road…" />
-              </div>
-
-              <div class="field">
-                <label for="cardTagsInput">Tags</label>
-                <input id="cardTagsInput" type="text" placeholder="comma-separated" />
-              </div>
-
-              <div class="field full">
-                <label for="cardImageUrlInput">Image URL</label>
-                <input id="cardImageUrlInput" type="text" placeholder="images/set1/card.png" />
-              </div>
-
-              <div class="field full">
-                <label for="cardNotesInput">Notes / Rules</label>
-                <textarea id="cardNotesInput" placeholder="Rules text…"></textarea>
-              </div>
-
-              <!-- Mod fields -->
-              <div class="field full" data-for-types="Mod">
-                <label for="modBasePartInput">Mod Base Part</label>
-                <input id="modBasePartInput" type="text" placeholder="Engine, Tires, Suspension…" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL1Input">Level 1</label>
-                <input id="modL1Input" type="text" placeholder="e.g. 1/2 or -" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL2Input">Level 2</label>
-                <input id="modL2Input" type="text" placeholder="e.g. 2/2 or -" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL3Input">Level 3</label>
-                <input id="modL3Input" type="text" placeholder="e.g. 3/3 or -" />
-              </div>
-              <div class="field" data-for-types="Mod">
-                <label for="modL4Input">Level 4</label>
-                <input id="modL4Input" type="text" placeholder="e.g. 5/3 or -" />
-              </div>
-
-              <!-- Vehicle fields -->
-              <div class="field" data-for-types="Vehicle,Named Vehicle">
-                <label for="vehicleHpConInput">Vehicle HP/CON</label>
-                <input id="vehicleHpConInput" type="text" placeholder="e.g. 6/4" />
-              </div>
-              <div class="field" data-for-types="Vehicle,Named Vehicle">
-                <label for="vehiclePitCostInput">PIT Cost</label>
-                <input id="vehiclePitCostInput" type="number" min="0" step="1" placeholder="0" />
-              </div>
-
-              <!-- Legacy set/card number inputs (kept for compatibility; prints should be used) -->
-              <div class="field" style="display:none;">
-                <label for="cardSetNameInput">Legacy Set</label>
-                <input id="cardSetNameInput" type="text" />
-              </div>
-              <div class="field" style="display:none;">
-                <label for="cardNumberInput">Legacy Card #</label>
-                <input id="cardNumberInput" type="text" />
-              </div>
-            </div>
-
-            <hr style="border:0;border-top:1px solid rgba(148,163,184,0.14);margin:12px 0;">
-
-            <div class="row" style="justify-content: space-between; align-items: center;">
-              <div class="pill">
-                <strong style="color: var(--text);">PRINTS</strong>
-                <span class="mono" style="opacity:0.8;">(Set + #)</span>
-              </div>
-            </div>
-
-            <div class="field-grid" style="margin-top:10px;">
-              <div class="field">
-                <label for="printSetSelect">Print Set</label>
-                <select id="printSetSelect">
-                  <option value="">(select)</option>
-                  <option value="SET 1">SET 1</option>
-                  <option value="SET 2">SET 2</option>
-                  <option value="SET 3">SET 3</option>
-                  <option value="SET 4">SET 4</option>
-                  <option value="SET 5">SET 5</option>
-                  <option value="CUSTOM">CUSTOM</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="printCustomSetInput">Custom Set</label>
-                <input id="printCustomSetInput" type="text" placeholder="e.g. SET FATHERS DAY" />
-              </div>
-              <div class="field">
-                <label for="printCardNumberInput">Print Card #</label>
-                <input id="printCardNumberInput" type="text" placeholder="01-001" />
-              </div>
-              <div class="field">
-                <label>&nbsp;</label>
-                <div class="row">
-                  <button id="printSetPrimaryBtn" class="btn small" type="button">SET PRIMARY (LAST)</button>
-                  <button id="printClearAllBtn" class="btn small danger" type="button">CLEAR PRINTS</button>
-                </div>
-              </div>
-
-              <div class="field full">
-                <label>Prints List (click an item to remove)</label>
-                <ul id="printsList" style="border:1px solid rgba(148,163,184,0.18);border-radius:12px;background:rgba(2,6,23,0.35);padding:8px;max-height:140px;overflow:auto;"></ul>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top: 12px;">
-              <button id="singleSaveBtn" class="btn primary" type="button">SAVE</button>
-              <button id="singleNewBtn" class="btn ghost" type="button">NEW</button>
-              <button id="singleDeleteBtn" class="btn danger" type="button">DELETE</button>
-            </div>
-
-            <div id="singleStatus" class="bulk-status" style="margin-top: 10px;">Ready.</div>
+        <div class="field-grid">
+          <div class="field full">
+            <label for="cardIdInput">Card ID</label>
+            <input id="cardIdInput" type="text" placeholder="(auto)" />
           </div>
 
-          <!-- Column 2: Library -->
-          <div class="card">
-            <h3>Library</h3>
-            <p class="sub">Search and select a card to edit.</p>
-
-            <div class="library-top">
-              <div class="field">
-                <label for="cardLibrarySearchInput">Search</label>
-                <input id="cardLibrarySearchInput" type="text" placeholder="search by name, type, or tag…" />
-              </div>
-              <div id="libraryCount">0 cards</div>
-            </div>
-
-            <ul id="cardLibraryList"></ul>
+          <div class="field full">
+            <label for="cardNameInput">Name</label>
+            <input id="cardNameInput" type="text" placeholder="Card name" />
           </div>
 
-          <!-- Column 3: Preview -->
-          <div class="card col-preview">
-            <h3>Preview</h3>
-            <p class="sub">Live preview of the current card.</p>
-            <div id="singlePreview"></div>
+          <div class="field">
+            <label for="cardTypeInput">Type</label>
+            <select id="cardTypeInput">
+              <option>Driver</option>
+              <option>Named Driver</option>
+              <option>Vehicle</option>
+              <option>Named Vehicle</option>
+              <option>Mod</option>
+              <option selected>Crew</option>
+              <option>Track</option>
+              <option>Condition</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="cardRarityInput">Rarity</label>
+            <select id="cardRarityInput">
+              <option>Common</option>
+              <option>Uncommon</option>
+              <option>Rare</option>
+              <option>Ultra Rare</option>
+              <option>Promo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="cardVehicleTypesInput">Vehicle Types</label>
+            <input id="cardVehicleTypesInput" type="text" placeholder="Drag, Drift, Off-Road…" />
+          </div>
+
+          <div class="field">
+            <label for="cardTagsInput">Tags</label>
+            <input id="cardTagsInput" type="text" placeholder="comma-separated" />
+          </div>
+
+          <div class="field full">
+            <label for="cardImageUrlInput">Image URL</label>
+            <input id="cardImageUrlInput" type="text" placeholder="images/set1/card.png" />
+          </div>
+
+          <div class="field full">
+            <label for="cardNotesInput">Notes / Rules</label>
+            <textarea id="cardNotesInput" placeholder="Rules text…"></textarea>
+          </div>
+
+          <!-- Mod fields (hidden unless Type = Mod) -->
+          <div class="field full" data-for-types="Mod" style="display:none;">
+            <label for="modBasePartInput">Mod Base Part</label>
+            <input id="modBasePartInput" type="text" placeholder="Engine, Tires, Suspension…" />
+          </div>
+          <div class="field" data-for-types="Mod" style="display:none;">
+            <label for="modL1Input">Level 1</label>
+            <input id="modL1Input" type="text" placeholder="e.g. 1/2 or -" />
+          </div>
+          <div class="field" data-for-types="Mod" style="display:none;">
+            <label for="modL2Input">Level 2</label>
+            <input id="modL2Input" type="text" placeholder="e.g. 2/2 or -" />
+          </div>
+          <div class="field" data-for-types="Mod" style="display:none;">
+            <label for="modL3Input">Level 3</label>
+            <input id="modL3Input" type="text" placeholder="e.g. 3/3 or -" />
+          </div>
+          <div class="field" data-for-types="Mod" style="display:none;">
+            <label for="modL4Input">Level 4</label>
+            <input id="modL4Input" type="text" placeholder="e.g. 5/3 or -" />
+          </div>
+
+          <!-- Vehicle fields (hidden unless Type = Vehicle or Named Vehicle) -->
+          <div class="field" data-for-types="Vehicle,Named Vehicle" style="display:none;">
+            <label for="vehicleHpConInput">Vehicle HP/CON</label>
+            <input id="vehicleHpConInput" type="text" placeholder="e.g. 6/4" />
+          </div>
+          <div class="field" data-for-types="Vehicle,Named Vehicle" style="display:none;">
+            <label for="vehiclePitCostInput">PIT Cost</label>
+            <input id="vehiclePitCostInput" type="number" min="0" step="1" placeholder="0" />
+          </div>
+
+          <!-- Legacy set/card number inputs (kept for compatibility; prints should be used) -->
+          <div class="field" style="display:none;">
+            <label for="cardSetNameInput">Legacy Set</label>
+            <input id="cardSetNameInput" type="text" />
+          </div>
+          <div class="field" style="display:none;">
+            <label for="cardNumberInput">Legacy Card #</label>
+            <input id="cardNumberInput" type="text" />
           </div>
         </div>
+
+        <hr style="border:0;border-top:1px solid rgba(148,163,184,0.14);margin:12px 0;">
+
+        <div class="row" style="justify-content: space-between; align-items: center;">
+          <div class="pill">
+            <strong style="color: var(--text);">PRINTS</strong>
+            <span class="mono" style="opacity:0.8;">(Set + #)</span>
+          </div>
+        </div>
+
+        <div class="field-grid" style="margin-top:10px;">
+          <div class="field">
+            <label for="printSetSelect">Print Set</label>
+            <select id="printSetSelect">
+              <option value="">(select)</option>
+              <option value="SET 1">SET 1</option>
+              <option value="SET 2">SET 2</option>
+              <option value="SET 3">SET 3</option>
+              <option value="SET 4">SET 4</option>
+              <option value="SET 5">SET 5</option>
+              <option value="CUSTOM">CUSTOM</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="printCustomSetInput">Custom Set</label>
+            <input id="printCustomSetInput" type="text" placeholder="e.g. SET FATHERS DAY" />
+          </div>
+          <div class="field">
+            <label for="printCardNumberInput">Print Card #</label>
+            <input id="printCardNumberInput" type="text" placeholder="01-001" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div class="row">
+              <button id="printSetPrimaryBtn" class="btn small" type="button">SET PRIMARY (LAST)</button>
+              <button id="printClearAllBtn" class="btn small danger" type="button">CLEAR PRINTS</button>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label>Prints List (click an item to remove)</label>
+            <ul id="printsList" style="border:1px solid rgba(148,163,184,0.18);border-radius:12px;background:rgba(2,6,23,0.35);padding:8px;max-height:140px;overflow:auto;"></ul>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top: 12px;">
+          <button id="singleSaveBtn" class="btn primary" type="button">SAVE</button>
+          <button id="singleNewBtn" class="btn ghost" type="button">NEW</button>
+          <button id="singleDeleteBtn" class="btn danger" type="button">DELETE</button>
+        </div>
+
+        <div id="singleStatus" class="bulk-status" style="margin-top: 10px;">Ready.</div>
       </div>
+
+      <!-- Column 2: Library -->
+      <div class="card">
+        <h3>Library</h3>
+        <p class="sub">Search and select a card to edit.</p>
+
+        <div class="library-top">
+          <div class="field">
+            <label for="cardLibrarySearchInput">Search</label>
+            <input id="cardLibrarySearchInput" type="text" placeholder="search by name, type, or tag…" />
+          </div>
+          <div id="libraryCount">0 cards</div>
+        </div>
+
+        <ul id="cardLibraryList"></ul>
+      </div>
+
+      <!-- Column 3: Preview -->
+      <div class="card col-preview">
+        <h3>Preview</h3>
+        <p class="sub">Live preview of the current card.</p>
+        <div id="singlePreview"></div>
+      </div>
+    </div>
+  </div>
+</section>
 
       <!-- =========================
            BULK
