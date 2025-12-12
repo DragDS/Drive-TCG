@@ -18,8 +18,8 @@ export const Dom = {
   cardIdInput: document.getElementById("cardIdInput"),
   cardNameInput: document.getElementById("cardNameInput"),
   cardTypeInput: document.getElementById("cardTypeInput"),
-  cardSetNameInput: document.getElementById("cardSetNameInput"),
-  cardNumberInput: document.getElementById("cardNumberInput"),
+  cardSetNameInput: document.getElementById("cardSetNameInput"), // hidden (derived from prints)
+  cardNumberInput: document.getElementById("cardNumberInput"),   // hidden (derived from prints)
   cardRarityInput: document.getElementById("cardRarityInput"),
   cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
   cardTagsInput: document.getElementById("cardTagsInput"),
