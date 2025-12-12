@@ -1,25 +1,18 @@
 // bulk.js
 // Bulk import from master XLSX: auto-parse, filter by Type/Set, select + import.
+// IMPORTANT: Does NOT statically import single.js, so Bulk works even if Single is broken.
 
 import { AppState } from "./state.js";
 import { Dom } from "./dom.js";
-import {
-  normalizeCardShape,
-  generateId,
-  parseVehicleTypes,
-  parseTags,
-  parseHpCon,
-  refreshSingleUi
-} from "./single.js";
 
 /************************************************************
  * Bulk session state
  ************************************************************/
-let parsedCards = [];             // all cards parsed from XLSX
-let selectedCardIds = new Set();  // card ids selected for import
+let parsedCards = [];
+let selectedCardIds = new Set();
 
 /************************************************************
- * Safe DOM helpers (prevents "init dies" issues)
+ * Small utilities (local)
  ************************************************************/
 function setStatus(msg) {
   if (Dom.bulkStatus) Dom.bulkStatus.textContent = msg;
@@ -31,9 +24,6 @@ function safeStr(v) {
   return String(v).trim();
 }
 
-/************************************************************
- * Helpers
- ************************************************************/
 function normHeader(str) {
   return (str || "")
     .toLowerCase()
@@ -53,13 +43,56 @@ function pick(row, map, ...keys) {
   return "";
 }
 
-/**
- * Split a "Set" string into normalized tokens for filtering.
- * Examples:
- *  - "SET 1" -> ["SET 1"]
- *  - "SET 1 & 2 & 3" -> ["SET 1","SET 2","SET 3"]
- *  - "1" -> ["SET 1"]
- */
+function generateId() {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  return "card_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function parseListLike(str) {
+  const s = safeStr(str);
+  if (!s) return [];
+  return s
+    .split(/[,;/|]+|&/g)
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function parseVehicleTypes(str) {
+  return parseListLike(str);
+}
+
+function parseTags(str) {
+  return parseListLike(str);
+}
+
+function parseHpCon(str) {
+  const s = safeStr(str);
+  const m = s.match(/^\s*(\d+)\s*\/\s*(\d+)\s*$/);
+  if (!m) return { hp: undefined, con: undefined };
+  return { hp: Number(m[1]), con: Number(m[2]) };
+}
+
+function normalizeCardShape(card) {
+  // Minimal normalization to match your card library expectations
+  return {
+    id: safeStr(card.id) || generateId(),
+    name: safeStr(card.name),
+    type: safeStr(card.type) || "Misc",
+    setName: safeStr(card.setName),
+    cardNumber: safeStr(card.cardNumber),
+    rarity: safeStr(card.rarity),
+    vehicleTypes: Array.isArray(card.vehicleTypes) ? card.vehicleTypes : [],
+    tags: Array.isArray(card.tags) ? card.tags : [],
+    imageUrl: safeStr(card.imageUrl),
+    notes: safeStr(card.notes),
+    extra: card.extra && typeof card.extra === "object" ? card.extra : {},
+    prints: Array.isArray(card.prints) ? card.prints : []
+  };
+}
+
+/************************************************************
+ * Set tokenization for filtering
+ ************************************************************/
 function setTokens(setStr) {
   const raw = safeStr(setStr);
   if (!raw) return [];
@@ -67,14 +100,11 @@ function setTokens(setStr) {
   const parts = raw.split(/&|,|;|\+|\//).map(s => s.trim()).filter(Boolean);
   const out = [];
 
-  for (let p of parts.length ? parts : [raw]) {
+  for (let p of (parts.length ? parts : [raw])) {
     p = p.replace(/\s+/g, " ").trim();
-
     if (/^\d+$/.test(p)) p = `SET ${p}`;
     p = p.replace(/^set\s*(\d+)$/i, (_, n) => `SET ${n}`);
-    p = p.toUpperCase();
-
-    out.push(p);
+    out.push(p.toUpperCase());
   }
 
   return Array.from(new Set(out));
@@ -104,16 +134,9 @@ function inferTypeFromSheetName(sheetName) {
   return "Misc";
 }
 
-function rowArrayFromSheet(sheet, firstRowHeader = true) {
+function rowArrayFromSheet(sheet) {
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: "" });
   if (!rows.length) return { headers: [], data: [] };
-
-  if (!firstRowHeader) {
-    const colCount = Math.max(...rows.map(r => r.length));
-    const headers = Array.from({ length: colCount }, (_, i) => `COL_${i + 1}`);
-    return { headers, data: rows };
-  }
-
   const headers = rows[0].map(h => safeStr(h));
   const data = rows.slice(1);
   return { headers, data };
@@ -161,7 +184,7 @@ function mapRowToCard(sheetType, headers, row) {
     const hpConStr = pick(row, map, "hpcon", "hp/con", "hp", "hitpoints");
     const hpCon = hpConStr && hpConStr.includes("/")
       ? parseHpCon(hpConStr)
-      : { hp: hpConStr ? Number(hpConStr) || undefined : undefined };
+      : { hp: hpConStr ? Number(hpConStr) || undefined : undefined, con: undefined };
 
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
@@ -201,7 +224,7 @@ function parseWorkbookToCards(workbook) {
     if (!sheet) return;
 
     const sheetType = inferTypeFromSheetName(sheetName);
-    const { headers, data } = rowArrayFromSheet(sheet, true);
+    const { headers, data } = rowArrayFromSheet(sheet);
     if (!headers.length || !data.length) return;
 
     data.forEach(row => {
@@ -279,10 +302,7 @@ function getViewedCards() {
 }
 
 function renderFilters() {
-  if (!Dom.bulkTypeFilter || !Dom.bulkSetFilter) {
-    console.warn("[bulk] Missing bulkTypeFilter or bulkSetFilter");
-    return;
-  }
+  if (!Dom.bulkTypeFilter || !Dom.bulkSetFilter) return;
 
   const types = getAllTypes(parsedCards);
   Dom.bulkTypeFilter.innerHTML = "";
@@ -307,11 +327,7 @@ function renderFilters() {
 }
 
 function renderSelectionList() {
-  if (!Dom.bulkSelectionList) {
-    console.warn("[bulk] Missing bulkSelectionList");
-    return;
-  }
-
+  if (!Dom.bulkSelectionList) return;
   const list = Dom.bulkSelectionList;
   list.innerHTML = "";
 
@@ -357,10 +373,7 @@ function renderSelectionList() {
 }
 
 function renderSelectedPreview() {
-  if (!Dom.bulkSelectedPreview) {
-    console.warn("[bulk] Missing bulkSelectedPreview");
-    return;
-  }
+  if (!Dom.bulkSelectedPreview) return;
 
   const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
   if (!selected.length) {
@@ -383,14 +396,23 @@ function clearBulkSession() {
   selectedCardIds.clear();
 
   setStatus("Waiting for file…");
-
   if (Dom.bulkSelectionList) Dom.bulkSelectionList.innerHTML = "";
   if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "";
   if (Dom.bulkTypeFilter) Dom.bulkTypeFilter.innerHTML = "";
   if (Dom.bulkSetFilter) Dom.bulkSetFilter.innerHTML = "";
 }
 
-function importSelectedIntoLibrary() {
+async function tryRefreshSingleUi() {
+  // If single.js is healthy, refresh it. If not, don't block bulk.
+  try {
+    const m = await import("./single.js");
+    m?.refreshSingleUi?.();
+  } catch (e) {
+    console.warn("[bulk] Could not refresh Single UI (single.js may be broken).", e);
+  }
+}
+
+async function importSelectedIntoLibrary() {
   if (!parsedCards.length) {
     setStatus("Nothing parsed yet.");
     return;
@@ -417,7 +439,7 @@ function importSelectedIntoLibrary() {
   });
 
   setStatus(`Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`);
-  refreshSingleUi();
+  await tryRefreshSingleUi();
 }
 
 /************************************************************
@@ -432,7 +454,7 @@ function handleLoadAndParseXlsx() {
 
   if (typeof XLSX === "undefined") {
     setStatus("XLSX library is not loaded. Check the xlsx.full.min.js script tag in admin.html.");
-    console.error("[bulk] XLSX is undefined. Did the CDN load? Is it blocked by CSP/adblock/offline?");
+    console.error("[bulk] XLSX is undefined. CDN blocked/offline/CSP?");
     return;
   }
 
@@ -443,11 +465,8 @@ function handleLoadAndParseXlsx() {
     try {
       const data = e.target.result;
       const workbook = XLSX.read(data, { type: "array" });
-      const cards = parseWorkbookToCards(workbook);
+      parsedCards = parseWorkbookToCards(workbook);
 
-      parsedCards = cards;
-
-      // Select all by default
       selectedCardIds = new Set(parsedCards.map(c => c.id));
 
       renderFilters();
@@ -461,10 +480,7 @@ function handleLoadAndParseXlsx() {
     }
   };
 
-  reader.onerror = () => {
-    setStatus("Could not read file.");
-  };
-
+  reader.onerror = () => setStatus("Could not read file.");
   reader.readAsArrayBuffer(file);
 }
 
@@ -474,74 +490,38 @@ function handleLoadAndParseXlsx() {
 export function initBulk() {
   console.log("[bulk] initBulk called. XLSX available?", typeof XLSX !== "undefined");
 
-  if (!Dom.bulkFileInput) console.warn("[bulk] Missing bulkFileInput");
-  if (!Dom.bulkLoadBtn) console.warn("[bulk] Missing bulkLoadBtn");
+  // Auto-parse when file selected
+  Dom.bulkFileInput?.addEventListener("change", () => {
+    const f = Dom.bulkFileInput.files?.[0];
+    if (!f) return setStatus("Waiting for file…");
+    handleLoadAndParseXlsx();
+  });
 
-  // ✅ Auto-parse when file selected
-  if (Dom.bulkFileInput) {
-    Dom.bulkFileInput.addEventListener("change", () => {
-      const f = Dom.bulkFileInput.files?.[0];
-      if (!f) {
-        setStatus("Waiting for file…");
-        return;
-      }
-      handleLoadAndParseXlsx();
-    });
-  }
-
-  // Optional manual button (re-parse)
-  if (Dom.bulkLoadBtn) {
-    Dom.bulkLoadBtn.addEventListener("click", handleLoadAndParseXlsx);
-  }
+  // Manual parse button
+  Dom.bulkLoadBtn?.addEventListener("click", handleLoadAndParseXlsx);
 
   // Filters
-  if (Dom.bulkTypeFilter) {
-    Dom.bulkTypeFilter.addEventListener("change", () => {
-      renderSelectionList();
-      renderSelectedPreview();
-    });
-  }
-  if (Dom.bulkSetFilter) {
-    Dom.bulkSetFilter.addEventListener("change", () => {
-      renderSelectionList();
-      renderSelectedPreview();
-    });
-  }
-  if (Dom.bulkFilterInput) {
-    Dom.bulkFilterInput.addEventListener("input", () => {
-      renderSelectionList();
-      renderSelectedPreview();
-    });
-  }
+  Dom.bulkTypeFilter?.addEventListener("change", () => { renderSelectionList(); renderSelectedPreview(); });
+  Dom.bulkSetFilter?.addEventListener("change", () => { renderSelectionList(); renderSelectedPreview(); });
+  Dom.bulkFilterInput?.addEventListener("input", () => { renderSelectionList(); renderSelectedPreview(); });
 
   // Select/Deselect viewed
-  if (Dom.bulkSelectAllViewedBtn) {
-    Dom.bulkSelectAllViewedBtn.addEventListener("click", () => {
-      const viewed = getViewedCards();
-      viewed.forEach(c => selectedCardIds.add(c.id));
-      renderSelectionList();
-      renderSelectedPreview();
-    });
-  }
+  Dom.bulkSelectAllViewedBtn?.addEventListener("click", () => {
+    getViewedCards().forEach(c => selectedCardIds.add(c.id));
+    renderSelectionList();
+    renderSelectedPreview();
+  });
 
-  if (Dom.bulkDeselectAllViewedBtn) {
-    Dom.bulkDeselectAllViewedBtn.addEventListener("click", () => {
-      const viewed = getViewedCards();
-      viewed.forEach(c => selectedCardIds.delete(c.id));
-      renderSelectionList();
-      renderSelectedPreview();
-    });
-  }
+  Dom.bulkDeselectAllViewedBtn?.addEventListener("click", () => {
+    getViewedCards().forEach(c => selectedCardIds.delete(c.id));
+    renderSelectionList();
+    renderSelectedPreview();
+  });
 
-  // Import / clear session
-  if (Dom.bulkImportSelectedBtn) {
-    Dom.bulkImportSelectedBtn.addEventListener("click", importSelectedIntoLibrary);
-  }
-  if (Dom.bulkClearSessionBtn) {
-    Dom.bulkClearSessionBtn.addEventListener("click", clearBulkSession);
-  }
+  // Import / clear
+  Dom.bulkImportSelectedBtn?.addEventListener("click", importSelectedIntoLibrary);
+  Dom.bulkClearSessionBtn?.addEventListener("click", clearBulkSession);
 
-  // Initial empty state
   if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
   setStatus("Waiting for file…");
 }
