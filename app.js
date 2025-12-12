@@ -1,31 +1,9 @@
 // app.js
 // Orchestrator: nav, modal, exports, and bootstrapping modules.
+// IMPORTANT: Uses dynamic imports so one broken module can't kill the whole admin.
 
 import { downloadJson, loadCards } from "./state.js";
 import { Dom } from "./dom.js";
-import { initSingle, refreshSingleUi, getCardsForExport } from "./single.js";
-import { initBulk } from "./bulk.js";
-import { initPrecons, loadPrecons } from "./precons.js";
-import { initHelp } from "./help.js";
-
-/************************************************************
- * Tiny safety helpers (prevents one crash from killing the app)
- ************************************************************/
-function safeOn(el, evt, fn, label = "handler") {
-  if (!el) {
-    console.warn(`[admin] Missing DOM element for ${label}`);
-    return;
-  }
-  el.addEventListener(evt, fn);
-}
-
-function safeInit(name, fn) {
-  try {
-    fn();
-  } catch (err) {
-    console.error(`[admin] ${name} failed to init:`, err);
-  }
-}
 
 /************************************************************
  * Navigation & Sections
@@ -59,93 +37,96 @@ function showSection(which) {
 }
 
 function initNav() {
-  safeOn(Dom.navSingleBtn, "click", () => showSection("single"), "navSingleBtn");
-  safeOn(Dom.navBulkBtn, "click", () => showSection("bulk"), "navBulkBtn");
-  safeOn(Dom.navPreconsBtn, "click", () => showSection("precons"), "navPreconsBtn");
-  safeOn(Dom.navHelpBtn, "click", () => showSection("help"), "navHelpBtn");
+  Dom.navSingleBtn?.addEventListener("click", () => showSection("single"));
+  Dom.navBulkBtn?.addEventListener("click", () => showSection("bulk"));
+  Dom.navPreconsBtn?.addEventListener("click", () => showSection("precons"));
+  Dom.navHelpBtn?.addEventListener("click", () => showSection("help"));
 }
 
 /************************************************************
  * Modal (shared)
  ************************************************************/
 function initModal() {
-  safeOn(
-    Dom.modalBackdrop,
-    "click",
-    (e) => {
-      if (e.target === Dom.modalBackdrop) {
-        Dom.modalBackdrop.classList.remove("active");
-      }
-    },
-    "modalBackdrop"
-  );
+  Dom.modalBackdrop?.addEventListener("click", (e) => {
+    if (e.target === Dom.modalBackdrop) {
+      Dom.modalBackdrop.classList.remove("active");
+    }
+  });
 }
 
 /************************************************************
  * Global Download Buttons
  ************************************************************/
-function initExportButtons() {
-  safeOn(
-    Dom.downloadCardsJsonBtn,
-    "click",
-    () => downloadJson(getCardsForExport(), "drive-card.json"),
-    "downloadCardsJsonBtn"
-  );
+function initExportButtons(getCardsForExport) {
+  // Cards export (top + single)
+  Dom.downloadCardsJsonBtn?.addEventListener("click", () => {
+    downloadJson(getCardsForExport(), "drive-card.json");
+  });
+  Dom.downloadCardsJsonBtn_single?.addEventListener("click", () => {
+    downloadJson(getCardsForExport(), "drive-card.json");
+  });
 
-  safeOn(
-    Dom.downloadCardsJsonBtn_single,
-    "click",
-    () => downloadJson(getCardsForExport(), "drive-card.json"),
-    "downloadCardsJsonBtn_single"
-  );
+  // Precon export is wired in precons.js in your setup; keep this noop-safe if button exists
+  Dom.downloadPreconsJsonBtn?.addEventListener("click", () => {
+    // precons.js may override / handle export; if not, you can add it later
+    console.warn("[admin] Precon export clicked. If nothing happens, wire it in precons.js/state.js.");
+  });
+}
 
-  // (Precon export button is in HTML; wire it here only if Dom has it.)
-  safeOn(
-    Dom.downloadPreconsJsonBtn,
-    "click",
-    () => {
-      // precons.js/state.js likely handles this; if you already wire elsewhere, remove.
-      console.warn("[admin] downloadPreconsJsonBtn clicked but no handler is defined here.");
-    },
-    "downloadPreconsJsonBtn"
-  );
+/************************************************************
+ * Safe dynamic import helper
+ ************************************************************/
+async function safeImport(path, label) {
+  try {
+    return await import(path);
+  } catch (err) {
+    console.error(`[admin] Failed to import ${label} (${path}):`, err);
+    return null;
+  }
 }
 
 /************************************************************
  * Kick everything off
  ************************************************************/
 (async function init() {
-  // Always wire nav/modal/export first (so UI isn't “dead”)
-  safeInit("initNav", initNav);
-  safeInit("initModal", initModal);
-  safeInit("initExportButtons", initExportButtons);
+  // UI wiring first
+  initNav();
+  initModal();
 
-  // Load core data early so downstream modules can build filters, etc.
+  // Load core data early
   try {
     await loadCards();
   } catch (err) {
     console.error("[admin] loadCards failed:", err);
   }
 
-  // Now init feature modules — isolated so one failure won't kill the rest
-  safeInit("initSingle", initSingle);
-  safeInit("initBulk", initBulk);
-  safeInit("initPrecons", initPrecons);
-  safeInit("initHelp", initHelp);
+  // Import modules independently so one failure doesn't break the rest
+  const singleMod  = await safeImport("./single.js", "single");
+  const bulkMod    = await safeImport("./bulk.js", "bulk");
+  const preconsMod = await safeImport("./precons.js", "precons");
+  const helpMod    = await safeImport("./help.js", "help");
 
-  // Refresh UI (safe)
-  try {
-    refreshSingleUi();
-  } catch (err) {
-    console.error("[admin] refreshSingleUi failed:", err);
-  }
+  // Init modules (each guarded)
+  try { singleMod?.initSingle?.(); } catch (e) { console.error("[admin] initSingle failed:", e); }
+  try { bulkMod?.initBulk?.(); } catch (e) { console.error("[admin] initBulk failed:", e); }
+  try { preconsMod?.initPrecons?.(); } catch (e) { console.error("[admin] initPrecons failed:", e); }
+  try { helpMod?.initHelp?.(); } catch (e) { console.error("[admin] initHelp failed:", e); }
 
-  // Load precons (safe)
-  try {
-    await loadPrecons();
-  } catch (err) {
-    console.error("[admin] loadPrecons failed:", err);
-  }
+  // Exports need getCardsForExport — provide a safe fallback if single.js is broken
+  const getCardsForExport =
+    singleMod?.getCardsForExport
+    || (() => {
+      console.warn("[admin] getCardsForExport unavailable (single.js failed). Export may not work.");
+      return [];
+    });
+
+  initExportButtons(getCardsForExport);
+
+  // Refresh UI safely
+  try { singleMod?.refreshSingleUi?.(); } catch (e) { console.error("[admin] refreshSingleUi failed:", e); }
+
+  // Load precons safely
+  try { await preconsMod?.loadPrecons?.(); } catch (e) { console.error("[admin] loadPrecons failed:", e); }
 
   // Default view
   showSection("single");
