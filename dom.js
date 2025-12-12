@@ -14,62 +14,18 @@ export const Dom = {
   preconsSection: document.getElementById("preconsSection"),
   helpSection: document.getElementById("helpSection"),
 
-  // Single card form
-  cardIdInput: document.getElementById("cardIdInput"),
-  cardNameInput: document.getElementById("cardNameInput"),
-  cardTypeInput: document.getElementById("cardTypeInput"),
-  cardSetNameInput: document.getElementById("cardSetNameInput"),
-  cardNumberInput: document.getElementById("cardNumberInput"),
-  cardRarityInput: document.getElementById("cardRarityInput"),
-  cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
-  cardTagsInput: document.getElementById("cardTagsInput"),
-  cardImageUrlInput: document.getElementById("cardImageUrlInput"),
-
-  modBasePartInput: document.getElementById("modBasePartInput"),
-  modL1Input: document.getElementById("modL1Input"),
-  modL2Input: document.getElementById("modL2Input"),
-  modL3Input: document.getElementById("modL3Input"),
-  modL4Input: document.getElementById("modL4Input"),
-
-  vehicleHpConInput: document.getElementById("vehicleHpConInput"),
-  vehiclePitCostInput: document.getElementById("vehiclePitCostInput"),
-
-  cardNotesInput: document.getElementById("cardNotesInput"),
-
-  printSetSelect: document.getElementById("printSetSelect"),
-  printCustomSetInput: document.getElementById("printCustomSetInput"),
-  printCardNumberInput: document.getElementById("printCardNumberInput"),
-  printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
-  printClearAllBtn: document.getElementById("printClearAllBtn"),
-  printsList: document.getElementById("printsList"),
-
-  singleSaveBtn: document.getElementById("singleSaveBtn"),
-  singleNewBtn: document.getElementById("singleNewBtn"),
-  singleDeleteBtn: document.getElementById("singleDeleteBtn"),
-  singleStatus: document.getElementById("singleStatus"),
-
-  singlePreview: document.getElementById("singlePreview"),
-  cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
-  cardLibraryList: document.getElementById("cardLibraryList"),
-  libraryCount: document.getElementById("libraryCount"),
-
-  /************************************************************
-   * Bulk import (new 3-step XLSX flow)
-   ************************************************************/
-  bulkFileInput: document.getElementById("bulkFileInput"),
+  // Bulk (patched)
+  bulkMasterFileInput: document.getElementById("bulkMasterFileInput"),
   bulkStatus: document.getElementById("bulkStatus"),
 
-  bulkFilterTypeSelect: document.getElementById("bulkFilterTypeSelect"),
-  bulkFilterSetSelect: document.getElementById("bulkFilterSetSelect"),
-
+  bulkTypeFilterSelect: document.getElementById("bulkTypeFilterSelect"),
+  bulkSetFilterSelect: document.getElementById("bulkSetFilterSelect"),
   bulkSelectAllViewedBtn: document.getElementById("bulkSelectAllViewedBtn"),
   bulkDeselectAllViewedBtn: document.getElementById("bulkDeselectAllViewedBtn"),
-
-  bulkSelectionList: document.getElementById("bulkSelectionList"),
+  bulkCardsList: document.getElementById("bulkCardsList"),
   bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
-
   bulkImportBtn: document.getElementById("bulkImportBtn"),
-  bulkClearSessionBtn: document.getElementById("bulkClearSessionBtn"),
+  bulkClearBtn: document.getElementById("bulkClearBtn"),
 
   // Precons
   preconGrid: document.getElementById("preconGrid"),
