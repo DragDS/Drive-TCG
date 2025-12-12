@@ -40,11 +40,7 @@
       --chip-bg-key: rgba(255,166,63,0.16);
       --chip-border: rgba(255,255,255,0.18);
       --chip-border-key: rgba(255,166,63,0.8);
-      --pill-bg: rgba(0,0,0,0.4);
-      --outline-soft: rgba(255,255,255,0.06);
-      --outline-strong: rgba(255,255,255,0.2);
       --shadow-soft: 0 18px 40px rgba(0,0,0,0.85);
-      --shadow-heavy: 0 26px 70px rgba(0,0,0,0.95);
       --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
                    Roboto, "Helvetica Neue", Arial, sans-serif;
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -165,7 +161,6 @@
       box-shadow: var(--accent-glow);
     }
     .btn.secondary { background: rgba(255,255,255,0.04); }
-    .btn.green { background: var(--ok-soft); border-color: var(--ok-border); color: var(--ok); }
     .btn.danger { background: var(--danger-soft); border-color: var(--danger-border); color: var(--danger); }
     .btn-ghost { background: transparent; border-style: dashed; border-color: rgba(255,255,255,0.24); }
     .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.32); background: rgba(26,28,42,0.95); }
@@ -248,7 +243,6 @@
     }
 
     .nav-tab {
-      position: relative;
       border: none;
       background: transparent;
       padding: 6px 10px;
@@ -261,7 +255,6 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      transition: color 0.14s ease, background 0.14s ease, transform 0.05s ease;
     }
     .nav-tab .bullet { width: 6px; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.16); }
     .nav-tab.active { background: rgba(255,255,255,0.06); color: var(--accent-muted); }
@@ -286,16 +279,10 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      min-width: 0;
     }
 
-    .field-card-label {
-      display:flex;
-      justify-content: space-between;
-      align-items:flex-start;
-      gap:8px;
-      margin-bottom:4px;
-    }
-
+    .field-card-label { display:flex; justify-content: space-between; align-items:flex-start; gap:8px; margin-bottom:4px; }
     .field-card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 2px; }
     .field-card-subtitle { font-size: 11px; color: var(--text-soft); }
 
@@ -311,7 +298,8 @@
     .field-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
     .field-grid.full { grid-template-columns: minmax(0, 1fr); }
 
-    .field { display:flex; flex-direction:column; gap:3px; }
+    .field { display:flex; flex-direction:column; gap:3px; min-width:0; }
+
     .field-label {
       font-size: 10px;
       text-transform: uppercase;
@@ -322,7 +310,7 @@
       align-items: baseline;
       gap:6px;
     }
-    .field-required::after { content:"•"; margin-left:4px; color: var(--accent); }
+
     .hint { font-size: 10px; color: var(--text-softer); }
 
     .input, textarea, select {
@@ -332,15 +320,17 @@
       background: var(--input-bg);
       border-radius: 10px;
       border: 1px solid var(--input-border);
-      padding: 5px 8px;
+      padding: 6px 9px;
       outline: none;
       transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+      min-width: 0;
     }
     .input:focus, textarea:focus, select:focus {
       border-color: var(--input-border-focus);
       box-shadow: var(--input-shadow-focus);
       background: #15182a;
     }
+
     textarea { min-height: 68px; resize: vertical; }
     .input-mono { font-family: var(--font-mono); font-size: 11px; }
 
@@ -349,14 +339,14 @@
       align-items:center;
       padding: 2px 7px;
       border-radius: 999px;
-      background: var(--chip-bg);
-      border: 1px solid var(--chip-border);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
       font-size: 10px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--text-soft);
     }
-    .chip.key { background: var(--chip-bg-key); border-color: var(--chip-border-key); color: var(--accent-muted); }
+    .chip.key { background: rgba(255,166,63,0.16); border-color: rgba(255,166,63,0.8); color: var(--accent-muted); }
 
     .card-preview {
       display:flex;
@@ -370,107 +360,12 @@
       border: 1px solid rgba(255,255,255,0.15);
       box-shadow: 0 20px 60px rgba(0,0,0,0.9);
     }
-    .card-preview-header { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
     .card-preview-header h2 { font-size: 15px; margin: 0; }
     .meta-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; font-size: 11px; color: var(--text-soft); }
-    .card-preview-body { display:grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr); gap:8px; align-items:stretch; }
-    .card-preview-img {
-      border-radius:12px;
-      border: 1px dashed rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.4);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:6px;
-      font-size:11px;
-      text-align:center;
-      color: var(--text-softer);
-    }
-    .card-preview-img img { max-width:100%; border-radius:10px; display:block; }
-    .notes-area {
-      border-radius:10px;
-      padding:6px 8px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size:11px;
-      color: var(--text-main);
-      min-height:52px;
-      white-space:pre-wrap;
-    }
-    .card-preview-footer { border-top: 1px dashed rgba(255,255,255,0.18); padding-top:6px; font-size:11px; color: var(--text-soft); }
 
-    .single-status { font-size: 11px; color: var(--text-softer); margin-top: 4px; }
-
-    .library-panel {
-      margin-top: 8px;
-      border-radius: 12px;
-      padding: 8px;
-      background: rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.12);
-      display:flex;
-      flex-direction:column;
-      gap:6px;
-    }
-    .library-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-    .library-header-left { display:flex; flex-direction:column; gap:2px; }
-    .library-title { font-size:11px; text-transform:uppercase; letter-spacing:0.16em; }
-    .library-count { font-size:10px; color: var(--text-softer); }
-    .library-search { min-width: 180px; }
-
-    .library-list {
-      list-style:none;
-      margin:0;
-      padding:0;
-      max-height: 240px;
-      overflow:auto;
-      border-radius:10px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.04), transparent 60%),
-        linear-gradient(160deg, rgba(5,5,12,0.95), rgba(4,4,10,0.98));
-    }
-    .library-item {
-      padding:5px 8px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      cursor:pointer;
-      transition: background 0.12s ease, transform 0.05s ease;
-    }
-    .library-item:last-child { border-bottom:none; }
-    .library-item:hover { background: rgba(255,255,255,0.05); transform: translateY(-1px); }
-    .library-item .header { display:flex; justify-content:space-between; align-items:baseline; gap:6px; }
-    .library-item .title { font-size: 12px; }
-    .library-item .chips { display:flex; flex-wrap:wrap; gap:3px; }
-    .library-item .sub { font-size: 10px; color: var(--text-softer); margin-top:2px; }
-
-    .prints-row { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
-    .prints-controls { display:grid; grid-template-columns: 1.1fr 0.7fr auto; gap:6px; }
-    .prints-actions { display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:10px; color: var(--text-softer); }
-    .prints-list {
-      list-style:none;
-      margin:0;
-      padding:4px 6px 4px;
-      border-radius:10px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.12);
-      font-size: 11px;
-      max-height: 100px;
-      overflow:auto;
-    }
-    .prints-list li { padding:2px 0; cursor:pointer; }
-    .prints-list li:hover { text-decoration: line-through; color: var(--danger); }
-
-    .bulk-layout {
-      display:grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-      gap:10px;
-    }
-    .bulk-editor {
-      min-height: 180px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      line-height: 1.4;
-    }
+    .bulk-layout { display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap:10px; }
     .bulk-status { font-size: 11px; color: var(--text-soft); margin-top:4px; }
+
     .bulk-preview {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -482,6 +377,25 @@
       overflow:auto;
       white-space: pre;
     }
+
+    .scroll-box {
+      border-radius:10px;
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.12);
+      overflow:auto;
+      padding:6px;
+      /* Prevent “infinite” height: constrain to viewport */
+      max-height: calc(100vh - 360px);
+      min-height: 220px;
+    }
+
+    .list-plain {
+      list-style:none;
+      padding:0;
+      margin:0;
+    }
+    .list-plain li { padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .list-plain li:last-child { border-bottom:none; }
 
     .precon-grid {
       display:grid;
@@ -515,11 +429,7 @@
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: 0 24px 80px rgba(0,0,0,0.95);
       padding: 12px 14px 10px;
-      transform: translateY(6px);
-      opacity: 0;
-      transition: all 0.18s ease-out;
     }
-    .modal-backdrop.active .modal { transform: translateY(0); opacity: 1; }
     .modal-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
     .modal-header h3 { margin:0; font-size:13px; letter-spacing:0.18em; text-transform:uppercase; }
     .modal-body { font-size:12px; color: var(--text-soft); margin-bottom:8px; }
@@ -528,13 +438,7 @@
     @media (max-width: 980px) {
       .form-layout { grid-template-columns: minmax(0, 1fr); }
       .bulk-layout { grid-template-columns: minmax(0, 1fr); }
-    }
-
-    @media (max-width: 720px) {
-      .app-header-main { flex-direction: column; align-items: flex-start; }
-      .app-actions { justify-content: flex-start; }
-      .library-header { flex-direction: column; align-items: flex-start; }
-      .library-search { width: 100%; }
+      .scroll-box { max-height: 46vh; }
     }
   </style>
 </head>
@@ -595,31 +499,29 @@
 
         <div class="panel-body">
           <!-- ===========================
-               SINGLE CARD (PATCHED)
+               SINGLE CARD
                =========================== -->
           <section id="singleSection" class="section active">
+            <!-- Your existing Single UI can live here; we keep required IDs for single.js -->
             <div class="form-layout">
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Single Card Editor</div>
-                    <div class="field-card-subtitle">
-                      Edit the core data for a single card, then export the full <code>drive-card.json</code>.
-                    </div>
+                    <div class="field-card-subtitle">Edit one card, save/update, export JSON.</div>
                   </div>
-                  <div class="badge"><span class="badge-dot"></span><span>Live Preview</span></div>
                 </div>
 
                 <div class="field-grid">
                   <div class="field">
-                    <label class="field-label"><span class="field-required">Card Name</span><span class="hint">e.g. LUCKY CHARM</span></label>
-                    <input id="cardNameInput" class="input" type="text" placeholder="e.g. LUCKY CHARM" />
+                    <label class="field-label"><span>Name</span><span class="hint">Card title</span></label>
+                    <input id="cardNameInput" class="input" type="text" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span class="field-required">Type</span><span class="hint">Crew / Driver / Mod / Vehicle…</span></label>
+                    <label class="field-label"><span>Type</span><span class="hint">Crew / Driver / Mod...</span></label>
                     <select id="cardTypeInput" class="input">
-                      <option value="">Select a type…</option>
+                      <option value="">Select…</option>
                       <option value="Crew">Crew</option>
                       <option value="Driver">Driver</option>
                       <option value="Named Driver">Named Driver</option>
@@ -633,109 +535,106 @@
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span class="field-required">Set Name</span><span class="hint">Displayed set</span></label>
-                    <input id="cardSetNameInput" class="input input-mono" type="text" placeholder="e.g. Set 1, Set 2" />
+                    <label class="field-label"><span>Set</span></label>
+                    <input id="cardSetNameInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span class="field-required">Card Number</span><span class="hint">Numeric or alphanumeric</span></label>
-                    <input id="cardNumberInput" class="input input-mono" type="text" placeholder="e.g. 001, FD-03" />
+                    <label class="field-label"><span>Card #</span></label>
+                    <input id="cardNumberInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span>Rarity</span><span class="hint">Common, Uncommon…</span></label>
-                    <input id="cardRarityInput" class="input input-mono" type="text" placeholder="e.g. Common" />
+                    <label class="field-label"><span>Rarity</span></label>
+                    <input id="cardRarityInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span>Image URL</span><span class="hint">Path or URL to art</span></label>
-                    <input id="cardImageUrlInput" class="input input-mono" type="text" placeholder="e.g. /img/cards/lucky_charm.png" />
+                    <label class="field-label"><span>Image URL</span></label>
+                    <input id="cardImageUrlInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
-                    <label class="field-label"><span>Vehicle Types</span><span class="hint">Comma-separated</span></label>
-                    <input id="cardVehicleTypesInput" class="input input-mono" type="text" placeholder="e.g. Drag, Drift" />
+                    <label class="field-label"><span>Vehicle Types</span></label>
+                    <input id="cardVehicleTypesInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field">
-                    <label class="field-label"><span>Tags</span><span class="hint">Comma-separated keywords</span></label>
-                    <input id="cardTagsInput" class="input input-mono" type="text" placeholder="e.g. Junkyard, Sponsor" />
+                    <label class="field-label"><span>Tags</span></label>
+                    <input id="cardTagsInput" class="input input-mono" type="text" />
                   </div>
 
-                  <!-- MOD BASE PART + LEVELS (PATCH) -->
+                  <!-- MOD FIELDS (the patch you needed) -->
                   <div class="field" data-for-types="Mod">
-                    <label class="field-label"><span>Mod Base Part</span><span class="hint">e.g. Engine, Headers</span></label>
-                    <input id="modBasePartInput" class="input input-mono" type="text" placeholder="Engine, Headers, Brakes…" />
-                  </div>
-
-                  <div class="field" data-for-types="Mod">
-                    <label class="field-label"><span>Mod Level 1</span><span class="hint">#/# or -</span></label>
-                    <input id="modL1Input" class="input input-mono" type="text" placeholder="e.g. 1/2 or -" />
+                    <label class="field-label"><span>Base Part</span><span class="hint">Mod only</span></label>
+                    <input id="modBasePartInput" class="input input-mono" type="text" />
                   </div>
 
                   <div class="field" data-for-types="Mod">
-                    <label class="field-label"><span>Mod Level 2</span><span class="hint">#/# or -</span></label>
-                    <input id="modL2Input" class="input input-mono" type="text" placeholder="e.g. 2/2 or -" />
+                    <label class="field-label"><span>Level 1</span><span class="hint">#/# or -</span></label>
+                    <input id="modL1Input" class="input input-mono" type="text" placeholder="1/2 or -" />
                   </div>
 
                   <div class="field" data-for-types="Mod">
-                    <label class="field-label"><span>Mod Level 3</span><span class="hint">#/# or -</span></label>
-                    <input id="modL3Input" class="input input-mono" type="text" placeholder="e.g. 3/3 or -" />
+                    <label class="field-label"><span>Level 2</span><span class="hint">#/# or -</span></label>
+                    <input id="modL2Input" class="input input-mono" type="text" placeholder="2/2 or -" />
                   </div>
 
                   <div class="field" data-for-types="Mod">
-                    <label class="field-label"><span>Mod Level 4</span><span class="hint">#/# or -</span></label>
-                    <input id="modL4Input" class="input input-mono" type="text" placeholder="e.g. 5/3 or -" />
+                    <label class="field-label"><span>Level 3</span><span class="hint">#/# or -</span></label>
+                    <input id="modL3Input" class="input input-mono" type="text" placeholder="3/3 or -" />
                   </div>
 
-                  <!-- VEHICLE STATS -->
+                  <div class="field" data-for-types="Mod">
+                    <label class="field-label"><span>Level 4</span><span class="hint">#/# or -</span></label>
+                    <input id="modL4Input" class="input input-mono" type="text" placeholder="5/3 or -" />
+                  </div>
+
                   <div class="field" data-for-types="Vehicle,Named Vehicle">
-                    <label class="field-label"><span>Vehicle Stats</span><span class="hint">Vehicle-only</span></label>
-                    <div class="field-grid">
-                      <div class="field">
-                        <label class="field-label"><span>HP / CON</span><span class="hint">e.g. 3/2</span></label>
-                        <input id="vehicleHpConInput" class="input input-mono" type="text" placeholder="e.g. 3/2" />
-                      </div>
-                      <div class="field">
-                        <label class="field-label"><span>Pit Cost</span><span class="hint">Numeric</span></label>
-                        <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" placeholder="e.g. 2" />
-                      </div>
-                    </div>
+                    <label class="field-label"><span>HP/CON</span></label>
+                    <input id="vehicleHpConInput" class="input input-mono" type="text" placeholder="3/2" />
+                  </div>
+
+                  <div class="field" data-for-types="Vehicle,Named Vehicle">
+                    <label class="field-label"><span>Pit Cost</span></label>
+                    <input id="vehiclePitCostInput" class="input input-mono" type="number" min="0" step="1" />
                   </div>
                 </div>
 
                 <div class="field">
-                  <label class="field-label"><span>Card Notes / Rules Text</span><span class="hint">Full rules text; preview on right.</span></label>
-                  <textarea id="cardNotesInput" class="input input-mono" placeholder="Enter the card's full rules text..."></textarea>
+                  <label class="field-label"><span>Notes</span></label>
+                  <textarea id="cardNotesInput" class="input input-mono"></textarea>
                 </div>
 
                 <div class="field-card-footer">
-                  <div class="hint">ID is auto-assigned for new cards. For existing cards, ID matches updates.</div>
-                  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                    <input id="cardIdInput" class="input input-mono" type="text" placeholder="(auto)" style="max-width: 180px;" />
-                    <button id="singleSaveBtn" class="btn primary small" type="button">Save / Update Card</button>
-                    <button id="singleNewBtn" class="btn small btn-ghost" type="button">New Card</button>
-                    <button id="singleDeleteBtn" class="btn small danger" type="button">Delete Card</button>
+                  <div class="hint">Save updates into memory; export JSON to persist.</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <input id="cardIdInput" class="input input-mono" type="text" placeholder="(auto)" style="max-width:180px;" />
+                    <button id="singleSaveBtn" class="btn primary small" type="button">Save / Update</button>
+                    <button id="singleNewBtn" class="btn small btn-ghost" type="button">New</button>
+                    <button id="singleDeleteBtn" class="btn small danger" type="button">Delete</button>
                   </div>
                 </div>
 
-                <div class="single-status" id="singleStatus">Ready.</div>
+                <div id="singleStatus" class="bulk-status">Ready.</div>
               </div>
 
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Live Preview &amp; Prints</div>
-                    <div class="field-card-subtitle">Shows a structured view of the card plus associated prints.</div>
+                    <div class="field-card-title">Preview &amp; Library</div>
+                    <div class="field-card-subtitle">Click a library item to load it into the editor.</div>
                   </div>
                 </div>
 
                 <div id="singlePreview" class="card-preview"></div>
 
-                <div class="prints-row">
-                  <div class="prints-controls">
+                <!-- Prints controls (IDs required by single.js/dom.js) -->
+                <div style="margin-top:8px;" class="field-grid">
+                  <div class="field">
+                    <label class="field-label"><span>Print Set</span></label>
                     <select id="printSetSelect" class="input input-mono">
-                      <option value="">Select a set…</option>
+                      <option value="">Select…</option>
                       <option value="Set 1">Set 1</option>
                       <option value="Set 2">Set 2</option>
                       <option value="Set 3">Set 3</option>
@@ -744,32 +643,40 @@
                       <option value="Set 6">Set 6</option>
                       <option value="CUSTOM">Custom…</option>
                     </select>
-                    <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Custom set name" />
-                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="# number" />
                   </div>
-
-                  <div class="prints-actions">
-                    <button id="printSetPrimaryBtn" class="btn small" type="button">Set Last As Primary ★</button>
-                    <button id="printClearAllBtn" class="btn small btn-ghost" type="button">Clear Prints</button>
-                    <span class="hint">Click a print in the list below to remove it.</span>
+                  <div class="field">
+                    <label class="field-label"><span>Custom Set</span></label>
+                    <input id="printCustomSetInput" class="input input-mono" type="text" placeholder="Only if Custom…" />
                   </div>
-
-                  <ul id="printsList" class="prints-list"></ul>
+                  <div class="field">
+                    <label class="field-label"><span>Print Card #</span></label>
+                    <input id="printCardNumberInput" class="input input-mono" type="text" placeholder="001" />
+                  </div>
                 </div>
 
-                <div class="library-panel">
-                  <div class="library-header">
-                    <div class="library-header-left">
-                      <div class="library-title">Card Library</div>
-                      <div id="libraryCount" class="library-count">0 cards</div>
-                    </div>
-                    <input id="cardLibrarySearchInput" class="input input-mono library-search" type="text" placeholder="Filter by name, type, or tags…" />
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+                  <button id="printSetPrimaryBtn" class="btn small" type="button">Set Primary ★</button>
+                  <button id="printClearAllBtn" class="btn small btn-ghost" type="button">Clear Prints</button>
+                </div>
+
+                <div class="scroll-box" style="max-height: 160px; min-height: 90px; margin-top:6px;">
+                  <ul id="printsList" class="list-plain"></ul>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;">
+                  <div>
+                    <div class="field-card-title" style="margin:0;">Card Library</div>
+                    <div id="libraryCount" class="hint">0 cards</div>
                   </div>
-                  <ul id="cardLibraryList" class="library-list"></ul>
+                  <input id="cardLibrarySearchInput" class="input input-mono" type="text" placeholder="Search…" style="max-width: 240px;" />
+                </div>
+
+                <div class="scroll-box" style="margin-top:6px;">
+                  <ul id="cardLibraryList" class="list-plain"></ul>
                 </div>
 
                 <div class="field-card-footer">
-                  <div class="hint">Use the library to quickly locate cards to edit.</div>
+                  <div class="hint">Export from here too.</div>
                   <button id="downloadCardsJsonBtn_single" class="btn secondary small" type="button">Export Card JSON</button>
                 </div>
               </div>
@@ -777,123 +684,142 @@
           </section>
 
           <!-- ===========================
-               BULK IMPORT (kept)
+               BULK IMPORT (RESTORED / NOT REMOVED)
                =========================== -->
           <section id="bulkSection" class="section">
-            <!-- Your working bulk UI stays here (driven by your bulk.js + current markup) -->
-            <!-- KEEPING YOUR EXISTING BULK SECTION STRUCTURE/IDS -->
             <div class="bulk-layout">
+              <!-- Step 1 -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Bulk Import · Step 1</div>
-                    <div class="field-card-subtitle">Load the master spreadsheet and parse it.</div>
+                    <div class="field-card-subtitle">Load your master spreadsheet. Raw data stays hidden.</div>
                   </div>
-                  <div class="badge"><span class="badge-dot"></span><span>Spreadsheet-first</span></div>
+                  <div class="badge"><span class="badge-dot"></span><span>Spreadsheet</span></div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                   <input
                     id="bulkFileInput"
                     type="file"
                     accept=".csv,.tsv,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     style="font-size:11px;"
                   />
-                  <span class="hint">Choose your master XLSX (or CSV/TSV). Parser reads first sheet.</span>
+                  <button id="bulkParseBtn" class="btn primary small" type="button">Load &amp; Parse</button>
                 </div>
 
-                <!-- Hidden raw textarea still exists for bulk.js compatibility (you said you don’t want to see it) -->
-                <textarea id="bulkInput" class="input bulk-editor" style="display:none;"></textarea>
+                <!-- Hidden raw data input (bulk.js relies on this ID) -->
+                <textarea id="bulkInput" class="input input-mono" style="display:none;"></textarea>
 
-                <div class="field-grid" style="margin-top: 6px;">
+                <div class="field-grid" style="margin-top:8px;">
                   <div class="field">
                     <label class="field-label"><span>Delimiter</span></label>
                     <select id="bulkDelimiterSelect" class="input input-mono">
-                      <option value="auto">Auto-detect</option>
-                      <option value="comma">Comma (,)</option>
-                      <option value="tab">Tab (↹)</option>
-                      <option value="semicolon">Semicolon (;)</option>
-                      <option value="pipe">Pipe (|)</option>
+                      <option value="auto">Auto</option>
+                      <option value="comma">Comma</option>
+                      <option value="tab">Tab</option>
+                      <option value="semicolon">Semicolon</option>
+                      <option value="pipe">Pipe</option>
                     </select>
                   </div>
                   <div class="field">
-                    <label class="field-label"><span>Header</span></label>
-                    <label style="font-size:11px;color:var(--text-soft);display:flex;gap:8px;align-items:center;">
+                    <label class="field-label"><span>Header Row</span></label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-soft);">
                       <input id="bulkHasHeaderCheckbox" type="checkbox" checked />
-                      <span>First row is header</span>
+                      First row is header
                     </label>
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:6px;margin-top:6px;">
-                  <button id="bulkParseBtn" class="btn primary small" type="button">Step 1: Parse</button>
-                </div>
-
                 <div id="bulkStatus" class="bulk-status">Waiting for file…</div>
 
+                <!-- Keep preview element for compatibility, but hidden -->
                 <pre id="bulkPreview" class="bulk-preview" style="display:none;"></pre>
               </div>
 
+              <!-- Step 2 + 3 -->
               <div class="field-card">
                 <div class="field-card-label">
                   <div>
-                    <div class="field-card-title">Bulk Import · Step 2 &amp; 3</div>
-                    <div class="field-card-subtitle">Filter, select, then import.</div>
+                    <div class="field-card-title">Bulk Import · Step 2</div>
+                    <div class="field-card-subtitle">Filter, select cards, then import.</div>
                   </div>
-                  <div class="badge"><span class="badge-dot"></span><span>Non-destructive</span></div>
+                  <div class="badge"><span class="badge-dot"></span><span>Select</span></div>
                 </div>
 
-                <div class="field">
-                  <label class="field-label"><span>Filter</span><span class="hint">name/type/set</span></label>
-                  <input id="bulkFilterInput" class="input input-mono" type="text" placeholder="Filter parsed cards..." />
+                <!-- NEW UI CONTROLS (won’t break bulk.js even if unused yet) -->
+                <div class="field-grid">
+                  <div class="field">
+                    <label class="field-label"><span>Filter by Type</span></label>
+                    <select id="bulkTypeSelect" class="input input-mono">
+                      <option value="">All Types</option>
+                    </select>
+                  </div>
+
+                  <div class="field">
+                    <label class="field-label"><span>Filter by Set</span><span class="hint">Supports “SET 1 &amp; 2”</span></label>
+                    <select id="bulkSetSelect" class="input input-mono">
+                      <option value="">All Sets</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:6px;margin:4px 0 6px;">
-                  <button id="bulkSelectAllBtn" class="btn small" type="button">Select All</button>
-                  <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Deselect All</button>
+                <div class="field" style="margin-top:6px;">
+                  <label class="field-label"><span>Search Filter</span><span class="hint">name/type/set</span></label>
+                  <input id="bulkFilterInput" class="input input-mono" type="text" placeholder="Type to filter visible rows..." />
                 </div>
 
-                <ul id="bulkSelectionList" class="prints-list" style="max-height: 220px;"></ul>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;">
+                  <button id="bulkSelectAllBtn" class="btn small" type="button">Select All (Viewed)</button>
+                  <button id="bulkDeselectAllBtn" class="btn small btn-ghost" type="button">Deselect All (Viewed)</button>
+                </div>
+
+                <div class="scroll-box" style="margin-top:6px;">
+                  <ul id="bulkSelectionList" class="list-plain"></ul>
+                </div>
 
                 <div class="field" style="margin-top:8px;">
-                  <label class="field-label"><span>Selected Preview</span></label>
+                  <label class="field-label"><span>Step 3 · Selected</span></label>
                   <pre id="bulkSelectedPreview" class="bulk-preview"></pre>
                 </div>
 
-                <div style="display:flex;justify-content:flex-end;margin-top:6px;">
-                  <button id="bulkImportBtn" class="btn secondary small" type="button">Step 3: Import</button>
+                <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                  <button id="bulkImportBtn" class="btn secondary small" type="button">Import Selected</button>
+                  <!-- Optional: if your bulk.js supports a "clear" flow later -->
+                  <button id="bulkClearBtn" class="btn small btn-ghost" type="button" onclick="
+                    (function(){
+                      const sel = document.getElementById('bulkSelectionList');
+                      const prev = document.getElementById('bulkSelectedPreview');
+                      const stat = document.getElementById('bulkStatus');
+                      if (sel) sel.innerHTML='';
+                      if (prev) prev.textContent='';
+                      if (stat) stat.textContent='Cleared selection (UI).';
+                    })();
+                  ">Clear</button>
                 </div>
               </div>
             </div>
           </section>
 
           <!-- ===========================
-               PRECONS (kept IDs)
+               PRECONS
                =========================== -->
           <section id="preconsSection" class="section">
             <div class="field-card">
               <div class="field-card-label">
                 <div>
                   <div class="field-card-title">Preconstructed Decks</div>
-                  <div class="field-card-subtitle">
-                    Manage <code>drive-precons.json</code>. Export when finished.
-                  </div>
+                  <div class="field-card-subtitle">Manage drive-precons.json</div>
                 </div>
-                <div class="badge"><span class="badge-dot"></span><span>JSON-backed</span></div>
               </div>
 
-              <p id="preconsStatus" style="font-size:11px;color:var(--text-soft);margin:0 0 4px;">Loading precons…</p>
+              <p id="preconsStatus" class="hint" style="margin:0 0 6px;">Loading precons…</p>
               <div id="preconGrid" class="precon-grid"></div>
-
-              <div class="field-card-footer">
-                <div class="hint">Precons resolve card names using the current card library.</div>
-                <button id="downloadPreconsJsonBtn" class="btn secondary small" type="button">Export Precon JSON</button>
-              </div>
             </div>
           </section>
 
           <!-- ===========================
-               HELP (restored)
+               HELP
                =========================== -->
           <section id="helpSection" class="section">
             <div class="help-grid">
@@ -901,16 +827,14 @@
                 <div class="field-card-label">
                   <div>
                     <div class="field-card-title">Help</div>
-                    <div class="field-card-subtitle">Quick reference for how this admin works.</div>
+                    <div class="field-card-subtitle">Quick reference</div>
                   </div>
-                  <div class="badge"><span class="badge-dot"></span><span>Static</span></div>
                 </div>
 
-                <div style="font-size:11px;color:var(--text-soft);line-height:1.5;">
-                  <p><strong>Single Card</strong>: Edit one card at a time. Use the library list to load an existing card.</p>
-                  <p><strong>Bulk Import</strong>: Load your master spreadsheet, filter by type/set, select cards, then import into the library.</p>
-                  <p><strong>Precons</strong>: Edit decklists and export <code>drive-precons.json</code>.</p>
-                  <p><strong>Export</strong>: Changes are in memory until you export and replace JSON files in your repo.</p>
+                <div class="hint" style="font-size:11px;line-height:1.5;">
+                  <p><strong>Single</strong>: Edit one card at a time and export.</p>
+                  <p><strong>Bulk</strong>: Load the master spreadsheet, filter, select, import.</p>
+                  <p><strong>Precons</strong>: Edit decklists and export.</p>
                 </div>
               </div>
             </div>
@@ -920,12 +844,12 @@
     </main>
   </div>
 
-  <!-- Shared modal -->
+  <!-- Modal (IDs required by dom.js/single.js confirmAction) -->
   <div id="modalBackdrop" class="modal-backdrop">
     <div class="modal">
       <div class="modal-header">
         <h3 id="modalTitle">Confirm</h3>
-        <span class="chip key">Dangerous</span>
+        <span class="chip key">Action</span>
       </div>
       <div id="modalBody" class="modal-body">Are you sure?</div>
       <div class="modal-footer">
@@ -935,10 +859,10 @@
     </div>
   </div>
 
-  <!-- XLSX library for .xlsx bulk import -->
+  <!-- XLSX support -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
-  <!-- App bootstrap -->
+  <!-- Boot -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
