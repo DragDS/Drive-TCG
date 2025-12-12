@@ -18,12 +18,13 @@ export const Dom = {
   cardIdInput: document.getElementById("cardIdInput"),
   cardNameInput: document.getElementById("cardNameInput"),
   cardTypeInput: document.getElementById("cardTypeInput"),
-  cardSetNameInput: document.getElementById("cardSetNameInput"), // hidden (derived from prints)
-  cardNumberInput: document.getElementById("cardNumberInput"),   // hidden (derived from prints)
+  cardSetNameInput: document.getElementById("cardSetNameInput"), // hidden (derived)
+  cardNumberInput: document.getElementById("cardNumberInput"),   // hidden (derived)
   cardRarityInput: document.getElementById("cardRarityInput"),
   cardVehicleTypesInput: document.getElementById("cardVehicleTypesInput"),
   cardTagsInput: document.getElementById("cardTagsInput"),
   cardImageUrlInput: document.getElementById("cardImageUrlInput"),
+  cardNotesInput: document.getElementById("cardNotesInput"),
 
   modBasePartInput: document.getElementById("modBasePartInput"),
   modL1Input: document.getElementById("modL1Input"),
@@ -34,59 +35,39 @@ export const Dom = {
   vehicleHpConInput: document.getElementById("vehicleHpConInput"),
   vehiclePitCostInput: document.getElementById("vehiclePitCostInput"),
 
-  cardNotesInput: document.getElementById("cardNotesInput"),
-
+  // Prints
   printSetSelect: document.getElementById("printSetSelect"),
   printCustomSetInput: document.getElementById("printCustomSetInput"),
   printCardNumberInput: document.getElementById("printCardNumberInput"),
+  printAddBtn: document.getElementById("printAddBtn"),
+  printUpdateBtn: document.getElementById("printUpdateBtn"),
+  printCancelEditBtn: document.getElementById("printCancelEditBtn"),
   printSetPrimaryBtn: document.getElementById("printSetPrimaryBtn"),
   printClearAllBtn: document.getElementById("printClearAllBtn"),
   printsList: document.getElementById("printsList"),
 
+  // Single actions
   singleSaveBtn: document.getElementById("singleSaveBtn"),
   singleNewBtn: document.getElementById("singleNewBtn"),
   singleDeleteBtn: document.getElementById("singleDeleteBtn"),
   singleStatus: document.getElementById("singleStatus"),
 
+  // Preview & Library
   singlePreview: document.getElementById("singlePreview"),
   cardLibrarySearchInput: document.getElementById("cardLibrarySearchInput"),
   cardLibraryList: document.getElementById("cardLibraryList"),
   libraryCount: document.getElementById("libraryCount"),
 
-  // Bulk import (new workflow)
-  bulkFileInput: document.getElementById("bulkFileInput"),
-  bulkLoadBtn: document.getElementById("bulkLoadBtn"),
-  bulkStatus: document.getElementById("bulkStatus"),
-
-  bulkTypeFilter: document.getElementById("bulkTypeFilter"),
-  bulkSetFilter: document.getElementById("bulkSetFilter"),
-  bulkSelectAllViewedBtn: document.getElementById("bulkSelectAllViewedBtn"),
-  bulkDeselectAllViewedBtn: document.getElementById("bulkDeselectAllViewedBtn"),
-  bulkFilterInput: document.getElementById("bulkFilterInput"),
-  bulkSelectionList: document.getElementById("bulkSelectionList"),
-
-  bulkSelectedPreview: document.getElementById("bulkSelectedPreview"),
-  bulkImportSelectedBtn: document.getElementById("bulkImportSelectedBtn"),
-  bulkClearSessionBtn: document.getElementById("bulkClearSessionBtn"),
-
-  // Legacy bulk elements kept hidden (so older code doesn’t explode)
-  bulkInput: document.getElementById("bulkInput"),
-  bulkDelimiterSelect: document.getElementById("bulkDelimiterSelect"),
-  bulkHasHeaderCheckbox: document.getElementById("bulkHasHeaderCheckbox"),
-  bulkParseBtn: document.getElementById("bulkParseBtn"),
-  bulkImportBtn: document.getElementById("bulkImportBtn"),
-  bulkPreview: document.getElementById("bulkPreview"),
+  // Export buttons
+  downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
+  downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
+  downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
 
   // Precons
   preconGrid: document.getElementById("preconGrid"),
   preconsStatus: document.getElementById("preconsStatus"),
 
-  // Global export buttons
-  downloadCardsJsonBtn: document.getElementById("downloadCardsJsonBtn"),
-  downloadCardsJsonBtn_single: document.getElementById("downloadCardsJsonBtn_single"),
-  downloadPreconsJsonBtn: document.getElementById("downloadPreconsJsonBtn"),
-
-  // Modal (kept for single.js)
+  // Modal
   modalBackdrop: document.getElementById("modalBackdrop"),
   modalTitle: document.getElementById("modalTitle"),
   modalBody: document.getElementById("modalBody"),
