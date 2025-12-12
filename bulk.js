@@ -3,13 +3,33 @@
 
 import { AppState } from "./state.js";
 import { Dom } from "./dom.js";
-import { normalizeCardShape, generateId, parseVehicleTypes, parseTags, parseHpCon, refreshSingleUi } from "./single.js";
+import {
+  normalizeCardShape,
+  generateId,
+  parseVehicleTypes,
+  parseTags,
+  parseHpCon,
+  refreshSingleUi
+} from "./single.js";
 
 /************************************************************
  * Bulk session state
  ************************************************************/
 let parsedCards = [];             // all cards parsed from XLSX
 let selectedCardIds = new Set();  // card ids selected for import
+
+/************************************************************
+ * Safe DOM helpers (prevents "init dies" issues)
+ ************************************************************/
+function setStatus(msg) {
+  if (Dom.bulkStatus) Dom.bulkStatus.textContent = msg;
+  else console.warn("[bulk] bulkStatus missing:", msg);
+}
+
+function safeStr(v) {
+  if (v === undefined || v === null) return "";
+  return String(v).trim();
+}
 
 /************************************************************
  * Helpers
@@ -33,17 +53,11 @@ function pick(row, map, ...keys) {
   return "";
 }
 
-function safeStr(v) {
-  if (v === undefined || v === null) return "";
-  return String(v).trim();
-}
-
 /**
  * Split a "Set" string into normalized tokens for filtering.
  * Examples:
  *  - "SET 1" -> ["SET 1"]
  *  - "SET 1 & 2 & 3" -> ["SET 1","SET 2","SET 3"]
- *  - "SET FATHERS DAY" -> ["SET FATHERS DAY"]
  *  - "1" -> ["SET 1"]
  */
 function setTokens(setStr) {
@@ -56,23 +70,13 @@ function setTokens(setStr) {
   for (let p of parts.length ? parts : [raw]) {
     p = p.replace(/\s+/g, " ").trim();
 
-    // If it's just a number like "2", treat as SET 2
     if (/^\d+$/.test(p)) p = `SET ${p}`;
-
-    // Normalize "SET2" -> "SET 2"
     p = p.replace(/^set\s*(\d+)$/i, (_, n) => `SET ${n}`);
-
-    // Uppercase style to match your sheet naming
     p = p.toUpperCase();
 
-    // If user typed "DRAFT" etc, keep it
     out.push(p);
   }
 
-  // If original had no separators and included multiple sets in one string, still allow tokens
-  // (already handled by split above)
-
-  // De-dupe
   return Array.from(new Set(out));
 }
 
@@ -89,7 +93,6 @@ function cardDisplayLine(c) {
  ************************************************************/
 function inferTypeFromSheetName(sheetName) {
   const s = safeStr(sheetName).toLowerCase();
-  // map your worksheet naming to in-game card types
   if (s.includes("named vehicle")) return "Named Vehicle";
   if (s.includes("vehicle")) return "Vehicle";
   if (s.includes("mod")) return "Mod";
@@ -97,17 +100,15 @@ function inferTypeFromSheetName(sheetName) {
   if (s.includes("crew")) return "Crew";
   if (s.includes("track")) return "Track";
   if (s.includes("condition")) return "Condition";
-  if (s.includes("sponsor")) return "Crew"; // sponsor is a sub-type; you can tag it via notes/tags if needed
+  if (s.includes("sponsor")) return "Crew";
   return "Misc";
 }
 
 function rowArrayFromSheet(sheet, firstRowHeader = true) {
-  // We’ll read as rows so we can build a flexible header map.
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: "" });
   if (!rows.length) return { headers: [], data: [] };
 
   if (!firstRowHeader) {
-    // generate A,B,C... headers
     const colCount = Math.max(...rows.map(r => r.length));
     const headers = Array.from({ length: colCount }, (_, i) => `COL_${i + 1}`);
     return { headers, data: rows };
@@ -123,7 +124,6 @@ function headerMap(headers) {
   headers.forEach((h, idx) => {
     const key = normHeader(h);
     if (!key) return;
-    // first occurrence wins
     if (!(key in map)) map[key] = idx;
   });
   return map;
@@ -132,18 +132,13 @@ function headerMap(headers) {
 function mapRowToCard(sheetType, headers, row) {
   const map = headerMap(headers);
 
-  // Core fields (auto-assigned)
   const type = pick(row, map, "type") || sheetType;
   const name = pick(row, map, "name", "cardname", "title");
   const rarity = pick(row, map, "rarity", "rar");
 
-  // set / number (prints)
-  const setName =
-    pick(row, map, "set", "setname", "setid", "prints", "printset") || "";
-  const cardNumber =
-    pick(row, map, "cardnumber", "number", "no", "#", "cardno") || "";
+  const setName = pick(row, map, "set", "setname", "setid", "prints", "printset") || "";
+  const cardNumber = pick(row, map, "cardnumber", "number", "no", "#", "cardno") || "";
 
-  // common fields
   const vtRaw = pick(row, map, "vehicletype", "vehicletype1", "vehicletype2", "vehicletype3");
   const tagsRaw = pick(row, map, "tags", "tag", "keywords");
   const imageUrl = pick(row, map, "image", "imageurl", "img");
@@ -195,11 +190,7 @@ function mapRowToCard(sheetType, headers, row) {
     prints
   };
 
-  const normalized = normalizeCardShape(baseCard);
-
-  // If name is missing but sheet has a column that ended up in notes (bad mapping),
-  // we still keep the row but you’ll see "(no name)" in Step 2.
-  return normalized;
+  return normalizeCardShape(baseCard);
 }
 
 function parseWorkbookToCards(workbook) {
@@ -211,17 +202,13 @@ function parseWorkbookToCards(workbook) {
 
     const sheetType = inferTypeFromSheetName(sheetName);
     const { headers, data } = rowArrayFromSheet(sheet, true);
-
-    // Empty or header-only sheet
     if (!headers.length || !data.length) return;
 
     data.forEach(row => {
-      // skip completely empty rows
       const hasAny = Array.isArray(row) && row.some(cell => safeStr(cell) !== "");
       if (!hasAny) return;
 
       const card = mapRowToCard(sheetType, headers, row);
-      // keep only usable cards
       if (card && (card.name || card.type || card.setName || card.cardNumber)) {
         all.push(card);
       }
@@ -237,25 +224,21 @@ function parseWorkbookToCards(workbook) {
 function getAllTypes(cards) {
   const types = new Set();
   cards.forEach(c => types.add((c.type || "Misc").trim() || "Misc"));
-  return ["All Types", ...Array.from(types).sort((a,b) => a.localeCompare(b))];
+  return ["All Types", ...Array.from(types).sort((a, b) => a.localeCompare(b))];
 }
 
 function getAllSetOptions(cards) {
   const sets = new Set();
-  cards.forEach(c => {
-    const tokens = setTokens(c.setName);
-    tokens.forEach(t => sets.add(t));
-  });
+  cards.forEach(c => setTokens(c.setName).forEach(t => sets.add(t)));
 
-  // Ensure common ordering: SET 1..n then others
   const arr = Array.from(sets);
   const setNums = arr
     .filter(s => /^SET\s+\d+$/.test(s))
-    .sort((a,b) => Number(a.replace(/\D+/g,"")) - Number(b.replace(/\D+/g,"")));
+    .sort((a, b) => Number(a.replace(/\D+/g, "")) - Number(b.replace(/\D+/g, "")));
 
   const others = arr
     .filter(s => !/^SET\s+\d+$/.test(s))
-    .sort((a,b) => a.localeCompare(b));
+    .sort((a, b) => a.localeCompare(b));
 
   return ["All Sets", ...setNums, ...others];
 }
@@ -267,11 +250,8 @@ function cardMatchesType(card, typeFilter) {
 
 function cardMatchesSet(card, setFilter) {
   if (!setFilter || setFilter === "All Sets") return true;
-
   const tokens = setTokens(card.setName);
-  // if the card has no set, treat as not matching
   if (!tokens.length) return false;
-
   return tokens.includes(setFilter.toUpperCase());
 }
 
@@ -299,9 +279,11 @@ function getViewedCards() {
 }
 
 function renderFilters() {
-  if (!Dom.bulkTypeFilter || !Dom.bulkSetFilter) return;
+  if (!Dom.bulkTypeFilter || !Dom.bulkSetFilter) {
+    console.warn("[bulk] Missing bulkTypeFilter or bulkSetFilter");
+    return;
+  }
 
-  // TYPE
   const types = getAllTypes(parsedCards);
   Dom.bulkTypeFilter.innerHTML = "";
   types.forEach(t => {
@@ -311,7 +293,6 @@ function renderFilters() {
     Dom.bulkTypeFilter.appendChild(opt);
   });
 
-  // SET
   const sets = getAllSetOptions(parsedCards);
   Dom.bulkSetFilter.innerHTML = "";
   sets.forEach(s => {
@@ -321,13 +302,16 @@ function renderFilters() {
     Dom.bulkSetFilter.appendChild(opt);
   });
 
-  // Default values
   Dom.bulkTypeFilter.value = "All Types";
   Dom.bulkSetFilter.value = "All Sets";
 }
 
 function renderSelectionList() {
-  if (!Dom.bulkSelectionList) return;
+  if (!Dom.bulkSelectionList) {
+    console.warn("[bulk] Missing bulkSelectionList");
+    return;
+  }
+
   const list = Dom.bulkSelectionList;
   list.innerHTML = "";
 
@@ -373,7 +357,10 @@ function renderSelectionList() {
 }
 
 function renderSelectedPreview() {
-  if (!Dom.bulkSelectedPreview) return;
+  if (!Dom.bulkSelectedPreview) {
+    console.warn("[bulk] Missing bulkSelectedPreview");
+    return;
+  }
 
   const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
   if (!selected.length) {
@@ -394,7 +381,9 @@ function renderSelectedPreview() {
 function clearBulkSession() {
   parsedCards = [];
   selectedCardIds.clear();
-  if (Dom.bulkStatus) Dom.bulkStatus.textContent = "Waiting for file…";
+
+  setStatus("Waiting for file…");
+
   if (Dom.bulkSelectionList) Dom.bulkSelectionList.innerHTML = "";
   if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "";
   if (Dom.bulkTypeFilter) Dom.bulkTypeFilter.innerHTML = "";
@@ -403,13 +392,13 @@ function clearBulkSession() {
 
 function importSelectedIntoLibrary() {
   if (!parsedCards.length) {
-    Dom.bulkStatus.textContent = "Nothing parsed yet.";
+    setStatus("Nothing parsed yet.");
     return;
   }
 
   const toImport = parsedCards.filter(c => selectedCardIds.has(c.id));
   if (!toImport.length) {
-    Dom.bulkStatus.textContent = "No cards selected to import.";
+    setStatus("No cards selected to import.");
     return;
   }
 
@@ -427,11 +416,7 @@ function importSelectedIntoLibrary() {
     }
   });
 
-  Dom.bulkStatus.textContent = `Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`;
-
-  // Keep the session (so you can import in batches) — or clear if you prefer:
-  // clearBulkSession();
-
+  setStatus(`Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`);
   refreshSingleUi();
 }
 
@@ -441,17 +426,17 @@ function importSelectedIntoLibrary() {
 function handleLoadAndParseXlsx() {
   const file = Dom.bulkFileInput?.files?.[0];
   if (!file) {
-    Dom.bulkStatus.textContent = "Waiting for file…";
+    setStatus("Waiting for file…");
     return;
   }
 
   if (typeof XLSX === "undefined") {
-    Dom.bulkStatus.textContent =
-      "XLSX library is not loaded. Ensure the xlsx.full.min.js script tag is included before app.js.";
+    setStatus("XLSX library is not loaded. Check the xlsx.full.min.js script tag in admin.html.");
+    console.error("[bulk] XLSX is undefined. Did the CDN load? Is it blocked by CSP/adblock/offline?");
     return;
   }
 
-  Dom.bulkStatus.textContent = `Loading & parsing ${file.name}…`;
+  setStatus(`Loading & parsing ${file.name}…`);
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -462,22 +447,22 @@ function handleLoadAndParseXlsx() {
 
       parsedCards = cards;
 
-      // Select all by default (you can change this if you prefer none selected)
+      // Select all by default
       selectedCardIds = new Set(parsedCards.map(c => c.id));
 
       renderFilters();
       renderSelectionList();
       renderSelectedPreview();
 
-      Dom.bulkStatus.textContent = `Parsed ${parsedCards.length} cards from master spreadsheet.`;
+      setStatus(`Parsed ${parsedCards.length} cards from master spreadsheet.`);
     } catch (err) {
-      console.error(err);
-      Dom.bulkStatus.textContent = "Failed to parse XLSX. Check console for details.";
+      console.error("[bulk] XLSX parse failed:", err);
+      setStatus("Failed to parse XLSX. Check console for details.");
     }
   };
 
   reader.onerror = () => {
-    Dom.bulkStatus.textContent = "Could not read file.";
+    setStatus("Could not read file.");
   };
 
   reader.readAsArrayBuffer(file);
@@ -487,12 +472,17 @@ function handleLoadAndParseXlsx() {
  * Public init
  ************************************************************/
 export function initBulk() {
+  console.log("[bulk] initBulk called. XLSX available?", typeof XLSX !== "undefined");
+
+  if (!Dom.bulkFileInput) console.warn("[bulk] Missing bulkFileInput");
+  if (!Dom.bulkLoadBtn) console.warn("[bulk] Missing bulkLoadBtn");
+
   // ✅ Auto-parse when file selected
   if (Dom.bulkFileInput) {
     Dom.bulkFileInput.addEventListener("change", () => {
       const f = Dom.bulkFileInput.files?.[0];
       if (!f) {
-        Dom.bulkStatus.textContent = "Waiting for file…";
+        setStatus("Waiting for file…");
         return;
       }
       handleLoadAndParseXlsx();
@@ -553,4 +543,5 @@ export function initBulk() {
 
   // Initial empty state
   if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
+  setStatus("Waiting for file…");
 }
