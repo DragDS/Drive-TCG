@@ -639,7 +639,7 @@
         </div>
       </section>
 
-      <!-- Modal -->
+      <!-- Modal (kept for single.js confirmAction fallback) -->
       <div id="modalBackdrop" style="display:none;"></div>
       <div id="modalTitle" style="display:none;"></div>
       <div id="modalBody" style="display:none;"></div>
@@ -649,7 +649,7 @@
     </div>
   </div>
 
-  <!-- ✅ XLSX support MUST be loaded before your module scripts -->
+  <!-- ✅ FIX: XLSX support MUST be loaded globally BEFORE your module scripts (bulk.js uses global XLSX) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Boot -->
