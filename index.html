@@ -1205,140 +1205,199 @@ function getPreconEntries(precon) {
       container.appendChild(rules);
     }
 
-    // -------------------- Precon Viewer (Mode 2) --------------------
-    let selectedPreconId = null;
+ // -------------------- Precon Viewer (Mode 2) --------------------
+let selectedPreconId = null;
 
-    function renderPreconList() {
-      Dom.preconList.innerHTML = "";
+/**
+ * PRECONS: supports BOTH formats:
+ *  A) cards: { "cardId": qty, ... }
+ *  B) cards: [ {id, qty}, ... ] or [ "cardId", ... ]
+ */
+function getPreconEntries(precon) {
+  const c = precon?.cards;
 
-      if (!AppState.precons.length) {
-        // loadPrecons() already set a helpful message in Dom.preconList if it failed
-        if (!Dom.preconList.textContent.trim()) {
-          Dom.preconList.innerHTML = "<p class='small-note'>No precons found (or precon.json missing).</p>";
+  // A) map form
+  if (c && !Array.isArray(c) && typeof c === "object") {
+    return Object.entries(c)
+      .map(([id, qty]) => ({ id, qty: Number(qty) || 0 }))
+      .filter(e => e.id && e.qty > 0);
+  }
+
+  // B) array form
+  if (Array.isArray(c)) {
+    return c
+      .map(item => {
+        if (!item) return null;
+
+        // allow a bare id string
+        if (typeof item === "string") return { id: item, qty: 1 };
+
+        if (typeof item === "object") {
+          const id =
+            item.id || item.cardId || item.card_id || item.card || item.cardID;
+          const qty = Number(item.qty ?? item.count ?? item.quantity ?? 1) || 0;
+          if (!id || qty <= 0) return null;
+          return { id, qty };
         }
-        return;
-      }
 
-      AppState.precons.forEach(p => {
-        const item = document.createElement("div");
-        item.className = "list-item";
-        if (p.id === selectedPreconId) item.classList.add("selected");
+        return null;
+      })
+      .filter(Boolean);
+  }
 
-        const title = document.createElement("div");
-        title.style.fontWeight = "600";
-        title.textContent = p.name || p.id;
+  return [];
+}
 
-        const note = document.createElement("div");
-        note.className = "small-note";
-        const ids = Object.keys(p.cards || {});
-        const total = ids.reduce((sum, id) => sum + (p.cards[id] || 0), 0);
-        note.textContent = `${total} cards`;
+function renderPreconList() {
+  Dom.preconList.innerHTML = "";
 
-        item.appendChild(title);
-        item.appendChild(note);
-
-        item.addEventListener("click", () => {
-          selectedPreconId = p.id;
-          renderPreconList();
-          renderPreconDetail(p);
-        });
-
-        Dom.preconList.appendChild(item);
-      });
+  if (!AppState.precons.length) {
+    // loadPrecons() already set a helpful message in Dom.preconList if it failed
+    if (!Dom.preconList.textContent.trim()) {
+      Dom.preconList.innerHTML =
+        "<p class='small-note'>No precons found (or drive-precons.json missing).</p>";
     }
+    return;
+  }
 
-    function renderPreconDetail(precon) {
-      const box = Dom.preconDetail;
-      box.innerHTML = "";
+  AppState.precons.forEach(p => {
+    const item = document.createElement("div");
+    item.className = "list-item";
+    if (p.id === selectedPreconId) item.classList.add("selected");
 
-      if (!precon) {
-        box.innerHTML = "<p class='small-note'>Select a precon to see its decklist.</p>";
-        return;
-      }
+    const title = document.createElement("div");
+    title.style.fontWeight = "600";
+    title.textContent = p.name || p.id;
 
-      const header = document.createElement("div");
-      header.className = "detail-header";
-      const nameEl = document.createElement("div");
-      nameEl.className = "detail-name";
-      nameEl.textContent = precon.name || precon.id;
-      const typeEl = document.createElement("div");
-      typeEl.className = "detail-type";
-      typeEl.textContent = "Precon";
-      header.appendChild(nameEl);
-      header.appendChild(typeEl);
+    const note = document.createElement("div");
+    note.className = "small-note";
 
-      const ids = Object.keys(precon.cards || {});
-      const totalCards = ids.reduce((sum, id) => sum + (precon.cards[id] || 0), 0);
-      const cardIdSet = new Set(AppState.cards.map(c => c.id));
-      const missing = ids.filter(id => !cardIdSet.has(id));
+    const entries = getPreconEntries(p);
+    const total = entries.reduce((sum, e) => sum + (e.qty || 0), 0);
+    note.textContent = `${total} cards`;
 
-      const meta = document.createElement("div");
-      meta.className = "detail-meta";
-      meta.appendChild(kvLine("Total Cards", String(totalCards)));
-      meta.appendChild(kvLine("Unique Cards", String(ids.length)));
-      meta.appendChild(kvLine("Missing IDs", String(missing.length)));
+    item.appendChild(title);
+    item.appendChild(note);
 
-      if (precon.notes) {
-        const note = document.createElement("div");
-        note.className = "small-note";
-        note.textContent = precon.notes;
-        meta.appendChild(note);
-      }
+    item.addEventListener("click", () => {
+      selectedPreconId = p.id;
+      renderPreconList();
+      renderPreconDetail(p);
+    });
 
-      const rules = document.createElement("div");
-      rules.className = "detail-rules";
-      rules.textContent = buildPreconDecklistText(precon);
+    Dom.preconList.appendChild(item);
+  });
+}
 
-      box.appendChild(header);
-      box.appendChild(meta);
-      box.appendChild(rules);
-    }
+function renderPreconDetail(precon) {
+  const box = Dom.preconDetail;
+  box.innerHTML = "";
 
-    function kvLine(k, v) {
-      const row = document.createElement("div");
-      row.className = "kv";
-      const ks = document.createElement("span");
-      ks.className = "k";
-      ks.textContent = k + ":";
-      const vs = document.createElement("span");
-      vs.className = "v";
-      vs.textContent = v;
-      row.appendChild(ks);
-      row.appendChild(vs);
-      return row;
-    }
+  if (!precon) {
+    box.innerHTML =
+      "<p class='small-note'>Select a precon to see its decklist.</p>";
+    return;
+  }
 
-    function buildPreconDecklistText(precon) {
-      const idToCard = new Map(AppState.cards.map(c => [c.id, c]));
-      const entries = Object.entries(precon.cards || {}).map(([id, qty]) => ({
-        id, qty, card: idToCard.get(id) || null
-      }));
+  const header = document.createElement("div");
+  header.className = "detail-header";
 
-      const known = entries.filter(e => e.card).sort((a, b) => byTypeSetNumberName(a.card, b.card));
-      const miss = entries.filter(e => !e.card).sort((a, b) => a.id.localeCompare(b.id));
+  const nameEl = document.createElement("div");
+  nameEl.className = "detail-name";
+  nameEl.textContent = precon.name || precon.id;
 
-      const lines = [];
-      lines.push("DECKLIST");
-      lines.push("—");
+  const typeEl = document.createElement("div");
+  typeEl.className = "detail-type";
+  typeEl.textContent = "Precon";
 
-      known.forEach(e => {
-        const c = e.card;
-        const setStr = (c.visiblePrints && c.visiblePrints[0] && c.visiblePrints[0].cardNumber)
-          ? c.visiblePrints[0].cardNumber
-          : (c.cardNumber || "");
-        const extra = setStr ? ` (${setStr})` : "";
-        lines.push(`${e.qty}x ${c.name}${extra} — ${c.type}`);
-      });
+  header.appendChild(nameEl);
+  header.appendChild(typeEl);
 
-      if (miss.length) {
-        lines.push("");
-        lines.push("MISSING (not in drive-card.json yet)");
-        lines.push("—");
-        miss.forEach(e => lines.push(`${e.qty}x ${e.id}`));
-      }
+  const entries = getPreconEntries(precon);
+  const totalCards = entries.reduce((sum, e) => sum + (e.qty || 0), 0);
 
-      return lines.join("\n");
-    }
+  const cardIdSet = new Set(AppState.cards.map(c => c.id));
+  const missing = entries.filter(e => !cardIdSet.has(e.id));
+
+  const meta = document.createElement("div");
+  meta.className = "detail-meta";
+  meta.appendChild(kvLine("Total Cards", String(totalCards)));
+  meta.appendChild(kvLine("Unique Cards", String(entries.length)));
+  meta.appendChild(kvLine("Missing IDs", String(missing.length)));
+
+  if (precon.notes) {
+    const note = document.createElement("div");
+    note.className = "small-note";
+    note.textContent = precon.notes;
+    meta.appendChild(note);
+  }
+
+  const rules = document.createElement("div");
+  rules.className = "detail-rules";
+  rules.textContent = buildPreconDecklistText(precon);
+
+  box.appendChild(header);
+  box.appendChild(meta);
+  box.appendChild(rules);
+}
+
+function kvLine(k, v) {
+  const row = document.createElement("div");
+  row.className = "kv";
+  const ks = document.createElement("span");
+  ks.className = "k";
+  ks.textContent = k + ":";
+  const vs = document.createElement("span");
+  vs.className = "v";
+  vs.textContent = v;
+  row.appendChild(ks);
+  row.appendChild(vs);
+  return row;
+}
+
+function buildPreconDecklistText(precon) {
+  const idToCard = new Map(AppState.cards.map(c => [c.id, c]));
+
+  const entries = getPreconEntries(precon).map(e => ({
+    id: e.id,
+    qty: e.qty,
+    card: idToCard.get(e.id) || null
+  }));
+
+  const known = entries
+    .filter(e => e.card)
+    .sort((a, b) => byTypeSetNumberName(a.card, b.card));
+
+  const miss = entries
+    .filter(e => !e.card)
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  const lines = [];
+  lines.push("DECKLIST");
+  lines.push("—");
+
+  known.forEach(e => {
+    const c = e.card;
+
+    // Prefer a visible print's cardNumber, otherwise fall back
+    const setStr =
+      (c.visiblePrints && c.visiblePrints[0] && c.visiblePrints[0].cardNumber)
+        ? c.visiblePrints[0].cardNumber
+        : (c.cardNumber || "");
+
+    const extra = setStr ? ` (${setStr})` : "";
+    lines.push(`${e.qty}x ${c.name}${extra} — ${c.type}`);
+  });
+
+  if (miss.length) {
+    lines.push("");
+    lines.push("MISSING (not in drive-card.json yet)");
+    lines.push("—");
+    miss.forEach(e => lines.push(`${e.qty}x ${e.id}`));
+  }
+
+  return lines.join("\n");
+}
 
     // -------------------- Deck Builder (Mode 3) --------------------
     function loadDecksFromStorage() {
@@ -1814,5 +1873,6 @@ function getPreconEntries(precon) {
   </script>
 </body>
 </html>
+
 
 
