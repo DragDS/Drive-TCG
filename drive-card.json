@@ -3,178 +3,175 @@
     "id": "1022a5a6-d3bf-46ed-9f5b-225a5eb19816",
     "name": "Blown Head Gasket",
     "type": "Crew",
-    "rarity": "Common",
     "setName": "SET 1",
     "cardNumber": "01-001",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "SELECT 1 OPPONENT, THAT PLAYER REMOVES A MOD FROM A VEHICLE THEY OWN.",
-    "createdAt": 1763867641765,
-    "extra": {},
     "imageUrl": "images/set1/blown_head_gasket.png",
+    "notes": "SELECT 1 OPPONENT, THAT PLAYER REMOVES A MOD FROM A VEHICLE THEY OWN.",
+    "extra": {},
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-001"
+        "cardNumber": "01-001",
+        "isPrimary": true
       }
-    ],
-    "vehicleTypes": []
+    ]
   },
   {
     "id": "76a4bf59-0bdf-441a-b5f4-2cc2f1b18c4b",
     "name": "Drift Stitch",
     "type": "Crew",
-    "rarity": "Common",
     "setName": "SET 1",
     "cardNumber": "01-007",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "SEARCH YOUR JUNKYARD FOR 1 MOD, REVEAL IT, AND EQUIP IT TO YOUR VEHICLE IN THE RACE.",
-    "createdAt": 1763872203579,
-    "extra": {},
     "imageUrl": "images/set1/drift_stitch.png",
+    "notes": "SEARCH YOUR JUNKYARD FOR 1 MOD, REVEAL IT, AND EQUIP IT TO YOUR VEHICLE IN THE RACE.",
+    "extra": {},
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-007"
+        "cardNumber": "01-007",
+        "isPrimary": true
       }
-    ],
-    "vehicleTypes": []
+    ]
   },
   {
     "id": "f820a9e5-9e71-4a47-aadc-18622a8284e2",
     "name": "Heavy Rain",
     "type": "Condition",
-    "rarity": "Common",
     "setName": "SET 1",
     "cardNumber": "01-069",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "-1/-6",
-    "createdAt": 1763872312027,
-    "extra": {},
     "imageUrl": "images/set1/heavy_rain.png",
+    "notes": "-1/-6",
+    "extra": {},
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-069"
+        "cardNumber": "01-069",
+        "isPrimary": true
       }
-    ],
-    "vehicleTypes": []
+    ]
   },
   {
     "id": "7c348147-66c5-4ec4-a362-108b6be913e3",
     "name": "Danny",
     "type": "Named Driver",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-061",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "All"
+    ],
     "tags": [],
-    "notes": "+4/+4\nIF THIS DRIVER WINS THE RACE, DRAW 1\nCARD.\nIF THIS DRIVER LOSES THE RACE, DRAW 2\nCARDS.",
-    "createdAt": 1763873521011,
-    "extra": {},
     "imageUrl": "images/set1/danny.png",
+    "notes": "+4/+4\nIF THIS DRIVER WINS THE RACE, DRAW 1\nCARD.\nIF THIS DRIVER LOSES THE RACE, DRAW 2\nCARDS.",
+    "extra": {},
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-061"
+        "cardNumber": "01-061",
+        "isPrimary": true
       }
-    ],
-    "vehicleTypes": [
-      "Drag",
-      "Drift",
-      "Off-Road",
-      "Rally"
     ]
   },
   {
     "id": "1c1ba6f3-f5ad-4706-b9df-34cfb2e9fe65",
     "name": "Josh",
     "type": "Named Driver",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-062",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
-    "notes": "+3/0\nFOR EACH MOD EQUIPPED, ADD +2/0.",
-    "createdAt": 1763874087263,
-    "extra": {},
     "imageUrl": "images/set1/josh.png",
+    "notes": "+3/0\nFOR EACH MOD EQUIPPED, ADD +2/0.",
+    "extra": {},
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-062"
+        "cardNumber": "01-062",
+        "isPrimary": true
       }
-    ],
-    "vehicleTypes": [
-      "Drag"
     ]
   },
   {
     "id": "9cd823cc-d472-444e-8ea3-f76503406c1b",
     "name": "Raquel",
     "type": "Named Driver",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-063",
-    "tags": [],
-    "notes": "+2/+2 \nFOR EACH OTHER VEHICLE IN THE RACE, ADD +3/+3.",
-    "createdAt": 1763874136128,
-    "extra": {},
-    "imageUrl": "images/set1/raquel.png",
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-063"
-      }
-    ],
+    "rarity": "Rare",
     "vehicleTypes": [
       "Drag",
       "Drift"
+    ],
+    "tags": [],
+    "imageUrl": "images/set1/raquel.png",
+    "notes": "+2/+2 \nFOR EACH OTHER VEHICLE IN THE RACE, ADD +3/+3.",
+    "extra": {},
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-063",
+        "isPrimary": true
+      }
     ]
   },
   {
     "id": "ae5735bd-9915-43a8-b1c8-9d6bc652113f",
     "name": "North Shore",
     "type": "Track",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-080",
-    "tags": [],
-    "notes": "AT THE END OF THE DRAW PHASE, YOU MAY LOOK AT THE TOP CARD OF YOUR GARAGE.",
-    "createdAt": 1763874291658,
-    "extra": {},
-    "imageUrl": "images/set1/north_short.png",
-    "prints": [
-      {
-        "setId": "SET 1",
-        "cardNumber": "01-080"
-      }
-    ],
+    "rarity": "Rare",
     "vehicleTypes": [
       "Drag",
       "Drift"
+    ],
+    "tags": [],
+    "imageUrl": "images/set1/north_short.png",
+    "notes": "AT THE END OF THE DRAW PHASE, YOU MAY LOOK AT THE TOP CARD OF YOUR GARAGE.",
+    "extra": {},
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-080",
+        "isPrimary": true
+      }
     ]
   },
   {
     "id": "fd8fca63-81e1-42d2-aebd-68d5ac7df947",
     "name": "Josh's Firehawk",
     "type": "Named Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-090",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/joshs_firehawk.png",
     "notes": "IF A TRACK IS IN  PLAY THAT AFFECTS DRAG VEHICLES, ADD +6/0 TO THIS VEHICLE",
-    "createdAt": 1763874406458,
     "extra": {
       "hp": 8,
       "con": 2,
       "pitCost": 2
     },
-    "imageUrl": "images/set1/joshs_firehawk.png",
-    "vehicleTypes": [
-      "Drag"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-090"
+        "cardNumber": "01-090",
+        "isPrimary": true
       }
     ]
   },
@@ -182,25 +179,25 @@
     "id": "d39ecb12-7977-4841-8613-fa07be759391",
     "name": "Raquel's Supersport",
     "type": "Named Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-091",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/raquels_supersport.png",
     "notes": "WHILE IN THE RACE, INCREASE YOUR OPPONENTS PIT COST BY 1.",
-    "createdAt": 1763874440337,
     "extra": {
       "hp": 7,
       "con": 3,
       "pitCost": 2
     },
-    "imageUrl": "images/set1/raquels_supersport.png",
-    "vehicleTypes": [
-      "Drag"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-091"
+        "cardNumber": "01-091",
+        "isPrimary": true
       }
     ]
   },
@@ -209,23 +206,24 @@
     "name": "Danny's R-2-4",
     "type": "Named Vehicle",
     "setName": "SET 1",
-    "rarity": "Rare",
     "cardNumber": "01-089",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drift"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/dannys_r-2-4.png",
     "notes": "WHILE IN THE RACE, YOU CAN MAY DRAW AN EXTRA CARD.",
     "extra": {
       "hp": 5,
       "con": 5,
       "pitCost": 2
     },
-    "imageUrl": "images/set1/dannys_r-2-4.png",
-    "vehicleTypes": [
-      "Drift"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-089"
+        "cardNumber": "01-089",
+        "isPrimary": true
       }
     ]
   },
@@ -236,15 +234,22 @@
     "setName": "SET 1",
     "cardNumber": "01-083",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
-    "notes": "-",
     "imageUrl": "images/set1/knox_lunar.png",
+    "notes": "-",
     "extra": {
       "hp": 6,
       "con": 4
     },
-    "vehicleTypes": [
-      "Drag"
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-083",
+        "isPrimary": true
+      }
     ]
   },
   {
@@ -254,39 +259,47 @@
     "setName": "SET 1",
     "cardNumber": "01-084",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
-    "notes": "-",
     "imageUrl": "images/set1/knox_super_sport.png",
+    "notes": "-",
     "extra": {
       "hp": 7,
       "con": 3
     },
-    "vehicleTypes": [
-      "Drag"
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-084",
+        "isPrimary": true
+      }
     ]
   },
   {
     "id": "card-eyyf41qhcb",
     "name": "NISORO R-2-4",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-085",
-    "notes": "-",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drift"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/nisoro_r-2-4.png",
+    "notes": "-",
     "extra": {
       "hp": 5,
       "con": 5,
       "pitCost": 1
     },
-    "imageUrl": "images/set1/nisoro_r-2-4.png",
-    "vehicleTypes": [
-      "Drift"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-085"
+        "cardNumber": "01-085",
+        "isPrimary": true
       }
     ]
   },
@@ -294,24 +307,25 @@
     "id": "card-2p4ythuubos",
     "name": "NISORO ZX1",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-086",
-    "notes": "-",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drift"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/nisoro_zx1.png",
+    "notes": "-",
     "extra": {
       "hp": 3,
       "con": 7,
       "pitCost": 1
     },
-    "imageUrl": "images/set1/nisoro_zx1.png",
-    "vehicleTypes": [
-      "Drift"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-086"
+        "cardNumber": "01-086",
+        "isPrimary": true
       }
     ]
   },
@@ -319,24 +333,25 @@
     "id": "card-55dc245erda",
     "name": "ROCHESTER FIREHAWK",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-087",
-    "notes": "-",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/rochester_firehawk.png",
+    "notes": "-",
     "extra": {
       "hp": 8,
       "con": 2,
       "pitCost": 1
     },
-    "imageUrl": "images/set1/rochester_firehawk.png",
-    "vehicleTypes": [
-      "Drag"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-087"
+        "cardNumber": "01-087",
+        "isPrimary": true
       }
     ]
   },
@@ -344,24 +359,25 @@
     "id": "card-7r1tasebfb",
     "name": "ROCHESTER FUEGO",
     "type": "Vehicle",
-    "rarity": "Rare",
     "setName": "SET 1",
     "cardNumber": "01-088",
-    "notes": "-",
+    "rarity": "Rare",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
+    "imageUrl": "images/set1/rochester_fuego.png",
+    "notes": "-",
     "extra": {
       "hp": 2,
       "con": 8,
       "pitCost": 1
     },
-    "imageUrl": "images/set1/rochester_fuego.png",
-    "vehicleTypes": [
-      "Drag"
-    ],
     "prints": [
       {
         "setId": "SET 1",
-        "cardNumber": "01-088"
+        "cardNumber": "01-088",
+        "isPrimary": true
       }
     ]
   },
@@ -372,11 +388,20 @@
     "setName": "SET 1",
     "cardNumber": "01-055",
     "rarity": "Common",
+    "vehicleTypes": [
+      "Drag"
+    ],
     "tags": [],
-    "notes": "TYPE: DRAG\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL HP IS GREATER THAN 10.\n+6/0",
     "imageUrl": "images/set1/drag_racing_enthusiast.png",
+    "notes": "EQUIP ONLY TO A VEHICLE WHOSE TOTAL HP IS GREATER THAN 10.\n+6/0",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-055",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-vzdztcajw3",
@@ -385,11 +410,20 @@
     "setName": "SET 1",
     "cardNumber": "01-056",
     "rarity": "Common",
+    "vehicleTypes": [
+      "Drift"
+    ],
     "tags": [],
-    "notes": "TYPE: DRIFT\nEQUIP ONLY TO A VEHICLE WHOSE TOTAL CON IS GREATER THAN 10.\n+0/6",
     "imageUrl": "images/set1/drift_racing_enthusiast.png",
+    "notes": "EQUIP ONLY TO A VEHICLE WHOSE TOTAL CON IS GREATER THAN 10.\n+0/6",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-056",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-94z2rdo2vei",
@@ -398,11 +432,20 @@
     "setName": "SET 1",
     "cardNumber": "01-057",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "All"
+    ],
     "tags": [],
-    "notes": "TYPE: ALL \nWHILE IN THE RACE, WHENEVER YOU DRAW A CARD. DRAW 2 CARDS THEN DISCARD 1 OF THOSE CARDS.",
     "imageUrl": "images/set1/fanatic.png",
+    "notes": "WHILE IN THE RACE, WHENEVER YOU DRAW A CARD. DRAW 2 CARDS THEN DISCARD 1 OF THOSE CARDS.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-057",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-dcyo3wk4kl7",
@@ -411,11 +454,20 @@
     "setName": "SET 1",
     "cardNumber": "01-058",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "All"
+    ],
     "tags": [],
-    "notes": "TYPE: ALL\nWHILE IN THE RACE, YOU MAY LOOK AT THE TOP CARD OF YOUR GARAGE.",
     "imageUrl": "images/set1/gearhead.png",
+    "notes": "WHILE IN THE RACE, YOU MAY LOOK AT THE TOP CARD OF YOUR GARAGE.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-058",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-oor990owzo8",
@@ -424,11 +476,20 @@
     "setName": "SET 1",
     "cardNumber": "01-059",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "All"
+    ],
     "tags": [],
-    "notes": "TYPE: ALL\nWHILE IN THE RACE, YOU MAY REMOVE A MOD FROM THE VEHICLE THIS CARD IS EQUIPPED TO, IF YOU DO DRAW A CARD.",
     "imageUrl": "images/set1/old_timer.png",
+    "notes": "WHILE IN THE RACE, YOU MAY REMOVE A MOD FROM THE VEHICLE THIS CARD IS EQUIPPED TO, IF YOU DO DRAW A CARD.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-059",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-3lz56egdskh",
@@ -437,11 +498,20 @@
     "setName": "SET 1",
     "cardNumber": "01-060",
     "rarity": "Rare",
+    "vehicleTypes": [
+      "All"
+    ],
     "tags": [],
-    "notes": "TYPE: ALL\nWHILE IN THE PIT, YOU MAY SWITCH THE EQUIPPED VEHICLE AND YOUR VEHICLE IN THE RACE WITHOUT PAYING A PIT COST.",
     "imageUrl": "images/set1/youngster.png",
+    "notes": "WHILE IN THE PIT, YOU MAY SWITCH THE EQUIPPED VEHICLE AND YOUR VEHICLE IN THE RACE WITHOUT PAYING A PIT COST.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-060",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-2pg1y1in2et",
@@ -449,12 +519,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-064",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "MODS WITH BASE PART: TIRE ARE 0/0.",
     "imageUrl": "images/set1/abandoned.png",
+    "notes": "MODS WITH BASE PART: TIRE ARE 0/0.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-064",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-ozgbh9v452d",
@@ -462,12 +539,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-067",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "AT THE START OF A PLAYERS TURN, THAT PLAYER REMOVES A MOD THEY OWN.",
     "imageUrl": "images/set1/hard_turn.png",
+    "notes": "AT THE START OF A PLAYERS TURN, THAT PLAYER REMOVES A MOD THEY OWN.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-067",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-2pjhj384qf3",
@@ -475,12 +559,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-068",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "DRIVER TRAITS DO NOT AFFECT HP/CON.",
     "imageUrl": "images/set1/heavy_fog.png",
+    "notes": "DRIVER TRAITS DO NOT AFFECT HP/CON.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-068",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-qthm2m19d6",
@@ -488,12 +579,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-070",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "-3/-3 IF A PLAYER DOES NOT PLAY A CREW DURING THEIR TURN.",
     "imageUrl": "images/set1/midnight_run.png",
+    "notes": "-3/-3 IF A PLAYER DOES NOT PLAY A CREW DURING THEIR TURN.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-070",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-f22wkvk09oe",
@@ -501,12 +599,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-072",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "-6/-1",
     "imageUrl": "images/set1/sudden_turn.png",
+    "notes": "-6/-1",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-072",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-e4a4q2olxof",
@@ -514,12 +619,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-071",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
     "imageUrl": "images/set1/rolling_start.png",
+    "notes": ".+2/+2 TO DRAG AND RALLY VEHICLES.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-071",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-enxnw3emc5v",
@@ -527,12 +639,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-066",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "VEHICLE'S BASE CON IS ZERO.",
     "imageUrl": "images/set1/down_hill.png",
+    "notes": "VEHICLE'S BASE CON IS ZERO.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-066",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-r9hjbcy63gh",
@@ -540,12 +659,19 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-073",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "VEHICLE'S BASE HP IS ZERO.",
     "imageUrl": "images/set1/up_hill.png",
+    "notes": "VEHICLE'S BASE HP IS ZERO.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-073",
+        "isPrimary": true
+      }
+    ]
   },
   {
     "id": "card-p4b7fg3w9r",
@@ -553,11 +679,18 @@
     "type": "Condition",
     "setName": "SET 1",
     "cardNumber": "01-065",
-    "rarity": "COMMON",
+    "rarity": "Common",
+    "vehicleTypes": [],
     "tags": [],
-    "notes": "-3/-3 EXCEPT TO NAMED VEHICLES.",
     "imageUrl": "images/set1/cruise.png",
+    "notes": "-3/-3 EXCEPT TO NAMED VEHICLES.",
     "extra": {},
-    "vehicleTypes": []
+    "prints": [
+      {
+        "setId": "SET 1",
+        "cardNumber": "01-065",
+        "isPrimary": true
+      }
+    ]
   }
 ]
