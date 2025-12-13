@@ -30,12 +30,7 @@
     header h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; }
     header p { margin: 0; font-size: 0.8rem; color: #9ca3af; }
 
-    .nav {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    .nav { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
 
     .nav-btn {
       border-radius: 999px;
@@ -81,7 +76,6 @@
     @media (max-width: 760px) { .layout-main { grid-template-columns: 1fr; } }
 
     h2 { margin: 0 0 0.5rem; font-size: 1rem; letter-spacing: 0.03em; }
-
     .small-note { font-size: 0.78rem; color: #9ca3af; margin: 0.1rem 0; }
 
     .controls { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -331,6 +325,10 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 0.82rem;
     }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
   </style>
 </head>
 
@@ -399,7 +397,7 @@
       <div class="two-col">
         <div>
           <h2>Precons</h2>
-          <p class="small-note">Loaded from <b>precon.json</b>.</p>
+          <p class="small-note">Loaded from <b class="mono">precon.json</b>.</p>
           <div id="preconList" class="list">
             <p class="small-note">Loading precons…</p>
           </div>
@@ -442,7 +440,7 @@
           </div>
         </div>
 
-        <!-- MIDDLE: Card grid (same library, but add buttons) -->
+        <!-- MIDDLE: Card grid -->
         <div>
           <h2>Cards</h2>
           <div id="deckCardsGrid" class="cards-grid">
@@ -490,21 +488,23 @@
   </div>
 
   <script>
-    // -------------------- Config --------------------
-    const RELEASED_SETS = null; // or ["SET 1"]
+    // --------------------------------------------------------------------
+    // RELEASE CONTROL: limit which sets appear on the public site.
+    // --------------------------------------------------------------------
+    // const RELEASED_SETS = ["SET 1", "SET 2"];
+    const RELEASED_SETS = null;
+
     const STORAGE_KEY = "drive_decks_v1";
 
     // -------------------- State --------------------
     const AppState = {
-      mode: "library", // "library" | "precon" | "deck"
+      mode: "library",
       cards: [],
       precons: [],
 
-      // Library filters/selection
       filteredCards: [],
       selectedCardId: null,
 
-      // Deck builder state
       deckFilteredCards: [],
       deckSelectedCardId: null,
       activeDeckIndex: 0,
@@ -526,7 +526,7 @@
       modePrecon: document.getElementById("modePrecon"),
       modeDeck: document.getElementById("modeDeck"),
 
-      // Library DOM
+      // Library
       searchInput: document.getElementById("searchInput"),
       typeFilter: document.getElementById("typeFilter"),
       setFilter: document.getElementById("setFilter"),
@@ -535,11 +535,11 @@
       cardsGrid: document.getElementById("cardsGrid"),
       detailCard: document.getElementById("detailCard"),
 
-      // Precon DOM
+      // Precon
       preconList: document.getElementById("preconList"),
       preconDetail: document.getElementById("preconDetail"),
 
-      // Deck DOM
+      // Deck
       deckSearchInput: document.getElementById("deckSearchInput"),
       deckTypeFilter: document.getElementById("deckTypeFilter"),
       deckSetFilter: document.getElementById("deckSetFilter"),
@@ -554,7 +554,7 @@
       deckList: document.getElementById("deckList"),
       btnDeckClear: document.getElementById("btnDeckClear"),
       btnDeckExport: document.getElementById("btnDeckExport"),
-      btnDeckImport: document.getElementById("btnDeckImport"),
+      btnDeckImport: document.getElementById("btnDeckImport")
     };
 
     // -------------------- Helpers --------------------
@@ -732,7 +732,7 @@
       Dom.cardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
       Dom.deckCardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
 
-      return fetch("drive-card.json")
+      return fetch("drive-card.json", { cache: "no-store" })
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch drive-card.json");
           return res.json();
@@ -764,7 +764,7 @@
               if (parsed.con !== undefined) card.extra.con = parsed.con;
             }
 
-            // release filtering
+            // Apply release filtering
             if (RELEASED_SETS && RELEASED_SETS.length) {
               if (card.prints && card.prints.length) {
                 card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p.setId));
@@ -776,14 +776,12 @@
             return card;
           });
 
-          // Hide cards with no visible prints when release restriction is on
           if (RELEASED_SETS && RELEASED_SETS.length) {
             cards = cards.filter(c => c.visiblePrints && c.visiblePrints.length > 0);
           }
 
           AppState.cards = cards;
 
-          // Default selections (nice UX)
           if (!AppState.selectedCardId && AppState.cards.length) AppState.selectedCardId = AppState.cards[0].id;
           if (!AppState.deckSelectedCardId && AppState.cards.length) AppState.deckSelectedCardId = AppState.cards[0].id;
         })
@@ -794,22 +792,55 @@
         });
     }
 
-    function loadPrecons() {
+    // ✅ FIXED: robust precon loading with fallback paths + visible error details
+    async function loadPrecons() {
       Dom.preconList.innerHTML = "<p class='small-note'>Loading precons…</p>";
 
-      return fetch("precon.json")
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to fetch precon.json");
-          return res.json();
-        })
-        .then(json => {
-          if (!Array.isArray(json)) throw new Error("precon.json is not an array.");
+      const candidates = [
+        "precon.json",
+        "./precon.json",
+        "data/precon.json",
+        "json/precon.json",
+        "precons.json",
+        "data/precons.json"
+      ];
+
+      let lastMessage = "Unknown error";
+
+      for (const url of candidates) {
+        try {
+          const res = await fetch(url, { cache: "no-store" });
+          if (!res.ok) {
+            lastMessage = `${url} → ${res.status} ${res.statusText}`;
+            continue;
+          }
+
+          const json = await res.json();
+          if (!Array.isArray(json)) {
+            lastMessage = `${url} → JSON is not an array`;
+            continue;
+          }
+
           AppState.precons = json;
-        })
-        .catch(err => {
-          console.warn("[precon.json]", err);
-          AppState.precons = [];
-        });
+          console.log(`[precon] loaded from: ${url}`, json);
+          return;
+        } catch (e) {
+          lastMessage = `${url} → ${e?.message || String(e)}`;
+        }
+      }
+
+      AppState.precons = [];
+      console.warn("[precon] failed to load from any candidate path.", lastMessage);
+
+      Dom.preconList.innerHTML =
+        `<p class="small-note">No precons found. Last error: <span class="mono">${escapeHtml(lastMessage)}</span></p>
+         <p class="small-note">Tried: <span class="mono">${candidates.map(escapeHtml).join(" , ")}</span></p>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, ch => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[ch]));
     }
 
     // -------------------- Mode Switching --------------------
@@ -922,9 +953,28 @@
         setSpan.textContent = sets.length ? sets.join(" & ") : (card.setName || "—");
         row2.appendChild(setSpan);
 
+        const tagsRow = document.createElement("div");
+        tagsRow.className = "card-tile-tags";
+        const tags = card.tags || [];
+        if (tags.length) {
+          tags.slice(0, 3).forEach(t => {
+            const chip = document.createElement("span");
+            chip.className = "chip chip-muted";
+            chip.textContent = t;
+            tagsRow.appendChild(chip);
+          });
+          if (tags.length > 3) {
+            const extra = document.createElement("span");
+            extra.className = "chip chip-muted";
+            extra.textContent = `+${tags.length - 3}`;
+            tagsRow.appendChild(extra);
+          }
+        }
+
         tile.appendChild(header);
         tile.appendChild(row1);
         tile.appendChild(row2);
+        if (tags.length) tile.appendChild(tagsRow);
 
         tile.addEventListener("click", () => {
           AppState.selectedCardId = card.id;
@@ -948,15 +998,12 @@
 
       const header = document.createElement("div");
       header.className = "detail-header";
-
       const nameEl = document.createElement("div");
       nameEl.className = "detail-name";
       nameEl.textContent = card.name || "(No Name)";
-
       const typeEl = document.createElement("div");
       typeEl.className = "detail-type";
       typeEl.textContent = card.type || "";
-
       header.appendChild(nameEl);
       header.appendChild(typeEl);
 
@@ -1050,7 +1097,10 @@
       Dom.preconList.innerHTML = "";
 
       if (!AppState.precons.length) {
-        Dom.preconList.innerHTML = "<p class='small-note'>No precons found (or precon.json missing).</p>";
+        // loadPrecons() already set a helpful message in Dom.preconList if it failed
+        if (!Dom.preconList.textContent.trim()) {
+          Dom.preconList.innerHTML = "<p class='small-note'>No precons found (or precon.json missing).</p>";
+        }
         return;
       }
 
@@ -1219,9 +1269,7 @@
       });
     }
 
-    function getActiveDeck() {
-      return AppState.decks[AppState.activeDeckIndex];
-    }
+    function getActiveDeck() { return AppState.decks[AppState.activeDeckIndex]; }
 
     function deckTotalCount(deck) {
       return Object.values(deck.cards || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
