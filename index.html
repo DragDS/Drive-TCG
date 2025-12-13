@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>DRIVE TCG – Card Library</title>
+  <title>DRIVE TCG – Library / Precons / Deck Builder</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     :root { color-scheme: dark; }
@@ -20,15 +20,45 @@
 
     header {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 1rem;
       margin-bottom: 0.75rem;
       flex-wrap: wrap;
     }
 
-    header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.04em; }
+    header h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; }
     header p { margin: 0; font-size: 0.8rem; color: #9ca3af; }
+
+    .nav {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .nav-btn {
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: transform 0.08s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+      user-select: none;
+    }
+
+    .nav-btn:hover {
+      border-color: #3b82f6;
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .nav-btn.active {
+      border-color: #facc15;
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9), 0 14px 30px rgba(234, 179, 8, 0.25);
+    }
 
     .panel {
       border-radius: 1rem;
@@ -48,7 +78,6 @@
       .layout-main { grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); grid-template-rows: auto auto; }
       .detail-column { grid-column: 1 / -1; }
     }
-
     @media (max-width: 760px) { .layout-main { grid-template-columns: 1fr; } }
 
     h2 { margin: 0 0 0.5rem; font-size: 1rem; letter-spacing: 0.03em; }
@@ -86,6 +115,7 @@
       padding: 0.15rem 0.55rem;
       font-size: 0.7rem;
       color: #cbd5f5;
+      user-select: none;
     }
     .chip-primary { border-color: #60a5fa; background: radial-gradient(circle at top left, #1d4ed8, #020617); }
     .chip-muted { opacity: 0.8; }
@@ -93,7 +123,7 @@
     .cards-grid {
       margin-top: 0.25rem;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 0.5rem;
       max-height: calc(100vh - 240px);
       overflow-y: auto;
@@ -112,17 +142,18 @@
       font-size: 0.78rem;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
       transition: transform 0.08s ease, box-shadow 0.1s ease, border-color 0.1s ease;
+      position: relative;
     }
 
     .card-tile:hover {
       transform: translateY(-1px);
       border-color: #3b82f6;
-      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.25);
     }
 
     .card-tile.selected {
       border-color: #facc15;
-      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9), 0 14px 30px rgba(234, 179, 8, 0.4);
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9), 0 14px 30px rgba(234, 179, 8, 0.25);
     }
 
     .card-tile-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -131,6 +162,21 @@
     .card-tile-set { font-size: 0.73rem; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .card-tile-rarity { font-size: 0.72rem; color: #a7f3d0; }
     .card-tile-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+
+    .tile-add {
+      position: absolute;
+      top: 0.35rem;
+      right: 0.35rem;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      font-size: 0.78rem;
+      line-height: 1;
+      padding: 0.18rem 0.45rem;
+      cursor: pointer;
+    }
+    .tile-add:hover { border-color: #3b82f6; }
 
     .status-line { font-size: 0.78rem; color: #9ca3af; margin-top: 0.15rem; }
     .status-line span { color: #e5e7eb; }
@@ -143,7 +189,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
-      min-height: 200px;
+      min-height: 220px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
     }
 
@@ -152,7 +198,6 @@
     .detail-type { font-size: 0.8rem; color: #9ca3af; }
 
     .detail-columns { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-
     .detail-image {
       flex: 0 0 42%;
       max-width: 42%;
@@ -164,7 +209,6 @@
       overflow: hidden;
       min-height: 160px;
     }
-
     .detail-image img { max-width: 100%; max-height: 260px; object-fit: contain; }
 
     .detail-meta {
@@ -175,7 +219,6 @@
       flex-direction: column;
       gap: 0.2rem;
     }
-
     .detail-row-label { font-weight: 600; color: #e5e7eb; margin-right: 0.25rem; }
 
     .detail-rules {
@@ -187,31 +230,136 @@
       white-space: pre-wrap;
     }
 
-    .inline-code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 0.78rem;
-      background: rgba(15, 23, 42, 0.9);
+    .btn-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; }
+    .btn {
+      border-radius: 0.6rem;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .btn:hover { border-color: #3b82f6; }
+    .btn-warn:hover { border-color: #facc15; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .list-item {
+      border-radius: 0.8rem;
+      border: 1px solid #1f2937;
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.16), #020617);
+      padding: 0.55rem 0.6rem;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
+    }
+    .list-item:hover { border-color: #3b82f6; }
+    .list-item.selected { border-color: #facc15; }
+
+    .deck-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .deck-tabs {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .deck-tab {
       border-radius: 999px;
       border: 1px solid #1f2937;
-      padding: 0.05rem 0.4rem;
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .deck-tab.active { border-color: #facc15; }
+
+    .kv { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+    .kv .k { color: #9ca3af; font-size: 0.8rem; }
+    .kv .v { color: #e5e7eb; font-size: 0.82rem; }
+
+    .deck-list {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      max-height: calc(100vh - 360px);
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+
+    .deck-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      border: 1px solid #1f2937;
+      border-radius: 0.65rem;
+      padding: 0.35rem 0.45rem;
+      background: rgba(2, 6, 23, 0.55);
+    }
+
+    .deck-row .name {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 0.82rem;
+    }
+
+    .qty {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex: 0 0 auto;
+    }
+    .qty .n {
+      display: inline-block;
+      min-width: 1.6rem;
+      text-align: center;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
     }
   </style>
 </head>
+
 <body>
   <div class="app">
     <header>
       <div>
-        <h1>DRIVE TCG – Card Library</h1>
-        <p>Search and browse the released DRIVE cards.</p>
+        <h1>DRIVE TCG</h1>
+        <p id="subtitle">Card Library</p>
       </div>
-      <div>
-        <p class="small-note">
-          Data from <span class="inline-code">drive-card.json</span>.
-        </p>
+
+      <div class="nav">
+        <button id="btnModeLibrary" class="nav-btn active" type="button">Card Library</button>
+        <button id="btnModePrecon" class="nav-btn" type="button">Precon Viewer</button>
+        <button id="btnModeDeck" class="nav-btn" type="button">Deck Builder</button>
       </div>
     </header>
 
-    <section class="panel">
+    <!-- MODE: Card Library -->
+    <section id="modeLibrary" class="panel">
       <div class="layout-main">
         <!-- LEFT: Filters -->
         <div>
@@ -221,37 +369,19 @@
               <label for="searchInput">Search</label>
               <input id="searchInput" type="text" placeholder="Name, type, set, tags, text…" />
             </div>
-
             <div class="field">
               <label for="typeFilter">Type</label>
-              <select id="typeFilter">
-                <option value="">All Types</option>
-              </select>
+              <select id="typeFilter"><option value="">All Types</option></select>
             </div>
-
             <div class="field">
               <label for="setFilter">Set</label>
-              <select id="setFilter">
-                <option value="">All Sets</option>
-              </select>
+              <select id="setFilter"><option value="">All Sets</option></select>
             </div>
-
             <div class="field">
               <label for="rarityFilter">Rarity</label>
-              <select id="rarityFilter">
-                <option value="">All Rarities</option>
-              </select>
+              <select id="rarityFilter"><option value="">All Rarities</option></select>
             </div>
-
-            <div class="field">
-              <label for="preconFilter">Precon</label>
-              <select id="preconFilter">
-                <option value="">All Cards</option>
-              </select>
-            </div>
-
             <p id="filterStatus" class="status-line"></p>
-            <p id="preconStatus" class="status-line"></p>
           </div>
         </div>
 
@@ -272,51 +402,165 @@
         </div>
       </div>
     </section>
+
+    <!-- MODE: Precon Viewer -->
+    <section id="modePrecon" class="panel" style="display:none;">
+      <div class="two-col">
+        <div>
+          <h2>Precons</h2>
+          <p class="small-note">Loaded from <b>precon.json</b>.</p>
+          <div id="preconList" class="list">
+            <p class="small-note">Loading precons…</p>
+          </div>
+        </div>
+
+        <div>
+          <h2>Precon Details</h2>
+          <div id="preconDetail" class="detail-card">
+            <p class="small-note">Select a precon to see its decklist.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODE: Deck Builder -->
+    <section id="modeDeck" class="panel" style="display:none;">
+      <div class="layout-main">
+        <!-- LEFT: Filters -->
+        <div>
+          <h2>Find Cards</h2>
+          <div class="controls">
+            <div class="field">
+              <label for="deckSearchInput">Search</label>
+              <input id="deckSearchInput" type="text" placeholder="Name, type, set, tags, text…" />
+            </div>
+            <div class="field">
+              <label for="deckTypeFilter">Type</label>
+              <select id="deckTypeFilter"><option value="">All Types</option></select>
+            </div>
+            <div class="field">
+              <label for="deckSetFilter">Set</label>
+              <select id="deckSetFilter"><option value="">All Sets</option></select>
+            </div>
+            <div class="field">
+              <label for="deckRarityFilter">Rarity</label>
+              <select id="deckRarityFilter"><option value="">All Rarities</option></select>
+            </div>
+            <p id="deckFilterStatus" class="status-line"></p>
+            <p class="small-note">Tip: click <b>+</b> on a card tile to add it to the active deck.</p>
+          </div>
+        </div>
+
+        <!-- MIDDLE: Card grid (same library, but add buttons) -->
+        <div>
+          <h2>Cards</h2>
+          <div id="deckCardsGrid" class="cards-grid">
+            <p class="small-note">Loading card data…</p>
+          </div>
+        </div>
+
+        <!-- RIGHT: Deck panel -->
+        <div class="detail-column">
+          <h2>My Decks</h2>
+          <div class="detail-card">
+            <div class="deck-head">
+              <div class="deck-tabs" id="deckTabs"></div>
+              <div class="kv">
+                <span class="k">Total cards</span>
+                <span class="v" id="deckTotal">0</span>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:0.4rem;">
+              <label for="deckNameInput">Deck Name</label>
+              <input id="deckNameInput" type="text" placeholder="My Deck" />
+            </div>
+
+            <div class="btn-row">
+              <button id="btnDeckClear" class="btn btn-warn" type="button">Clear Deck</button>
+              <button id="btnDeckExport" class="btn" type="button">Export JSON</button>
+              <button id="btnDeckImport" class="btn" type="button">Import JSON</button>
+            </div>
+
+            <div class="deck-list" id="deckList">
+              <p class="small-note">Add cards from the list to start building.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
-    // --------------------------------------------------------------------
-    // RELEASE CONTROL: limit which sets appear on the public site.
-    // --------------------------------------------------------------------
-    //
-    // If RELEASED_SETS is:
-    //   - null or []:  all sets in drive-card.json will be shown.
-    //   - an array:    only printings with setId in that array are visible.
-    //
-    const RELEASED_SETS = null;
-    // const RELEASED_SETS = ["SET 1", "SET 2"];
+    // -------------------- Config --------------------
+    const RELEASED_SETS = null; // or ["SET 1"]
+    const STORAGE_KEY = "drive_decks_v1";
 
+    // -------------------- State --------------------
     const AppState = {
+      mode: "library", // "library" | "precon" | "deck"
       cards: [],
+      precons: [],
+
+      // Library filters/selection
       filteredCards: [],
       selectedCardId: null,
-      sets: [],
-      types: [],
-      rarities: [],
-      precons: [],
-      selectedPreconId: ""
+
+      // Deck builder state
+      deckFilteredCards: [],
+      activeDeckIndex: 0,
+      decks: [
+        { id: "deck1", name: "Deck 1", cards: {} },
+        { id: "deck2", name: "Deck 2", cards: {} },
+        { id: "deck3", name: "Deck 3", cards: {} }
+      ]
     };
 
     const Dom = {
+      subtitle: document.getElementById("subtitle"),
+
+      btnModeLibrary: document.getElementById("btnModeLibrary"),
+      btnModePrecon: document.getElementById("btnModePrecon"),
+      btnModeDeck: document.getElementById("btnModeDeck"),
+
+      modeLibrary: document.getElementById("modeLibrary"),
+      modePrecon: document.getElementById("modePrecon"),
+      modeDeck: document.getElementById("modeDeck"),
+
+      // Library DOM
       searchInput: document.getElementById("searchInput"),
       typeFilter: document.getElementById("typeFilter"),
       setFilter: document.getElementById("setFilter"),
       rarityFilter: document.getElementById("rarityFilter"),
-      preconFilter: document.getElementById("preconFilter"),
       filterStatus: document.getElementById("filterStatus"),
-      preconStatus: document.getElementById("preconStatus"),
       cardsGrid: document.getElementById("cardsGrid"),
-      detailCard: document.getElementById("detailCard")
+      detailCard: document.getElementById("detailCard"),
+
+      // Precon DOM
+      preconList: document.getElementById("preconList"),
+      preconDetail: document.getElementById("preconDetail"),
+
+      // Deck DOM
+      deckSearchInput: document.getElementById("deckSearchInput"),
+      deckTypeFilter: document.getElementById("deckTypeFilter"),
+      deckSetFilter: document.getElementById("deckSetFilter"),
+      deckRarityFilter: document.getElementById("deckRarityFilter"),
+      deckFilterStatus: document.getElementById("deckFilterStatus"),
+      deckCardsGrid: document.getElementById("deckCardsGrid"),
+
+      deckTabs: document.getElementById("deckTabs"),
+      deckNameInput: document.getElementById("deckNameInput"),
+      deckTotal: document.getElementById("deckTotal"),
+      deckList: document.getElementById("deckList"),
+      btnDeckClear: document.getElementById("btnDeckClear"),
+      btnDeckExport: document.getElementById("btnDeckExport"),
+      btnDeckImport: document.getElementById("btnDeckImport"),
     };
 
-    // ---------------------------- Helpers ----------------------------
-
+    // -------------------- Helpers --------------------
     function parseTags(str) {
       if (!str) return [];
-      return String(str)
-        .split(/[;,]/)
-        .map(s => s.trim())
-        .filter(Boolean);
+      return String(str).split(/[;,]/).map(s => s.trim()).filter(Boolean);
     }
 
     function parseHpCon(val) {
@@ -339,14 +583,7 @@
       const s = String(raw || "").trim();
       if (!s) return "";
       const key = s.toLowerCase();
-      const map = {
-        common: "Common",
-        uncommon: "Uncommon",
-        rare: "Rare",
-        epic: "Epic",
-        legendary: "Legendary",
-        promo: "Promo"
-      };
+      const map = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", promo: "Promo" };
       return map[key] || (s[0].toUpperCase() + s.slice(1).toLowerCase());
     }
 
@@ -368,17 +605,10 @@
     }
 
     function normalizePrints(card) {
-      if (!card) return;
-
       if (!Array.isArray(card.prints)) card.prints = [];
-
       if (!card.prints.length && (card.setName || card.cardNumber)) {
-        card.prints.push({
-          setId: card.setName || "",
-          cardNumber: card.cardNumber || ""
-        });
+        card.prints.push({ setId: card.setName || "", cardNumber: card.cardNumber || "" });
       }
-
       const primary = card.prints[0];
       if (primary) {
         card.setName = primary.setId || card.setName || "";
@@ -387,106 +617,111 @@
         card.setName = card.setName || "";
         card.cardNumber = card.cardNumber || "";
       }
-
       card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p.setId));
     }
 
-    const CardData = {
-      getVehicleTypes(card) {
-        if (!card) return [];
-        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) return card.vehicleTypes;
-        const e = card.extra || {};
-        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) return e.vehicleTypes;
-        if (e.vehicleType) return [e.vehicleType];
-        return [];
-      },
-      getModStats(card) {
-        if (!card || card.type !== "Mod") return null;
-        const e = card.extra || {};
-        const parts = [];
-        if (e.modLevel1) parts.push(`L1 ${e.modLevel1}`);
-        if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
-        if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
-        if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
-        if (!parts.length && !e.modBasePart) return null;
-        const label = e.modType ? `${e.modType} ${e.modBasePart || "Mod"}` : (e.modBasePart || "Mod");
-        return parts.length ? `${label}: ${parts.join(" / ")}` : label;
-      },
-      getVehicleStats(card) {
-        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return null;
-        const e = card.extra || {};
-        const bits = [];
-        if (e.hp !== undefined || e.con !== undefined) {
-          bits.push(`HP/CON: ${(e.hp ?? "?")}/${(e.con ?? "?")}`);
-        }
-        if (e.pitCost !== undefined) bits.push(`PIT: ${e.pitCost}`);
-        return bits.length ? bits.join(" | ") : null;
-      }
-    };
-
-    // ---------------------------- Precons ----------------------------
-
-    function loadPrecons() {
-      return fetch("precon.json")
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to fetch precon.json");
-          return res.json();
-        })
-        .then(json => {
-          if (!Array.isArray(json)) throw new Error("precon.json is not an array.");
-          AppState.precons = json;
-
-          Dom.preconFilter.innerHTML = '<option value="">All Cards</option>';
-          AppState.precons.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p.id;
-            opt.textContent = p.name || p.id;
-            Dom.preconFilter.appendChild(opt);
-          });
-        })
-        .catch(err => {
-          console.warn("[precon.json]", err);
-          AppState.precons = [];
-          Dom.preconFilter.innerHTML = '<option value="">All Cards</option>';
-        });
+    function getVehicleTypes(card) {
+      if (!card) return [];
+      if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) return card.vehicleTypes;
+      const e = card.extra || {};
+      if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) return e.vehicleTypes;
+      if (e.vehicleType) return [e.vehicleType];
+      return [];
     }
 
-    function getSelectedPreconCardSet() {
-      const pid = AppState.selectedPreconId;
-      if (!pid) return null;
-      const precon = AppState.precons.find(p => p.id === pid);
-      if (!precon || !precon.cards) return null;
-      return new Set(Object.keys(precon.cards));
+    function getModStats(card) {
+      if (!card || card.type !== "Mod") return null;
+      const e = card.extra || {};
+      const parts = [];
+      if (e.modLevel1) parts.push(`L1 ${e.modLevel1}`);
+      if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
+      if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
+      if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
+      if (!parts.length && !e.modBasePart) return null;
+      const label = e.modType ? `${e.modType} ${e.modBasePart || "Mod"}` : (e.modBasePart || "Mod");
+      return parts.length ? `${label}: ${parts.join(" / ")}` : label;
     }
 
-    function renderPreconStatus() {
-      const pid = AppState.selectedPreconId;
-      if (!pid) {
-        Dom.preconStatus.textContent = "";
-        return;
-      }
-
-      const precon = AppState.precons.find(p => p.id === pid);
-      if (!precon) {
-        Dom.preconStatus.textContent = "";
-        return;
-      }
-
-      const ids = Object.keys(precon.cards || {});
-      const totalCards = ids.reduce((sum, id) => sum + (precon.cards[id] || 0), 0);
-
-      // Since library is unfinished, we report missing IDs rather than erroring.
-      const cardIdSet = new Set(AppState.cards.map(c => c.id));
-      const missing = ids.filter(id => !cardIdSet.has(id));
-
-      Dom.preconStatus.innerHTML =
-        `Precon: <span>${totalCards}</span> cards · Missing: <span>${missing.length}</span>`;
+    function getVehicleStats(card) {
+      if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return null;
+      const e = card.extra || {};
+      const bits = [];
+      if (e.hp !== undefined || e.con !== undefined) bits.push(`HP/CON: ${(e.hp ?? "?")}/${(e.con ?? "?")}`);
+      if (e.pitCost !== undefined) bits.push(`PIT: ${e.pitCost}`);
+      return bits.length ? bits.join(" | ") : null;
     }
 
-    // ---------------------------- Cards load ----------------------------
+    function byTypeSetNumberName(a, b) {
+      const t = (a.type || "").localeCompare(b.type || "");
+      if (t !== 0) return t;
 
+      const ap = (a.visiblePrints && a.visiblePrints[0]) ? a.visiblePrints[0] : null;
+      const bp = (b.visiblePrints && b.visiblePrints[0]) ? b.visiblePrints[0] : null;
+
+      const aset = (ap?.setId || a.setName || "");
+      const bset = (bp?.setId || b.setName || "");
+      const s = aset.localeCompare(bset);
+      if (s !== 0) return s;
+
+      const anum = (ap?.cardNumber || a.cardNumber || "");
+      const bnum = (bp?.cardNumber || b.cardNumber || "");
+      const n = anum.localeCompare(bnum);
+      if (n !== 0) return n;
+
+      return (a.name || "").localeCompare(b.name || "");
+    }
+
+    function buildHaystack(card) {
+      const prints = card.visiblePrints || [];
+      const setBits = prints.map(p => `${p.setId || ""} ${p.cardNumber || ""}`.trim()).filter(Boolean);
+      const vtBits = getVehicleTypes(card).filter(Boolean);
+      const tagBits = (card.tags || []).filter(Boolean);
+      const e = card.extra || {};
+      const extraBits = [e.modType, e.modBasePart, e.modLevel1, e.modLevel2, e.modLevel3, e.modLevel4].filter(Boolean);
+
+      const parts = [
+        card.name,
+        card.type,
+        card.rarity,
+        card.setName,
+        card.cardNumber,
+        ...setBits,
+        ...vtBits,
+        ...tagBits,
+        ...extraBits,
+        (card.notes || "").replace(/\s+/g, " ")
+      ];
+      return parts.join(" | ").toLowerCase();
+    }
+
+    function computeFilters(cards) {
+      const types = new Set();
+      const sets = new Set();
+      const rarities = new Set();
+      cards.forEach(c => {
+        if (c.type) types.add(c.type);
+        if (c.rarity) rarities.add(c.rarity);
+        (c.visiblePrints || []).forEach(p => { if (p.setId) sets.add(p.setId); });
+      });
+      return {
+        types: Array.from(types).sort(),
+        sets: Array.from(sets).sort(),
+        rarities: Array.from(rarities).sort()
+      };
+    }
+
+    function fillSelect(selectEl, values, placeholder) {
+      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+      values.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        selectEl.appendChild(opt);
+      });
+    }
+
+    // -------------------- Data Load --------------------
     function loadCards() {
-      Dom.cardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
       return fetch("drive-card.json")
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch drive-card.json");
@@ -495,9 +730,8 @@
         .then(json => {
           if (!Array.isArray(json)) throw new Error("drive-card.json is not an array.");
 
-          AppState.cards = json.map(raw => {
+          let cards = json.map(raw => {
             const card = Object.assign({}, raw);
-
             card.type = normalizeType(card.type);
             card.rarity = normalizeRarity(card.rarity);
 
@@ -520,84 +754,86 @@
               if (parsed.con !== undefined) card.extra.con = parsed.con;
             }
 
+            // release filtering
+            if (RELEASED_SETS && RELEASED_SETS.length) {
+              if (card.prints && card.prints.length) {
+                card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p.setId));
+              } else {
+                card.visiblePrints = [];
+              }
+            }
+
             return card;
           });
 
-          // If release filtering is enabled, hide cards with no visible printings.
-          AppState.cards = AppState.cards.filter(card => {
-            if (!card.prints || !card.prints.length) {
-              if (!RELEASED_SETS || !RELEASED_SETS.length) {
-                card.visiblePrints = [];
-                return true;
-              }
-              return false;
-            }
-            return card.visiblePrints && card.visiblePrints.length > 0;
-          });
+          // Hide cards with no visible prints when release restriction is on
+          if (RELEASED_SETS && RELEASED_SETS.length) {
+            cards = cards.filter(c => c.visiblePrints && c.visiblePrints.length > 0);
+          }
 
-          extractFilterValues();
-          applyFiltersAndRender();
+          AppState.cards = cards;
         })
         .catch(err => {
           console.error(err);
-          Dom.cardsGrid.innerHTML =
-            "<p class='small-note'>Error loading drive-card.json. Check the console for details.</p>";
+          Dom.cardsGrid.innerHTML = "<p class='small-note'>Error loading drive-card.json. Check console.</p>";
+          Dom.deckCardsGrid.innerHTML = "<p class='small-note'>Error loading drive-card.json. Check console.</p>";
         });
     }
 
-    function extractFilterValues() {
-      const types = new Set();
-      const sets = new Set();
-      const rarities = new Set();
-
-      AppState.cards.forEach(card => {
-        if (card.type) types.add(card.type);
-        if (card.rarity) rarities.add(card.rarity);
-        (card.visiblePrints || []).forEach(p => { if (p.setId) sets.add(p.setId); });
-      });
-
-      AppState.types = Array.from(types).sort();
-      AppState.sets = Array.from(sets).sort();
-      AppState.rarities = Array.from(rarities).sort();
-
-      Dom.typeFilter.innerHTML = '<option value="">All Types</option>';
-      AppState.types.forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t;
-        opt.textContent = t;
-        Dom.typeFilter.appendChild(opt);
-      });
-
-      Dom.setFilter.innerHTML = '<option value="">All Sets</option>';
-      AppState.sets.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s;
-        opt.textContent = s;
-        Dom.setFilter.appendChild(opt);
-      });
-
-      Dom.rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-      AppState.rarities.forEach(r => {
-        const opt = document.createElement("option");
-        opt.value = r;
-        opt.textContent = r;
-        Dom.rarityFilter.appendChild(opt);
-      });
+    function loadPrecons() {
+      return fetch("precon.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch precon.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json)) throw new Error("precon.json is not an array.");
+          AppState.precons = json;
+        })
+        .catch(err => {
+          console.warn("[precon.json]", err);
+          AppState.precons = [];
+        });
     }
 
-    function applyFiltersAndRender() {
+    // -------------------- Mode Switching --------------------
+    function setMode(mode) {
+      AppState.mode = mode;
+
+      Dom.btnModeLibrary.classList.toggle("active", mode === "library");
+      Dom.btnModePrecon.classList.toggle("active", mode === "precon");
+      Dom.btnModeDeck.classList.toggle("active", mode === "deck");
+
+      Dom.modeLibrary.style.display = mode === "library" ? "" : "none";
+      Dom.modePrecon.style.display = mode === "precon" ? "" : "none";
+      Dom.modeDeck.style.display = mode === "deck" ? "" : "none";
+
+      Dom.subtitle.textContent =
+        mode === "library" ? "Card Library" :
+        mode === "precon" ? "Precon Viewer" :
+        "Deck Builder";
+
+      if (mode === "library") {
+        renderLibrary();
+        renderLibraryDetail(); // keep selection consistent
+      } else if (mode === "precon") {
+        renderPreconList();
+        renderPreconDetail(null);
+      } else if (mode === "deck") {
+        renderDeckTabs();
+        renderDeckUI();
+        renderDeckLibrary();
+      }
+    }
+
+    // -------------------- Card Library (Mode 1) --------------------
+    function applyLibraryFilters() {
       const q = Dom.searchInput.value.toLowerCase().trim();
       const typeFilter = Dom.typeFilter.value;
       const setFilter = Dom.setFilter.value;
       const rarityFilter = Dom.rarityFilter.value;
 
       let cards = AppState.cards.slice();
-
-      // Precon filter (if selected)
-      const preconSet = getSelectedPreconCardSet();
-      if (preconSet) {
-        cards = cards.filter(c => preconSet.has(c.id));
-      }
 
       cards = cards.filter(card => {
         const prints = card.visiblePrints || [];
@@ -611,78 +847,29 @@
         }
 
         if (q) {
-          const setBits = (prints || [])
-            .map(p => `${p.setId || ""} ${p.cardNumber || ""}`.trim())
-            .filter(Boolean);
-
-          const vtBits = (CardData.getVehicleTypes(card) || []).filter(Boolean);
-          const tagBits = (card.tags || []).filter(Boolean);
-
-          const e = card.extra || {};
-          const extraBits = [
-            e.modType,
-            e.modBasePart,
-            e.modLevel1,
-            e.modLevel2,
-            e.modLevel3,
-            e.modLevel4
-          ].filter(Boolean);
-
-          const textParts = [
-            card.name,
-            card.type,
-            card.rarity,
-            card.setName,
-            card.cardNumber,
-            ...setBits,
-            ...vtBits,
-            ...tagBits,
-            ...extraBits,
-            (card.notes || "").replace(/\s+/g, " ")
-          ];
-
-          const haystack = textParts.join(" | ").toLowerCase();
-          if (!haystack.includes(q)) return false;
+          if (!buildHaystack(card).includes(q)) return false;
         }
 
         return true;
       });
 
-      // Sort: type → setId → cardNumber → name
-      cards.sort((a, b) => {
-        const t = (a.type || "").localeCompare(b.type || "");
-        if (t !== 0) return t;
-
-        const ap = (a.visiblePrints && a.visiblePrints[0]) ? a.visiblePrints[0] : null;
-        const bp = (b.visiblePrints && b.visiblePrints[0]) ? b.visiblePrints[0] : null;
-
-        const aset = (ap?.setId || a.setName || "");
-        const bset = (bp?.setId || b.setName || "");
-        const s = aset.localeCompare(bset);
-        if (s !== 0) return s;
-
-        const anum = (ap?.cardNumber || a.cardNumber || "");
-        const bnum = (bp?.cardNumber || b.cardNumber || "");
-        const n = anum.localeCompare(bnum);
-        if (n !== 0) return n;
-
-        return (a.name || "").localeCompare(b.name || "");
-      });
-
+      cards.sort(byTypeSetNumberName);
       AppState.filteredCards = cards;
-      renderCardsGrid();
-      renderFilterStatus();
-      renderPreconStatus();
-      renderDetailCard();
     }
 
-    function renderFilterStatus() {
-      const total = AppState.cards.length;
-      const shown = AppState.filteredCards.length;
-      Dom.filterStatus.innerHTML = `Showing <span>${shown}</span> of <span>${total}</span> cards.`;
+    function renderLibrary() {
+      // filters
+      const f = computeFilters(AppState.cards);
+      fillSelect(Dom.typeFilter, f.types, "All Types");
+      fillSelect(Dom.setFilter, f.sets, "All Sets");
+      fillSelect(Dom.rarityFilter, f.rarities, "All Rarities");
+
+      applyLibraryFilters();
+      renderLibraryGrid();
+      Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
     }
 
-    function renderCardsGrid() {
+    function renderLibraryGrid() {
       const grid = Dom.cardsGrid;
       grid.innerHTML = "";
 
@@ -716,43 +903,24 @@
         const sets = (card.visiblePrints || []).map(p => p.setId).filter(Boolean);
         const setSpan = document.createElement("span");
         setSpan.className = "card-tile-set";
-        setSpan.textContent = sets.length ? sets.join(" & ") : "—";
+        setSpan.textContent = sets.length ? sets.join(" & ") : (card.setName || "—");
         row2.appendChild(setSpan);
-
-        const tagsRow = document.createElement("div");
-        tagsRow.className = "card-tile-tags";
-        const tags = card.tags || [];
-        if (tags.length) {
-          tags.slice(0, 3).forEach(t => {
-            const chip = document.createElement("span");
-            chip.className = "chip chip-muted";
-            chip.textContent = t;
-            tagsRow.appendChild(chip);
-          });
-          if (tags.length > 3) {
-            const extra = document.createElement("span");
-            extra.className = "chip chip-muted";
-            extra.textContent = `+${tags.length - 3}`;
-            tagsRow.appendChild(extra);
-          }
-        }
 
         tile.appendChild(header);
         tile.appendChild(row1);
         tile.appendChild(row2);
-        if (tags.length) tile.appendChild(tagsRow);
 
         tile.addEventListener("click", () => {
           AppState.selectedCardId = card.id;
-          renderCardsGrid();
-          renderDetailCard();
+          renderLibraryGrid();
+          renderLibraryDetail();
         });
 
         grid.appendChild(tile);
       });
     }
 
-    function renderDetailCard() {
+    function renderLibraryDetail() {
       const container = Dom.detailCard;
       container.innerHTML = "";
 
@@ -762,6 +930,7 @@
         return;
       }
 
+      // Header
       const header = document.createElement("div");
       header.className = "detail-header";
       const nameEl = document.createElement("div");
@@ -776,6 +945,7 @@
       const columns = document.createElement("div");
       columns.className = "detail-columns";
 
+      // Image
       const imgBox = document.createElement("div");
       imgBox.className = "detail-image";
       if (card.imageUrl) {
@@ -790,81 +960,51 @@
         imgBox.appendChild(placeholder);
       }
 
+      // Meta
       const meta = document.createElement("div");
       meta.className = "detail-meta";
 
+      const prints = card.visiblePrints || [];
       const setsRow = document.createElement("div");
-      const setsLabel = document.createElement("span");
-      setsLabel.className = "detail-row-label";
-      setsLabel.textContent = "Set(s):";
-      setsRow.appendChild(setsLabel);
-
+      setsRow.appendChild(makeLabel("Set(s):"));
       const setChips = document.createElement("div");
       setChips.className = "chip-row";
-      const prints = card.visiblePrints || [];
-      if (!prints.length && (!RELEASED_SETS || !RELEASED_SETS.length)) {
+      if (prints.length) {
+        prints.forEach(p => {
+          const chip = document.createElement("span");
+          chip.className = "chip chip-primary";
+          chip.textContent = p.cardNumber ? `${p.setId} – ${p.cardNumber}` : p.setId;
+          setChips.appendChild(chip);
+        });
+      } else {
         const chip = document.createElement("span");
         chip.className = "chip chip-muted";
         chip.textContent = card.setName || "—";
         setChips.appendChild(chip);
-      } else if (!prints.length) {
-        const chip = document.createElement("span");
-        chip.className = "chip chip-muted";
-        chip.textContent = "Hidden (unreleased set)";
-        setChips.appendChild(chip);
-      } else {
-        prints.forEach(p => {
-          const label = p.cardNumber ? `${p.setId} – ${p.cardNumber}` : p.setId;
-          const chip = document.createElement("span");
-          chip.className = "chip chip-primary";
-          chip.textContent = label;
-          setChips.appendChild(chip);
-        });
       }
       setsRow.appendChild(setChips);
 
       const rarityRow = document.createElement("div");
-      const rarityLabel = document.createElement("span");
-      rarityLabel.className = "detail-row-label";
-      rarityLabel.textContent = "Rarity:";
-      const rarityVal = document.createElement("span");
-      rarityVal.textContent = card.rarity || "—";
-      rarityRow.appendChild(rarityLabel);
-      rarityRow.appendChild(rarityVal);
+      rarityRow.appendChild(makeLabel("Rarity:"));
+      rarityRow.appendChild(document.createTextNode(card.rarity || "—"));
 
+      const vt = getVehicleTypes(card);
       const vtRow = document.createElement("div");
-      const vtLabel = document.createElement("span");
-      vtLabel.className = "detail-row-label";
-      vtLabel.textContent = "Vehicle Types:";
-      const vtVal = document.createElement("span");
-      const vt = CardData.getVehicleTypes(card);
-      vtVal.textContent = vt.length ? vt.join(", ") : "—";
-      vtRow.appendChild(vtLabel);
-      vtRow.appendChild(vtVal);
+      vtRow.appendChild(makeLabel("Vehicle Types:"));
+      vtRow.appendChild(document.createTextNode(vt.length ? vt.join(", ") : "—"));
 
       const tagsRow = document.createElement("div");
-      const tagsLabel = document.createElement("span");
-      tagsLabel.className = "detail-row-label";
-      tagsLabel.textContent = "Tags:";
-      const tagsVal = document.createElement("span");
-      const tags = card.tags || [];
-      tagsVal.textContent = tags.length ? tags.join(", ") : "—";
-      tagsRow.appendChild(tagsLabel);
-      tagsRow.appendChild(tagsVal);
+      tagsRow.appendChild(makeLabel("Tags:"));
+      tagsRow.appendChild(document.createTextNode((card.tags || []).length ? card.tags.join(", ") : "—"));
 
       const statsRow = document.createElement("div");
-      const statsLabel = document.createElement("span");
-      statsLabel.className = "detail-row-label";
-      statsLabel.textContent = "Stats:";
-      const statsVal = document.createElement("span");
-      const modStats = CardData.getModStats(card);
-      const vehStats = CardData.getVehicleStats(card);
+      statsRow.appendChild(makeLabel("Stats:"));
       const pieces = [];
+      const modStats = getModStats(card);
+      const vehStats = getVehicleStats(card);
       if (modStats) pieces.push(modStats);
       if (vehStats) pieces.push(vehStats);
-      statsVal.textContent = pieces.length ? pieces.join(" | ") : "—";
-      statsRow.appendChild(statsLabel);
-      statsRow.appendChild(statsVal);
+      statsRow.appendChild(document.createTextNode(pieces.length ? pieces.join(" | ") : "—"));
 
       meta.appendChild(setsRow);
       meta.appendChild(rarityRow);
@@ -875,6 +1015,7 @@
       columns.appendChild(imgBox);
       columns.appendChild(meta);
 
+      // Rules
       const rules = document.createElement("div");
       rules.className = "detail-rules";
       rules.textContent = card.notes || "No rules text.";
@@ -884,24 +1025,480 @@
       container.appendChild(rules);
     }
 
-    // ---------------------------- Init ----------------------------
-
-    function init() {
-      Dom.searchInput.addEventListener("input", applyFiltersAndRender);
-      Dom.typeFilter.addEventListener("change", applyFiltersAndRender);
-      Dom.setFilter.addEventListener("change", applyFiltersAndRender);
-      Dom.rarityFilter.addEventListener("change", applyFiltersAndRender);
-
-      Dom.preconFilter.addEventListener("change", () => {
-        AppState.selectedPreconId = Dom.preconFilter.value;
-        applyFiltersAndRender();
-      });
-
-      // Load precons (if missing, we still run fine), then load cards.
-      loadPrecons().finally(() => loadCards());
+    function makeLabel(text) {
+      const s = document.createElement("span");
+      s.className = "detail-row-label";
+      s.textContent = text;
+      return s;
     }
 
-    init();
+    // -------------------- Precon Viewer (Mode 2) --------------------
+    let selectedPreconId = null;
+
+    function renderPreconList() {
+      Dom.preconList.innerHTML = "";
+
+      if (!AppState.precons.length) {
+        Dom.preconList.innerHTML = "<p class='small-note'>No precons found (or precon.json missing).</p>";
+        return;
+      }
+
+      AppState.precons.forEach(p => {
+        const item = document.createElement("div");
+        item.className = "list-item";
+        if (p.id === selectedPreconId) item.classList.add("selected");
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "600";
+        title.textContent = p.name || p.id;
+
+        const note = document.createElement("div");
+        note.className = "small-note";
+        const ids = Object.keys(p.cards || {});
+        const total = ids.reduce((sum, id) => sum + (p.cards[id] || 0), 0);
+        note.textContent = `${total} cards`;
+
+        item.appendChild(title);
+        item.appendChild(note);
+
+        item.addEventListener("click", () => {
+          selectedPreconId = p.id;
+          renderPreconList();
+          renderPreconDetail(p);
+        });
+
+        Dom.preconList.appendChild(item);
+      });
+    }
+
+    function renderPreconDetail(precon) {
+      const box = Dom.preconDetail;
+      box.innerHTML = "";
+
+      if (!precon) {
+        box.innerHTML = "<p class='small-note'>Select a precon to see its decklist.</p>";
+        return;
+      }
+
+      const header = document.createElement("div");
+      header.className = "detail-header";
+      const nameEl = document.createElement("div");
+      nameEl.className = "detail-name";
+      nameEl.textContent = precon.name || precon.id;
+      const typeEl = document.createElement("div");
+      typeEl.className = "detail-type";
+      typeEl.textContent = "Precon";
+      header.appendChild(nameEl);
+      header.appendChild(typeEl);
+
+      const ids = Object.keys(precon.cards || {});
+      const totalCards = ids.reduce((sum, id) => sum + (precon.cards[id] || 0), 0);
+      const cardIdSet = new Set(AppState.cards.map(c => c.id));
+      const missing = ids.filter(id => !cardIdSet.has(id));
+
+      const meta = document.createElement("div");
+      meta.className = "detail-meta";
+      meta.appendChild(kvLine("Total Cards", String(totalCards)));
+      meta.appendChild(kvLine("Unique Cards", String(ids.length)));
+      meta.appendChild(kvLine("Missing IDs", String(missing.length)));
+
+      if (precon.notes) {
+        const note = document.createElement("div");
+        note.className = "small-note";
+        note.textContent = precon.notes;
+        meta.appendChild(note);
+      }
+
+      const rules = document.createElement("div");
+      rules.className = "detail-rules";
+      rules.textContent = buildPreconDecklistText(precon);
+
+      box.appendChild(header);
+      box.appendChild(meta);
+      box.appendChild(rules);
+    }
+
+    function kvLine(k, v) {
+      const row = document.createElement("div");
+      row.className = "kv";
+      const ks = document.createElement("span");
+      ks.className = "k";
+      ks.textContent = k + ":";
+      const vs = document.createElement("span");
+      vs.className = "v";
+      vs.textContent = v;
+      row.appendChild(ks);
+      row.appendChild(vs);
+      return row;
+    }
+
+    function buildPreconDecklistText(precon) {
+      const idToCard = new Map(AppState.cards.map(c => [c.id, c]));
+      const entries = Object.entries(precon.cards || {}).map(([id, qty]) => ({
+        id, qty, card: idToCard.get(id) || null
+      }));
+
+      // Sort: known cards by type->set->number->name; missing last
+      const known = entries.filter(e => e.card).sort((a, b) => byTypeSetNumberName(a.card, b.card));
+      const miss = entries.filter(e => !e.card).sort((a, b) => a.id.localeCompare(b.id));
+
+      const lines = [];
+      lines.push("DECKLIST");
+      lines.push("—");
+
+      known.forEach(e => {
+        const c = e.card;
+        const setStr = (c.visiblePrints && c.visiblePrints[0] && c.visiblePrints[0].cardNumber)
+          ? c.visiblePrints[0].cardNumber
+          : (c.cardNumber || "");
+        const extra = setStr ? ` (${setStr})` : "";
+        lines.push(`${e.qty}x ${c.name}${extra} — ${c.type}`);
+      });
+
+      if (miss.length) {
+        lines.push("");
+        lines.push("MISSING (not in drive-card.json yet)");
+        lines.push("—");
+        miss.forEach(e => lines.push(`${e.qty}x ${e.id}`));
+      }
+
+      return lines.join("\n");
+    }
+
+    // -------------------- Deck Builder (Mode 3) --------------------
+    function loadDecksFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed) || parsed.length !== 3) return;
+
+        // basic validation + merge defaults
+        AppState.decks = parsed.map((d, i) => ({
+          id: d.id || `deck${i+1}`,
+          name: typeof d.name === "string" ? d.name : `Deck ${i+1}`,
+          cards: (d.cards && typeof d.cards === "object") ? d.cards : {}
+        }));
+      } catch (e) {
+        console.warn("Failed to load decks from storage:", e);
+      }
+    }
+
+    function saveDecksToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState.decks));
+      } catch (e) {
+        console.warn("Failed to save decks:", e);
+      }
+    }
+
+    function renderDeckTabs() {
+      Dom.deckTabs.innerHTML = "";
+      AppState.decks.forEach((d, idx) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "deck-tab" + (idx === AppState.activeDeckIndex ? " active" : "");
+        b.textContent = `Deck ${idx + 1}`;
+        b.addEventListener("click", () => {
+          AppState.activeDeckIndex = idx;
+          renderDeckTabs();
+          renderDeckUI();
+          renderDeckLibraryGrid(); // refresh + buttons
+        });
+        Dom.deckTabs.appendChild(b);
+      });
+    }
+
+    function getActiveDeck() {
+      return AppState.decks[AppState.activeDeckIndex];
+    }
+
+    function deckTotalCount(deck) {
+      return Object.values(deck.cards || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
+    }
+
+    function renderDeckUI() {
+      const deck = getActiveDeck();
+      Dom.deckNameInput.value = deck.name || "";
+      Dom.deckTotal.textContent = String(deckTotalCount(deck));
+      renderDeckList();
+    }
+
+    function renderDeckList() {
+      const deck = getActiveDeck();
+      const idToCard = new Map(AppState.cards.map(c => [c.id, c]));
+      const entries = Object.entries(deck.cards || {})
+        .map(([id, qty]) => ({ id, qty: Number(qty) || 0, card: idToCard.get(id) || null }))
+        .filter(e => e.qty > 0);
+
+      Dom.deckList.innerHTML = "";
+
+      if (!entries.length) {
+        Dom.deckList.innerHTML = "<p class='small-note'>Add cards from the list to start building.</p>";
+        return;
+      }
+
+      // Sort: known by card sort; missing last
+      const known = entries.filter(e => e.card).sort((a, b) => byTypeSetNumberName(a.card, b.card));
+      const miss = entries.filter(e => !e.card).sort((a, b) => a.id.localeCompare(b.id));
+
+      const renderEntry = (e) => {
+        const row = document.createElement("div");
+        row.className = "deck-row";
+
+        const left = document.createElement("div");
+        left.className = "name";
+        left.textContent = e.card ? `${e.card.name} — ${e.card.type}` : `MISSING: ${e.id}`;
+
+        const qty = document.createElement("div");
+        qty.className = "qty";
+
+        const btnMinus = document.createElement("button");
+        btnMinus.type = "button";
+        btnMinus.className = "btn";
+        btnMinus.textContent = "−";
+        btnMinus.addEventListener("click", () => addToDeck(e.id, -1));
+
+        const n = document.createElement("span");
+        n.className = "n";
+        n.textContent = String(e.qty);
+
+        const btnPlus = document.createElement("button");
+        btnPlus.type = "button";
+        btnPlus.className = "btn";
+        btnPlus.textContent = "+";
+        btnPlus.addEventListener("click", () => addToDeck(e.id, +1));
+
+        qty.appendChild(btnMinus);
+        qty.appendChild(n);
+        qty.appendChild(btnPlus);
+
+        row.appendChild(left);
+        row.appendChild(qty);
+        return row;
+      };
+
+      known.forEach(e => Dom.deckList.appendChild(renderEntry(e)));
+      if (miss.length) {
+        const sep = document.createElement("p");
+        sep.className = "small-note";
+        sep.textContent = "Missing cards (not in drive-card.json yet):";
+        Dom.deckList.appendChild(sep);
+        miss.forEach(e => Dom.deckList.appendChild(renderEntry(e)));
+      }
+    }
+
+    function addToDeck(cardId, delta) {
+      const deck = getActiveDeck();
+      if (!deck.cards) deck.cards = {};
+      const cur = Number(deck.cards[cardId] || 0);
+      const next = Math.max(0, cur + delta);
+      if (next === 0) delete deck.cards[cardId];
+      else deck.cards[cardId] = next;
+
+      saveDecksToStorage();
+      Dom.deckTotal.textContent = String(deckTotalCount(deck));
+      renderDeckList();
+    }
+
+    function clearActiveDeck() {
+      const deck = getActiveDeck();
+      deck.cards = {};
+      saveDecksToStorage();
+      renderDeckUI();
+      renderDeckLibraryGrid();
+    }
+
+    function exportActiveDeck() {
+      const deck = getActiveDeck();
+      const payload = {
+        id: deck.id,
+        name: deck.name,
+        cards: deck.cards || {}
+      };
+      const text = JSON.stringify(payload, null, 2);
+      // Copy-to-clipboard best-effort; fallback alert
+      navigator.clipboard?.writeText(text).then(() => {
+        alert("Deck JSON copied to clipboard.");
+      }).catch(() => {
+        prompt("Copy your deck JSON:", text);
+      });
+    }
+
+    function importActiveDeck() {
+      const raw = prompt("Paste Deck JSON here:");
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") throw new Error("Invalid JSON.");
+        if (!parsed.cards || typeof parsed.cards !== "object") throw new Error("Missing 'cards' map.");
+
+        const deck = getActiveDeck();
+        deck.name = typeof parsed.name === "string" ? parsed.name : deck.name;
+        deck.cards = parsed.cards;
+
+        saveDecksToStorage();
+        renderDeckUI();
+        renderDeckLibraryGrid();
+      } catch (e) {
+        alert("Import failed: " + e.message);
+      }
+    }
+
+    // Deck builder card list (with + buttons)
+    function applyDeckLibraryFilters() {
+      const q = Dom.deckSearchInput.value.toLowerCase().trim();
+      const typeFilter = Dom.deckTypeFilter.value;
+      const setFilter = Dom.deckSetFilter.value;
+      const rarityFilter = Dom.deckRarityFilter.value;
+
+      let cards = AppState.cards.slice();
+
+      cards = cards.filter(card => {
+        const prints = card.visiblePrints || [];
+        if (prints.length === 0 && setFilter) return false;
+
+        if (typeFilter && card.type !== typeFilter) return false;
+        if (rarityFilter && card.rarity !== rarityFilter) return false;
+
+        if (setFilter) {
+          if (!prints.some(p => p.setId === setFilter)) return false;
+        }
+
+        if (q) {
+          if (!buildHaystack(card).includes(q)) return false;
+        }
+        return true;
+      });
+
+      cards.sort(byTypeSetNumberName);
+      AppState.deckFilteredCards = cards;
+    }
+
+    function renderDeckLibrary() {
+      const f = computeFilters(AppState.cards);
+      fillSelect(Dom.deckTypeFilter, f.types, "All Types");
+      fillSelect(Dom.deckSetFilter, f.sets, "All Sets");
+      fillSelect(Dom.deckRarityFilter, f.rarities, "All Rarities");
+
+      applyDeckLibraryFilters();
+      renderDeckLibraryGrid();
+      Dom.deckFilterStatus.innerHTML =
+        `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+    }
+
+    function renderDeckLibraryGrid() {
+      const grid = Dom.deckCardsGrid;
+      grid.innerHTML = "";
+
+      if (!AppState.deckFilteredCards.length) {
+        grid.innerHTML = "<p class='small-note'>No cards match the current filters.</p>";
+        return;
+      }
+
+      AppState.deckFilteredCards.forEach(card => {
+        const tile = document.createElement("div");
+        tile.className = "card-tile";
+
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "tile-add";
+        addBtn.textContent = "+";
+        addBtn.title = "Add to active deck";
+        addBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          addToDeck(card.id, +1);
+        });
+
+        const header = document.createElement("div");
+        header.className = "card-tile-name";
+        header.textContent = card.name || "(No Name)";
+
+        const row1 = document.createElement("div");
+        row1.className = "card-tile-row";
+        const typeSpan = document.createElement("span");
+        typeSpan.className = "card-tile-type";
+        typeSpan.textContent = card.type || "";
+        const raritySpan = document.createElement("span");
+        raritySpan.className = "card-tile-rarity";
+        raritySpan.textContent = card.rarity || "";
+        row1.appendChild(typeSpan);
+        row1.appendChild(raritySpan);
+
+        const row2 = document.createElement("div");
+        row2.className = "card-tile-row";
+        const sets = (card.visiblePrints || []).map(p => p.setId).filter(Boolean);
+        const setSpan = document.createElement("span");
+        setSpan.className = "card-tile-set";
+        setSpan.textContent = sets.length ? sets.join(" & ") : (card.setName || "—");
+        row2.appendChild(setSpan);
+
+        tile.appendChild(addBtn);
+        tile.appendChild(header);
+        tile.appendChild(row1);
+        tile.appendChild(row2);
+
+        tile.addEventListener("click", () => {
+          // Optional: add on click? For now, click just adds detail via alert-free UX:
+          // We'll do nothing (keeps it clean), + button handles adding.
+        });
+
+        grid.appendChild(tile);
+      });
+    }
+
+    // -------------------- Init --------------------
+    function wireEvents() {
+      Dom.btnModeLibrary.addEventListener("click", () => setMode("library"));
+      Dom.btnModePrecon.addEventListener("click", () => setMode("precon"));
+      Dom.btnModeDeck.addEventListener("click", () => setMode("deck"));
+
+      // library filters
+      Dom.searchInput.addEventListener("input", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.typeFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.setFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.rarityFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+
+      // deck filters
+      Dom.deckSearchInput.addEventListener("input", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.deckTypeFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.deckSetFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.deckRarityFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+
+      // deck actions
+      Dom.deckNameInput.addEventListener("input", () => {
+        const deck = getActiveDeck();
+        deck.name = Dom.deckNameInput.value;
+        saveDecksToStorage();
+      });
+
+      Dom.btnDeckClear.addEventListener("click", () => {
+        if (confirm("Clear this deck?")) clearActiveDeck();
+      });
+      Dom.btnDeckExport.addEventListener("click", exportActiveDeck);
+      Dom.btnDeckImport.addEventListener("click", importActiveDeck);
+    }
+
+    function bootstrap() {
+      wireEvents();
+      loadDecksFromStorage();
+
+      Promise.all([loadCards(), loadPrecons()]).then(() => {
+        // Populate both library & deck filter dropdowns once data is in
+        renderLibrary();
+        renderDeckTabs();
+        renderDeckUI();
+        renderDeckLibrary();
+
+        // Precon list is ready too
+        renderPreconList();
+
+        // default mode
+        setMode("library");
+      });
+    }
+
+    bootstrap();
   </script>
 </body>
 </html>
