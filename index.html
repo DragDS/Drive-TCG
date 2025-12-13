@@ -278,11 +278,7 @@
       flex-wrap: wrap;
     }
 
-    .deck-tabs {
-      display: flex;
-      gap: 0.35rem;
-      flex-wrap: wrap;
-    }
+    .deck-tabs { display: flex; gap: 0.35rem; flex-wrap: wrap; }
     .deck-tab {
       border-radius: 999px;
       border: 1px solid #1f2937;
@@ -303,7 +299,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.35rem;
-      max-height: calc(100vh - 360px);
+      max-height: calc(100vh - 460px);
       overflow-y: auto;
       padding-right: 0.25rem;
     }
@@ -327,12 +323,7 @@
       font-size: 0.82rem;
     }
 
-    .qty {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-      flex: 0 0 auto;
-    }
+    .qty { display: inline-flex; align-items: center; gap: 0.3rem; flex: 0 0 auto; }
     .qty .n {
       display: inline-block;
       min-width: 1.6rem;
@@ -447,7 +438,7 @@
               <select id="deckRarityFilter"><option value="">All Rarities</option></select>
             </div>
             <p id="deckFilterStatus" class="status-line"></p>
-            <p class="small-note">Tip: click <b>+</b> on a card tile to add it to the active deck.</p>
+            <p class="small-note">Tip: click <b>+</b> on a card tile to add it to the active deck. Click the tile to preview.</p>
           </div>
         </div>
 
@@ -459,8 +450,15 @@
           </div>
         </div>
 
-        <!-- RIGHT: Deck panel -->
+        <!-- RIGHT: Details + My Decks (stacked) -->
         <div class="detail-column">
+          <h2>Details</h2>
+          <div id="deckDetailCard" class="detail-card">
+            <p class="small-note">Select a card to see its full details.</p>
+          </div>
+
+          <div style="height:0.6rem;"></div>
+
           <h2>My Decks</h2>
           <div class="detail-card">
             <div class="deck-head">
@@ -508,6 +506,7 @@
 
       // Deck builder state
       deckFilteredCards: [],
+      deckSelectedCardId: null,
       activeDeckIndex: 0,
       decks: [
         { id: "deck1", name: "Deck 1", cards: {} },
@@ -547,6 +546,7 @@
       deckRarityFilter: document.getElementById("deckRarityFilter"),
       deckFilterStatus: document.getElementById("deckFilterStatus"),
       deckCardsGrid: document.getElementById("deckCardsGrid"),
+      deckDetailCard: document.getElementById("deckDetailCard"),
 
       deckTabs: document.getElementById("deckTabs"),
       deckNameInput: document.getElementById("deckNameInput"),
@@ -720,8 +720,18 @@
       });
     }
 
+    function makeLabel(text) {
+      const s = document.createElement("span");
+      s.className = "detail-row-label";
+      s.textContent = text;
+      return s;
+    }
+
     // -------------------- Data Load --------------------
     function loadCards() {
+      Dom.cardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
+      Dom.deckCardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
+
       return fetch("drive-card.json")
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch drive-card.json");
@@ -772,6 +782,10 @@
           }
 
           AppState.cards = cards;
+
+          // Default selections (nice UX)
+          if (!AppState.selectedCardId && AppState.cards.length) AppState.selectedCardId = AppState.cards[0].id;
+          if (!AppState.deckSelectedCardId && AppState.cards.length) AppState.deckSelectedCardId = AppState.cards[0].id;
         })
         .catch(err => {
           console.error(err);
@@ -781,6 +795,8 @@
     }
 
     function loadPrecons() {
+      Dom.preconList.innerHTML = "<p class='small-note'>Loading precons…</p>";
+
       return fetch("precon.json")
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch precon.json");
@@ -815,7 +831,7 @@
 
       if (mode === "library") {
         renderLibrary();
-        renderLibraryDetail(); // keep selection consistent
+        renderLibraryDetail();
       } else if (mode === "precon") {
         renderPreconList();
         renderPreconDetail(null);
@@ -823,6 +839,7 @@
         renderDeckTabs();
         renderDeckUI();
         renderDeckLibrary();
+        renderDeckDetailCard();
       }
     }
 
@@ -858,7 +875,6 @@
     }
 
     function renderLibrary() {
-      // filters
       const f = computeFilters(AppState.cards);
       fillSelect(Dom.typeFilter, f.types, "All Types");
       fillSelect(Dom.setFilter, f.sets, "All Sets");
@@ -930,22 +946,23 @@
         return;
       }
 
-      // Header
       const header = document.createElement("div");
       header.className = "detail-header";
+
       const nameEl = document.createElement("div");
       nameEl.className = "detail-name";
       nameEl.textContent = card.name || "(No Name)";
+
       const typeEl = document.createElement("div");
       typeEl.className = "detail-type";
       typeEl.textContent = card.type || "";
+
       header.appendChild(nameEl);
       header.appendChild(typeEl);
 
       const columns = document.createElement("div");
       columns.className = "detail-columns";
 
-      // Image
       const imgBox = document.createElement("div");
       imgBox.className = "detail-image";
       if (card.imageUrl) {
@@ -960,15 +977,16 @@
         imgBox.appendChild(placeholder);
       }
 
-      // Meta
       const meta = document.createElement("div");
       meta.className = "detail-meta";
 
       const prints = card.visiblePrints || [];
+
       const setsRow = document.createElement("div");
       setsRow.appendChild(makeLabel("Set(s):"));
       const setChips = document.createElement("div");
       setChips.className = "chip-row";
+
       if (prints.length) {
         prints.forEach(p => {
           const chip = document.createElement("span");
@@ -988,14 +1006,15 @@
       rarityRow.appendChild(makeLabel("Rarity:"));
       rarityRow.appendChild(document.createTextNode(card.rarity || "—"));
 
-      const vt = getVehicleTypes(card);
       const vtRow = document.createElement("div");
       vtRow.appendChild(makeLabel("Vehicle Types:"));
+      const vt = getVehicleTypes(card);
       vtRow.appendChild(document.createTextNode(vt.length ? vt.join(", ") : "—"));
 
       const tagsRow = document.createElement("div");
       tagsRow.appendChild(makeLabel("Tags:"));
-      tagsRow.appendChild(document.createTextNode((card.tags || []).length ? card.tags.join(", ") : "—"));
+      const tags = card.tags || [];
+      tagsRow.appendChild(document.createTextNode(tags.length ? tags.join(", ") : "—"));
 
       const statsRow = document.createElement("div");
       statsRow.appendChild(makeLabel("Stats:"));
@@ -1015,7 +1034,6 @@
       columns.appendChild(imgBox);
       columns.appendChild(meta);
 
-      // Rules
       const rules = document.createElement("div");
       rules.className = "detail-rules";
       rules.textContent = card.notes || "No rules text.";
@@ -1023,13 +1041,6 @@
       container.appendChild(header);
       container.appendChild(columns);
       container.appendChild(rules);
-    }
-
-    function makeLabel(text) {
-      const s = document.createElement("span");
-      s.className = "detail-row-label";
-      s.textContent = text;
-      return s;
     }
 
     // -------------------- Precon Viewer (Mode 2) --------------------
@@ -1138,7 +1149,6 @@
         id, qty, card: idToCard.get(id) || null
       }));
 
-      // Sort: known cards by type->set->number->name; missing last
       const known = entries.filter(e => e.card).sort((a, b) => byTypeSetNumberName(a.card, b.card));
       const miss = entries.filter(e => !e.card).sort((a, b) => a.id.localeCompare(b.id));
 
@@ -1173,7 +1183,6 @@
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed) || parsed.length !== 3) return;
 
-        // basic validation + merge defaults
         AppState.decks = parsed.map((d, i) => ({
           id: d.id || `deck${i+1}`,
           name: typeof d.name === "string" ? d.name : `Deck ${i+1}`,
@@ -1203,7 +1212,8 @@
           AppState.activeDeckIndex = idx;
           renderDeckTabs();
           renderDeckUI();
-          renderDeckLibraryGrid(); // refresh + buttons
+          renderDeckLibraryGrid();
+          renderDeckDetailCard();
         });
         Dom.deckTabs.appendChild(b);
       });
@@ -1238,7 +1248,6 @@
         return;
       }
 
-      // Sort: known by card sort; missing last
       const known = entries.filter(e => e.card).sort((a, b) => byTypeSetNumberName(a.card, b.card));
       const miss = entries.filter(e => !e.card).sort((a, b) => a.id.localeCompare(b.id));
 
@@ -1311,13 +1320,9 @@
 
     function exportActiveDeck() {
       const deck = getActiveDeck();
-      const payload = {
-        id: deck.id,
-        name: deck.name,
-        cards: deck.cards || {}
-      };
+      const payload = { id: deck.id, name: deck.name, cards: deck.cards || {} };
       const text = JSON.stringify(payload, null, 2);
-      // Copy-to-clipboard best-effort; fallback alert
+
       navigator.clipboard?.writeText(text).then(() => {
         alert("Deck JSON copied to clipboard.");
       }).catch(() => {
@@ -1345,7 +1350,6 @@
       }
     }
 
-    // Deck builder card list (with + buttons)
     function applyDeckLibraryFilters() {
       const q = Dom.deckSearchInput.value.toLowerCase().trim();
       const typeFilter = Dom.deckTypeFilter.value;
@@ -1399,6 +1403,7 @@
       AppState.deckFilteredCards.forEach(card => {
         const tile = document.createElement("div");
         tile.className = "card-tile";
+        if (card.id === AppState.deckSelectedCardId) tile.classList.add("selected");
 
         const addBtn = document.createElement("button");
         addBtn.type = "button";
@@ -1439,12 +1444,120 @@
         tile.appendChild(row2);
 
         tile.addEventListener("click", () => {
-          // Optional: add on click? For now, click just adds detail via alert-free UX:
-          // We'll do nothing (keeps it clean), + button handles adding.
+          AppState.deckSelectedCardId = card.id;
+          renderDeckLibraryGrid();
+          renderDeckDetailCard();
         });
 
         grid.appendChild(tile);
       });
+    }
+
+    function renderDeckDetailCard() {
+      const container = Dom.deckDetailCard;
+      container.innerHTML = "";
+
+      const card = AppState.cards.find(c => c.id === AppState.deckSelectedCardId);
+      if (!card) {
+        container.innerHTML = "<p class='small-note'>Select a card to see its full details.</p>";
+        return;
+      }
+
+      const header = document.createElement("div");
+      header.className = "detail-header";
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "detail-name";
+      nameEl.textContent = card.name || "(No Name)";
+
+      const typeEl = document.createElement("div");
+      typeEl.className = "detail-type";
+      typeEl.textContent = card.type || "";
+
+      header.appendChild(nameEl);
+      header.appendChild(typeEl);
+
+      const columns = document.createElement("div");
+      columns.className = "detail-columns";
+
+      const imgBox = document.createElement("div");
+      imgBox.className = "detail-image";
+      if (card.imageUrl) {
+        const img = document.createElement("img");
+        img.src = card.imageUrl;
+        img.alt = card.name || "Card image";
+        imgBox.appendChild(img);
+      } else {
+        const placeholder = document.createElement("span");
+        placeholder.className = "small-note";
+        placeholder.textContent = "No image";
+        imgBox.appendChild(placeholder);
+      }
+
+      const meta = document.createElement("div");
+      meta.className = "detail-meta";
+
+      const prints = card.visiblePrints || [];
+
+      const setsRow = document.createElement("div");
+      setsRow.appendChild(makeLabel("Set(s):"));
+      const setChips = document.createElement("div");
+      setChips.className = "chip-row";
+
+      if (prints.length) {
+        prints.forEach(p => {
+          const chip = document.createElement("span");
+          chip.className = "chip chip-primary";
+          chip.textContent = p.cardNumber ? `${p.setId} – ${p.cardNumber}` : p.setId;
+          setChips.appendChild(chip);
+        });
+      } else {
+        const chip = document.createElement("span");
+        chip.className = "chip chip-muted";
+        chip.textContent = card.setName || "—";
+        setChips.appendChild(chip);
+      }
+      setsRow.appendChild(setChips);
+
+      const rarityRow = document.createElement("div");
+      rarityRow.appendChild(makeLabel("Rarity:"));
+      rarityRow.appendChild(document.createTextNode(card.rarity || "—"));
+
+      const vtRow = document.createElement("div");
+      vtRow.appendChild(makeLabel("Vehicle Types:"));
+      const vt = getVehicleTypes(card);
+      vtRow.appendChild(document.createTextNode(vt.length ? vt.join(", ") : "—"));
+
+      const tagsRow = document.createElement("div");
+      tagsRow.appendChild(makeLabel("Tags:"));
+      const tags = card.tags || [];
+      tagsRow.appendChild(document.createTextNode(tags.length ? tags.join(", ") : "—"));
+
+      const statsRow = document.createElement("div");
+      statsRow.appendChild(makeLabel("Stats:"));
+      const pieces = [];
+      const modStats = getModStats(card);
+      const vehStats = getVehicleStats(card);
+      if (modStats) pieces.push(modStats);
+      if (vehStats) pieces.push(vehStats);
+      statsRow.appendChild(document.createTextNode(pieces.length ? pieces.join(" | ") : "—"));
+
+      meta.appendChild(setsRow);
+      meta.appendChild(rarityRow);
+      meta.appendChild(vtRow);
+      meta.appendChild(tagsRow);
+      meta.appendChild(statsRow);
+
+      columns.appendChild(imgBox);
+      columns.appendChild(meta);
+
+      const rules = document.createElement("div");
+      rules.className = "detail-rules";
+      rules.textContent = card.notes || "No rules text.";
+
+      container.appendChild(header);
+      container.appendChild(columns);
+      container.appendChild(rules);
     }
 
     // -------------------- Init --------------------
@@ -1454,16 +1567,52 @@
       Dom.btnModeDeck.addEventListener("click", () => setMode("deck"));
 
       // library filters
-      Dom.searchInput.addEventListener("input", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.typeFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.setFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.rarityFilter.addEventListener("change", () => { applyLibraryFilters(); renderLibraryGrid(); renderLibraryDetail(); Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.searchInput.addEventListener("input", () => {
+        applyLibraryFilters();
+        renderLibraryGrid();
+        renderLibraryDetail();
+        Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.typeFilter.addEventListener("change", () => {
+        applyLibraryFilters();
+        renderLibraryGrid();
+        renderLibraryDetail();
+        Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.setFilter.addEventListener("change", () => {
+        applyLibraryFilters();
+        renderLibraryGrid();
+        renderLibraryDetail();
+        Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.rarityFilter.addEventListener("change", () => {
+        applyLibraryFilters();
+        renderLibraryGrid();
+        renderLibraryDetail();
+        Dom.filterStatus.innerHTML = `Showing <span>${AppState.filteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
 
       // deck filters
-      Dom.deckSearchInput.addEventListener("input", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.deckTypeFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.deckSetFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
-      Dom.deckRarityFilter.addEventListener("change", () => { applyDeckLibraryFilters(); renderDeckLibraryGrid(); Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`; });
+      Dom.deckSearchInput.addEventListener("input", () => {
+        applyDeckLibraryFilters();
+        renderDeckLibraryGrid();
+        Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.deckTypeFilter.addEventListener("change", () => {
+        applyDeckLibraryFilters();
+        renderDeckLibraryGrid();
+        Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.deckSetFilter.addEventListener("change", () => {
+        applyDeckLibraryFilters();
+        renderDeckLibraryGrid();
+        Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
+      Dom.deckRarityFilter.addEventListener("change", () => {
+        applyDeckLibraryFilters();
+        renderDeckLibraryGrid();
+        Dom.deckFilterStatus.innerHTML = `Showing <span>${AppState.deckFilteredCards.length}</span> of <span>${AppState.cards.length}</span> cards.`;
+      });
 
       // deck actions
       Dom.deckNameInput.addEventListener("input", () => {
@@ -1484,16 +1633,16 @@
       loadDecksFromStorage();
 
       Promise.all([loadCards(), loadPrecons()]).then(() => {
-        // Populate both library & deck filter dropdowns once data is in
         renderLibrary();
+        renderLibraryDetail();
+
         renderDeckTabs();
         renderDeckUI();
         renderDeckLibrary();
+        renderDeckDetailCard();
 
-        // Precon list is ready too
         renderPreconList();
 
-        // default mode
         setMode("library");
       });
     }
