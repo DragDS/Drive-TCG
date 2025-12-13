@@ -5,28 +5,18 @@
   <title>DRIVE TCG – Card Library</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: dark;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: radial-gradient(circle at top, #0f172a, #020617 55%);
       color: #e5e7eb;
       min-height: 100vh;
     }
 
-    .app {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 1rem 1.25rem 2.5rem;
-    }
+    .app { max-width: 1280px; margin: 0 auto; padding: 1rem 1.25rem 2.5rem; }
 
     header {
       display: flex;
@@ -37,17 +27,8 @@
       flex-wrap: wrap;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 1.4rem;
-      letter-spacing: 0.04em;
-    }
-
-    header p {
-      margin: 0;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
+    header h1 { margin: 0; font-size: 1.4rem; letter-spacing: 0.04em; }
+    header p { margin: 0; font-size: 0.8rem; color: #9ca3af; }
 
     .panel {
       border-radius: 1rem;
@@ -64,52 +45,22 @@
     }
 
     @media (max-width: 1080px) {
-      .layout-main {
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
-        grid-template-rows: auto auto;
-      }
-      .detail-column {
-        grid-column: 1 / -1;
-      }
+      .layout-main { grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr); grid-template-rows: auto auto; }
+      .detail-column { grid-column: 1 / -1; }
     }
 
-    @media (max-width: 760px) {
-      .layout-main {
-        grid-template-columns: 1fr;
-      }
-    }
+    @media (max-width: 760px) { .layout-main { grid-template-columns: 1fr; } }
 
-    h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1rem;
-      letter-spacing: 0.03em;
-    }
+    h2 { margin: 0 0 0.5rem; font-size: 1rem; letter-spacing: 0.03em; }
 
-    .small-note {
-      font-size: 0.78rem;
-      color: #9ca3af;
-      margin: 0.1rem 0;
-    }
+    .small-note { font-size: 0.78rem; color: #9ca3af; margin: 0.1rem 0; }
 
-    .controls {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+    .controls { display: flex; flex-direction: column; gap: 0.5rem; }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
+    .field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .field label { font-size: 0.8rem; color: #9ca3af; }
 
-    .field label {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    input[type="text"],
-    select {
+    input[type="text"], select {
       border-radius: 0.5rem;
       border: 1px solid #1f2937;
       background: rgba(15, 23, 42, 0.95);
@@ -120,18 +71,12 @@
       min-height: 1.9rem;
     }
 
-    input[type="text"]:focus,
-    select:focus {
+    input[type="text"]:focus, select:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
     }
 
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-    }
-
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.25rem; }
     .chip {
       display: inline-flex;
       align-items: center;
@@ -142,22 +87,15 @@
       font-size: 0.7rem;
       color: #cbd5f5;
     }
-
-    .chip-primary {
-      border-color: #60a5fa;
-      background: radial-gradient(circle at top left, #1d4ed8, #020617);
-    }
-
-    .chip-muted {
-      opacity: 0.8;
-    }
+    .chip-primary { border-color: #60a5fa; background: radial-gradient(circle at top left, #1d4ed8, #020617); }
+    .chip-muted { opacity: 0.8; }
 
     .cards-grid {
       margin-top: 0.25rem;
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 0.5rem;
-      max-height: calc(100vh - 210px);
+      max-height: calc(100vh - 240px);
       overflow-y: auto;
       padding-right: 0.25rem;
     }
@@ -165,11 +103,7 @@
     .card-tile {
       border-radius: 0.6rem;
       border: 1px solid #1f2937;
-      background: radial-gradient(
-        circle at top left,
-        rgba(148, 163, 184, 0.16),
-        #020617
-      );
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.16), #020617);
       padding: 0.4rem 0.45rem;
       cursor: pointer;
       display: flex;
@@ -177,8 +111,7 @@
       gap: 0.25rem;
       font-size: 0.78rem;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
-      transition: transform 0.08s ease, box-shadow 0.1s ease,
-        border-color 0.1s ease;
+      transition: transform 0.08s ease, box-shadow 0.1s ease, border-color 0.1s ease;
     }
 
     .card-tile:hover {
@@ -189,66 +122,23 @@
 
     .card-tile.selected {
       border-color: #facc15;
-      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9),
-        0 14px 30px rgba(234, 179, 8, 0.4);
+      box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.9), 0 14px 30px rgba(234, 179, 8, 0.4);
     }
 
-    .card-tile-name {
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .card-tile-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-tile-row { display: flex; justify-content: space-between; gap: 0.3rem; align-items: baseline; }
+    .card-tile-type { font-size: 0.73rem; color: #9ca3af; }
+    .card-tile-set { font-size: 0.73rem; color: #c4b5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-tile-rarity { font-size: 0.72rem; color: #a7f3d0; }
+    .card-tile-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; }
 
-    .card-tile-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.3rem;
-      align-items: baseline;
-    }
-
-    .card-tile-type {
-      font-size: 0.73rem;
-      color: #9ca3af;
-    }
-
-    .card-tile-set {
-      font-size: 0.73rem;
-      color: #c4b5fd;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-tile-rarity {
-      font-size: 0.72rem;
-      color: #a7f3d0;
-    }
-
-    .card-tile-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.2rem;
-    }
-
-    .status-line {
-      font-size: 0.78rem;
-      color: #9ca3af;
-      margin-top: 0.15rem;
-    }
-
-    .status-line span {
-      color: #e5e7eb;
-    }
+    .status-line { font-size: 0.78rem; color: #9ca3af; margin-top: 0.15rem; }
+    .status-line span { color: #e5e7eb; }
 
     .detail-card {
       border-radius: 0.9rem;
       border: 1px solid #1f2937;
-      background: radial-gradient(
-        circle at top left,
-        rgba(148, 163, 184, 0.16),
-        #020617
-      );
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.16), #020617);
       padding: 0.6rem;
       display: flex;
       flex-direction: column;
@@ -257,29 +147,11 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
     }
 
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-      align-items: baseline;
-      flex-wrap: wrap;
-    }
+    .detail-header { display: flex; justify-content: space-between; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
+    .detail-name { font-size: 1.05rem; font-weight: 600; }
+    .detail-type { font-size: 0.8rem; color: #9ca3af; }
 
-    .detail-name {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-
-    .detail-type {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .detail-columns {
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-    }
+    .detail-columns { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 
     .detail-image {
       flex: 0 0 42%;
@@ -293,11 +165,7 @@
       min-height: 160px;
     }
 
-    .detail-image img {
-      max-width: 100%;
-      max-height: 260px;
-      object-fit: contain;
-    }
+    .detail-image img { max-width: 100%; max-height: 260px; object-fit: contain; }
 
     .detail-meta {
       flex: 1;
@@ -308,11 +176,7 @@
       gap: 0.2rem;
     }
 
-    .detail-row-label {
-      font-weight: 600;
-      color: #e5e7eb;
-      margin-right: 0.25rem;
-    }
+    .detail-row-label { font-weight: 600; color: #e5e7eb; margin-right: 0.25rem; }
 
     .detail-rules {
       border-radius: 0.6rem;
@@ -324,8 +188,7 @@
     }
 
     .inline-code {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-        "Liberation Mono", "Courier New", monospace;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
       font-size: 0.78rem;
       background: rgba(15, 23, 42, 0.9);
       border-radius: 999px;
@@ -356,31 +219,39 @@
           <div class="controls">
             <div class="field">
               <label for="searchInput">Search</label>
-              <input
-                id="searchInput"
-                type="text"
-                placeholder="Name, type, text, set…"
-              />
+              <input id="searchInput" type="text" placeholder="Name, type, set, tags, text…" />
             </div>
+
             <div class="field">
               <label for="typeFilter">Type</label>
               <select id="typeFilter">
                 <option value="">All Types</option>
               </select>
             </div>
+
             <div class="field">
               <label for="setFilter">Set</label>
               <select id="setFilter">
                 <option value="">All Sets</option>
               </select>
             </div>
+
             <div class="field">
               <label for="rarityFilter">Rarity</label>
               <select id="rarityFilter">
                 <option value="">All Rarities</option>
               </select>
             </div>
+
+            <div class="field">
+              <label for="preconFilter">Precon</label>
+              <select id="preconFilter">
+                <option value="">All Cards</option>
+              </select>
+            </div>
+
             <p id="filterStatus" class="status-line"></p>
+            <p id="preconStatus" class="status-line"></p>
           </div>
         </div>
 
@@ -396,9 +267,7 @@
         <div class="detail-column">
           <h2>Details</h2>
           <div id="detailCard" class="detail-card">
-            <p class="small-note">
-              Select a card from the list to see full details.
-            </p>
+            <p class="small-note">Select a card from the list to see full details.</p>
           </div>
         </div>
       </div>
@@ -414,12 +283,8 @@
     //   - null or []:  all sets in drive-card.json will be shown.
     //   - an array:    only printings with setId in that array are visible.
     //
-    // Example:
-    //   const RELEASED_SETS = ["SET 1", "SET 2"];
-    //
-    // For now it defaults to "all released".
     const RELEASED_SETS = null;
-    // const RELEASED_SETS = ["SET 1", "SET 2"]; // <- uncomment & edit to hide future sets
+    // const RELEASED_SETS = ["SET 1", "SET 2"];
 
     const AppState = {
       cards: [],
@@ -427,7 +292,9 @@
       selectedCardId: null,
       sets: [],
       types: [],
-      rarities: []
+      rarities: [],
+      precons: [],
+      selectedPreconId: ""
     };
 
     const Dom = {
@@ -435,16 +302,19 @@
       typeFilter: document.getElementById("typeFilter"),
       setFilter: document.getElementById("setFilter"),
       rarityFilter: document.getElementById("rarityFilter"),
+      preconFilter: document.getElementById("preconFilter"),
       filterStatus: document.getElementById("filterStatus"),
+      preconStatus: document.getElementById("preconStatus"),
       cardsGrid: document.getElementById("cardsGrid"),
       detailCard: document.getElementById("detailCard")
     };
 
-    // Helpers that mirror admin-side logic a bit
+    // ---------------------------- Helpers ----------------------------
+
     function parseTags(str) {
       if (!str) return [];
       return String(str)
-        .split(",")
+        .split(/[;,]/)
         .map(s => s.trim())
         .filter(Boolean);
     }
@@ -465,13 +335,43 @@
       return RELEASED_SETS.includes(setId);
     }
 
+    function normalizeRarity(raw) {
+      const s = String(raw || "").trim();
+      if (!s) return "";
+      const key = s.toLowerCase();
+      const map = {
+        common: "Common",
+        uncommon: "Uncommon",
+        rare: "Rare",
+        epic: "Epic",
+        legendary: "Legendary",
+        promo: "Promo"
+      };
+      return map[key] || (s[0].toUpperCase() + s.slice(1).toLowerCase());
+    }
+
+    function normalizeType(raw) {
+      const s = String(raw || "").trim();
+      if (!s) return "";
+      const key = s.toLowerCase();
+      const map = {
+        "named driver": "Named Driver",
+        "named vehicle": "Named Vehicle",
+        driver: "Driver",
+        vehicle: "Vehicle",
+        mod: "Mod",
+        track: "Track",
+        condition: "Condition",
+        crew: "Crew"
+      };
+      return map[key] || s;
+    }
+
     function normalizePrints(card) {
       if (!card) return;
 
-      // Ensure prints array exists if any legacy fields present
-      if (!Array.isArray(card.prints)) {
-        card.prints = [];
-      }
+      if (!Array.isArray(card.prints)) card.prints = [];
+
       if (!card.prints.length && (card.setName || card.cardNumber)) {
         card.prints.push({
           setId: card.setName || "",
@@ -479,7 +379,6 @@
         });
       }
 
-      // Make sure primary printing backfills setName/cardNumber
       const primary = card.prints[0];
       if (primary) {
         card.setName = primary.setId || card.setName || "";
@@ -489,23 +388,15 @@
         card.cardNumber = card.cardNumber || "";
       }
 
-      // Filter visible printings by RELEASED_SETS
-      const visible = (card.prints || []).filter(p =>
-        isSetReleased(p.setId)
-      );
-      card.visiblePrints = visible;
+      card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p.setId));
     }
 
     const CardData = {
       getVehicleTypes(card) {
         if (!card) return [];
-        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) {
-          return card.vehicleTypes;
-        }
+        if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) return card.vehicleTypes;
         const e = card.extra || {};
-        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) {
-          return e.vehicleTypes;
-        }
+        if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) return e.vehicleTypes;
         if (e.vehicleType) return [e.vehicleType];
         return [];
       },
@@ -518,66 +409,112 @@
         if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
         if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
         if (!parts.length && !e.modBasePart) return null;
-        const label = e.modType
-          ? `${e.modType} ${e.modBasePart || "Mod"}`
-          : (e.modBasePart || "Mod");
+        const label = e.modType ? `${e.modType} ${e.modBasePart || "Mod"}` : (e.modBasePart || "Mod");
         return parts.length ? `${label}: ${parts.join(" / ")}` : label;
       },
       getVehicleStats(card) {
-        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle"))
-          return null;
+        if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return null;
         const e = card.extra || {};
         const bits = [];
         if (e.hp !== undefined || e.con !== undefined) {
-          bits.push(`HP/CON: ${e.hp || "?"}/${e.con || "?"}`);
+          bits.push(`HP/CON: ${(e.hp ?? "?")}/${(e.con ?? "?")}`);
         }
-        if (e.pitCost !== undefined) {
-          bits.push(`PIT: ${e.pitCost}`);
-        }
+        if (e.pitCost !== undefined) bits.push(`PIT: ${e.pitCost}`);
         return bits.length ? bits.join(" | ") : null;
       }
     };
 
+    // ---------------------------- Precons ----------------------------
+
+    function loadPrecons() {
+      return fetch("precon.json")
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to fetch precon.json");
+          return res.json();
+        })
+        .then(json => {
+          if (!Array.isArray(json)) throw new Error("precon.json is not an array.");
+          AppState.precons = json;
+
+          Dom.preconFilter.innerHTML = '<option value="">All Cards</option>';
+          AppState.precons.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.name || p.id;
+            Dom.preconFilter.appendChild(opt);
+          });
+        })
+        .catch(err => {
+          console.warn("[precon.json]", err);
+          AppState.precons = [];
+          Dom.preconFilter.innerHTML = '<option value="">All Cards</option>';
+        });
+    }
+
+    function getSelectedPreconCardSet() {
+      const pid = AppState.selectedPreconId;
+      if (!pid) return null;
+      const precon = AppState.precons.find(p => p.id === pid);
+      if (!precon || !precon.cards) return null;
+      return new Set(Object.keys(precon.cards));
+    }
+
+    function renderPreconStatus() {
+      const pid = AppState.selectedPreconId;
+      if (!pid) {
+        Dom.preconStatus.textContent = "";
+        return;
+      }
+
+      const precon = AppState.precons.find(p => p.id === pid);
+      if (!precon) {
+        Dom.preconStatus.textContent = "";
+        return;
+      }
+
+      const ids = Object.keys(precon.cards || {});
+      const totalCards = ids.reduce((sum, id) => sum + (precon.cards[id] || 0), 0);
+
+      // Since library is unfinished, we report missing IDs rather than erroring.
+      const cardIdSet = new Set(AppState.cards.map(c => c.id));
+      const missing = ids.filter(id => !cardIdSet.has(id));
+
+      Dom.preconStatus.innerHTML =
+        `Precon: <span>${totalCards}</span> cards · Missing: <span>${missing.length}</span>`;
+    }
+
+    // ---------------------------- Cards load ----------------------------
+
     function loadCards() {
       Dom.cardsGrid.innerHTML = "<p class='small-note'>Loading card data…</p>";
-      fetch("drive-card.json")
+      return fetch("drive-card.json")
         .then(res => {
           if (!res.ok) throw new Error("Failed to fetch drive-card.json");
           return res.json();
         })
         .then(json => {
-          if (!Array.isArray(json)) {
-            throw new Error("drive-card.json is not an array.");
-          }
+          if (!Array.isArray(json)) throw new Error("drive-card.json is not an array.");
+
           AppState.cards = json.map(raw => {
             const card = Object.assign({}, raw);
 
-            if (!card.extra) card.extra = {};
-            if (!Array.isArray(card.tags)) {
-              card.tags = parseTags(card.tags);
-            }
-            if (typeof card.imageUrl !== "string") {
-              card.imageUrl = card.imageUrl || "";
-            }
+            card.type = normalizeType(card.type);
+            card.rarity = normalizeRarity(card.rarity);
 
-            // Normalize prints & compute visible printings
+            if (!card.extra) card.extra = {};
+            if (!Array.isArray(card.tags)) card.tags = parseTags(card.tags);
+            if (typeof card.imageUrl !== "string") card.imageUrl = card.imageUrl || "";
+
             normalizePrints(card);
 
-            // Vehicle types may be in array or extra
             if (!Array.isArray(card.vehicleTypes)) {
               const vt = card.extra.vehicleTypes || card.extra.vehicleType || [];
-              card.vehicleTypes = Array.isArray(vt) ? vt : vt ? [vt] : [];
+              card.vehicleTypes = Array.isArray(vt) ? vt : (vt ? [vt] : []);
             }
 
-            // Some data might encode hp/con in a string; admin now should handle this,
-            // but just in case, do a fallback parse:
-            if (
-              (card.type === "Vehicle" || card.type === "Named Vehicle") &&
-              !("hp" in card.extra) &&
-              !("con" in card.extra)
-            ) {
-              const fromField =
-                card.extra.hpCon || card.vehicleHpCon || card.HP_CON || "";
+            if ((card.type === "Vehicle" || card.type === "Named Vehicle") &&
+                !("hp" in card.extra) && !("con" in card.extra)) {
+              const fromField = card.extra.hpCon || card.vehicleHpCon || card.HP_CON || "";
               const parsed = parseHpCon(fromField);
               if (parsed.hp !== undefined) card.extra.hp = parsed.hp;
               if (parsed.con !== undefined) card.extra.con = parsed.con;
@@ -586,11 +523,9 @@
             return card;
           });
 
-          // Apply release filtering: hide cards with no visible printings at all
+          // If release filtering is enabled, hide cards with no visible printings.
           AppState.cards = AppState.cards.filter(card => {
-            // If card has no prints at all, decide:
             if (!card.prints || !card.prints.length) {
-              // If release list is open, we allow it; otherwise hide
               if (!RELEASED_SETS || !RELEASED_SETS.length) {
                 card.visiblePrints = [];
                 return true;
@@ -618,17 +553,13 @@
       AppState.cards.forEach(card => {
         if (card.type) types.add(card.type);
         if (card.rarity) rarities.add(card.rarity);
-
-        (card.visiblePrints || []).forEach(p => {
-          if (p.setId) sets.add(p.setId);
-        });
+        (card.visiblePrints || []).forEach(p => { if (p.setId) sets.add(p.setId); });
       });
 
       AppState.types = Array.from(types).sort();
       AppState.sets = Array.from(sets).sort();
       AppState.rarities = Array.from(rarities).sort();
 
-      // Populate dropdowns
       Dom.typeFilter.innerHTML = '<option value="">All Types</option>';
       AppState.types.forEach(t => {
         const opt = document.createElement("option");
@@ -662,12 +593,15 @@
 
       let cards = AppState.cards.slice();
 
+      // Precon filter (if selected)
+      const preconSet = getSelectedPreconCardSet();
+      if (preconSet) {
+        cards = cards.filter(c => preconSet.has(c.id));
+      }
+
       cards = cards.filter(card => {
-        // Drop cards with no visible printings if set filtering is in use
         const prints = card.visiblePrints || [];
-        if (prints.length === 0 && setFilter) {
-          return false;
-        }
+        if (prints.length === 0 && setFilter) return false;
 
         if (typeFilter && card.type !== typeFilter) return false;
         if (rarityFilter && card.rarity !== rarityFilter) return false;
@@ -677,32 +611,60 @@
         }
 
         if (q) {
+          const setBits = (prints || [])
+            .map(p => `${p.setId || ""} ${p.cardNumber || ""}`.trim())
+            .filter(Boolean);
+
+          const vtBits = (CardData.getVehicleTypes(card) || []).filter(Boolean);
+          const tagBits = (card.tags || []).filter(Boolean);
+
+          const e = card.extra || {};
+          const extraBits = [
+            e.modType,
+            e.modBasePart,
+            e.modLevel1,
+            e.modLevel2,
+            e.modLevel3,
+            e.modLevel4
+          ].filter(Boolean);
+
           const textParts = [
             card.name,
             card.type,
             card.rarity,
             card.setName,
+            card.cardNumber,
+            ...setBits,
+            ...vtBits,
+            ...tagBits,
+            ...extraBits,
             (card.notes || "").replace(/\s+/g, " ")
           ];
-          const haystack = textParts
-            .join(" | ")
-            .toLowerCase();
+
+          const haystack = textParts.join(" | ").toLowerCase();
           if (!haystack.includes(q)) return false;
         }
 
         return true;
       });
 
-      // Sort: type → set → cardNumber → name
+      // Sort: type → setId → cardNumber → name
       cards.sort((a, b) => {
         const t = (a.type || "").localeCompare(b.type || "");
         if (t !== 0) return t;
 
-        const as = (a.setName || "").localeCompare(b.setName || "");
-        if (as !== 0) return as;
+        const ap = (a.visiblePrints && a.visiblePrints[0]) ? a.visiblePrints[0] : null;
+        const bp = (b.visiblePrints && b.visiblePrints[0]) ? b.visiblePrints[0] : null;
 
-        const an = (a.cardNumber || "").localeCompare(b.cardNumber || "");
-        if (an !== 0) return an;
+        const aset = (ap?.setId || a.setName || "");
+        const bset = (bp?.setId || b.setName || "");
+        const s = aset.localeCompare(bset);
+        if (s !== 0) return s;
+
+        const anum = (ap?.cardNumber || a.cardNumber || "");
+        const bnum = (bp?.cardNumber || b.cardNumber || "");
+        const n = anum.localeCompare(bnum);
+        if (n !== 0) return n;
 
         return (a.name || "").localeCompare(b.name || "");
       });
@@ -710,14 +672,14 @@
       AppState.filteredCards = cards;
       renderCardsGrid();
       renderFilterStatus();
-      renderDetailCard(); // refresh details if selection changed or filtered out
+      renderPreconStatus();
+      renderDetailCard();
     }
 
     function renderFilterStatus() {
       const total = AppState.cards.length;
       const shown = AppState.filteredCards.length;
-      Dom.filterStatus.innerHTML =
-        `Showing <span>${shown}</span> of <span>${total}</span> cards.`;
+      Dom.filterStatus.innerHTML = `Showing <span>${shown}</span> of <span>${total}</span> cards.`;
     }
 
     function renderCardsGrid() {
@@ -725,17 +687,14 @@
       grid.innerHTML = "";
 
       if (!AppState.filteredCards.length) {
-        grid.innerHTML =
-          "<p class='small-note'>No cards match the current filters.</p>";
+        grid.innerHTML = "<p class='small-note'>No cards match the current filters.</p>";
         return;
       }
 
       AppState.filteredCards.forEach(card => {
         const tile = document.createElement("div");
         tile.className = "card-tile";
-        if (card.id === AppState.selectedCardId) {
-          tile.classList.add("selected");
-        }
+        if (card.id === AppState.selectedCardId) tile.classList.add("selected");
 
         const header = document.createElement("div");
         header.className = "card-tile-name";
@@ -754,9 +713,7 @@
 
         const row2 = document.createElement("div");
         row2.className = "card-tile-row";
-        const sets = (card.visiblePrints || [])
-          .map(p => p.setId)
-          .filter(Boolean);
+        const sets = (card.visiblePrints || []).map(p => p.setId).filter(Boolean);
         const setSpan = document.createElement("span");
         setSpan.className = "card-tile-set";
         setSpan.textContent = sets.length ? sets.join(" & ") : "—";
@@ -801,8 +758,7 @@
 
       const card = AppState.cards.find(c => c.id === AppState.selectedCardId);
       if (!card) {
-        container.innerHTML =
-          "<p class='small-note'>Select a card from the list to see its full details.</p>";
+        container.innerHTML = "<p class='small-note'>Select a card from the list to see its full details.</p>";
         return;
       }
 
@@ -820,7 +776,6 @@
       const columns = document.createElement("div");
       columns.className = "detail-columns";
 
-      // Image
       const imgBox = document.createElement("div");
       imgBox.className = "detail-image";
       if (card.imageUrl) {
@@ -835,11 +790,9 @@
         imgBox.appendChild(placeholder);
       }
 
-      // Meta
       const meta = document.createElement("div");
       meta.className = "detail-meta";
 
-      // Sets & card numbers
       const setsRow = document.createElement("div");
       const setsLabel = document.createElement("span");
       setsLabel.className = "detail-row-label";
@@ -850,7 +803,6 @@
       setChips.className = "chip-row";
       const prints = card.visiblePrints || [];
       if (!prints.length && (!RELEASED_SETS || !RELEASED_SETS.length)) {
-        // If we're not restricting releases and there are no prints, fall back to legacy fields
         const chip = document.createElement("span");
         chip.className = "chip chip-muted";
         chip.textContent = card.setName || "—";
@@ -871,7 +823,6 @@
       }
       setsRow.appendChild(setChips);
 
-      // Rarity
       const rarityRow = document.createElement("div");
       const rarityLabel = document.createElement("span");
       rarityLabel.className = "detail-row-label";
@@ -881,7 +832,6 @@
       rarityRow.appendChild(rarityLabel);
       rarityRow.appendChild(rarityVal);
 
-      // Vehicle Types
       const vtRow = document.createElement("div");
       const vtLabel = document.createElement("span");
       vtLabel.className = "detail-row-label";
@@ -892,7 +842,6 @@
       vtRow.appendChild(vtLabel);
       vtRow.appendChild(vtVal);
 
-      // Tags
       const tagsRow = document.createElement("div");
       const tagsLabel = document.createElement("span");
       tagsLabel.className = "detail-row-label";
@@ -903,7 +852,6 @@
       tagsRow.appendChild(tagsLabel);
       tagsRow.appendChild(tagsVal);
 
-      // Stats (Mods / Vehicles)
       const statsRow = document.createElement("div");
       const statsLabel = document.createElement("span");
       statsLabel.className = "detail-row-label";
@@ -927,7 +875,6 @@
       columns.appendChild(imgBox);
       columns.appendChild(meta);
 
-      // Rules text
       const rules = document.createElement("div");
       rules.className = "detail-rules";
       rules.textContent = card.notes || "No rules text.";
@@ -937,13 +884,21 @@
       container.appendChild(rules);
     }
 
+    // ---------------------------- Init ----------------------------
+
     function init() {
       Dom.searchInput.addEventListener("input", applyFiltersAndRender);
       Dom.typeFilter.addEventListener("change", applyFiltersAndRender);
       Dom.setFilter.addEventListener("change", applyFiltersAndRender);
       Dom.rarityFilter.addEventListener("change", applyFiltersAndRender);
 
-      loadCards();
+      Dom.preconFilter.addEventListener("change", () => {
+        AppState.selectedPreconId = Dom.preconFilter.value;
+        applyFiltersAndRender();
+      });
+
+      // Load precons (if missing, we still run fine), then load cards.
+      loadPrecons().finally(() => loadCards());
     }
 
     init();
