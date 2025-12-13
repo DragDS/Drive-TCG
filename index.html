@@ -557,175 +557,284 @@
       btnDeckImport: document.getElementById("btnDeckImport")
     };
 
-    // -------------------- Helpers --------------------
-    function parseTags(str) {
-      if (!str) return [];
-      return String(str).split(/[;,]/).map(s => s.trim()).filter(Boolean);
-    }
+  // -------------------- Helpers --------------------
+function toStr(v) {
+  return (v === null || v === undefined) ? "" : String(v);
+}
 
-    function parseHpCon(val) {
-      const out = { hp: undefined, con: undefined };
-      if (!val) return out;
-      const cleaned = String(val).replace(/\s/g, "");
-      const parts = cleaned.split("/");
-      if (parts[0] !== undefined && parts[0] !== "") out.hp = Number(parts[0]);
-      if (parts[1] !== undefined && parts[1] !== "") out.con = Number(parts[1]);
-      return out;
-    }
+function toNum(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
 
-    function isSetReleased(setId) {
-      if (!setId) return true;
-      if (!RELEASED_SETS || !RELEASED_SETS.length) return true;
-      return RELEASED_SETS.includes(setId);
-    }
+function uniq(arr) {
+  return Array.from(new Set((arr || []).filter(Boolean)));
+}
 
-    function normalizeRarity(raw) {
-      const s = String(raw || "").trim();
-      if (!s) return "";
-      const key = s.toLowerCase();
-      const map = { common: "Common", uncommon: "Uncommon", rare: "Rare", epic: "Epic", legendary: "Legendary", promo: "Promo" };
-      return map[key] || (s[0].toUpperCase() + s.slice(1).toLowerCase());
-    }
+function parseTags(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(s => toStr(s).trim()).filter(Boolean);
+  return toStr(raw)
+    .split(/[;,]/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
 
-    function normalizeType(raw) {
-      const s = String(raw || "").trim();
-      if (!s) return "";
-      const key = s.toLowerCase();
-      const map = {
-        "named driver": "Named Driver",
-        "named vehicle": "Named Vehicle",
-        driver: "Driver",
-        vehicle: "Vehicle",
-        mod: "Mod",
-        track: "Track",
-        condition: "Condition",
-        crew: "Crew"
-      };
-      return map[key] || s;
-    }
+function parseHpCon(val) {
+  const out = { hp: undefined, con: undefined };
+  if (!val) return out;
+  const cleaned = toStr(val).replace(/\s/g, "");
+  const parts = cleaned.split("/");
+  if (parts[0] !== undefined && parts[0] !== "") out.hp = toNum(parts[0]);
+  if (parts[1] !== undefined && parts[1] !== "") out.con = toNum(parts[1]);
+  return out;
+}
 
-    function normalizePrints(card) {
-      if (!Array.isArray(card.prints)) card.prints = [];
-      if (!card.prints.length && (card.setName || card.cardNumber)) {
-        card.prints.push({ setId: card.setName || "", cardNumber: card.cardNumber || "" });
-      }
-      const primary = card.prints[0];
-      if (primary) {
-        card.setName = primary.setId || card.setName || "";
-        card.cardNumber = primary.cardNumber || card.cardNumber || "";
-      } else {
-        card.setName = card.setName || "";
-        card.cardNumber = card.cardNumber || "";
-      }
-      card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p.setId));
-    }
+// RELEASE gating
+function isSetReleased(setId) {
+  if (!setId) return true;
+  if (!RELEASED_SETS || !RELEASED_SETS.length) return true;
+  return RELEASED_SETS.includes(setId);
+}
 
-    function getVehicleTypes(card) {
-      if (!card) return [];
-      if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) return card.vehicleTypes;
-      const e = card.extra || {};
-      if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) return e.vehicleTypes;
-      if (e.vehicleType) return [e.vehicleType];
-      return [];
-    }
+// Normalizers (make data consistent even if JSON has weird casing)
+function normalizeRarity(raw) {
+  const s = toStr(raw).trim();
+  if (!s) return "";
+  const key = s.toLowerCase();
+  const map = {
+    common: "Common",
+    uncommon: "Uncommon",
+    rare: "Rare",
+    epic: "Epic",
+    legendary: "Legendary",
+    promo: "Promo"
+  };
+  return map[key] || (s[0].toUpperCase() + s.slice(1).toLowerCase());
+}
 
-    function getModStats(card) {
-      if (!card || card.type !== "Mod") return null;
-      const e = card.extra || {};
-      const parts = [];
-      if (e.modLevel1) parts.push(`L1 ${e.modLevel1}`);
-      if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
-      if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
-      if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
-      if (!parts.length && !e.modBasePart) return null;
-      const label = e.modType ? `${e.modType} ${e.modBasePart || "Mod"}` : (e.modBasePart || "Mod");
-      return parts.length ? `${label}: ${parts.join(" / ")}` : label;
-    }
+function normalizeType(raw) {
+  const s = toStr(raw).trim();
+  if (!s) return "";
+  const key = s.toLowerCase();
+  const map = {
+    "named driver": "Named Driver",
+    "named vehicle": "Named Vehicle",
+    driver: "Driver",
+    vehicle: "Vehicle",
+    mod: "Mod",
+    track: "Track",
+    condition: "Condition",
+    crew: "Crew"
+  };
+  return map[key] || s;
+}
 
-    function getVehicleStats(card) {
-      if (!card || (card.type !== "Vehicle" && card.type !== "Named Vehicle")) return null;
-      const e = card.extra || {};
-      const bits = [];
-      if (e.hp !== undefined || e.con !== undefined) bits.push(`HP/CON: ${(e.hp ?? "?")}/${(e.con ?? "?")}`);
-      if (e.pitCost !== undefined) bits.push(`PIT: ${e.pitCost}`);
-      return bits.length ? bits.join(" | ") : null;
-    }
+// Prints: ensure legacy setName/cardNumber become prints, and compute visiblePrints
+function normalizePrints(card) {
+  if (!card) return;
 
-    function byTypeSetNumberName(a, b) {
-      const t = (a.type || "").localeCompare(b.type || "");
-      if (t !== 0) return t;
+  if (!Array.isArray(card.prints)) card.prints = [];
 
-      const ap = (a.visiblePrints && a.visiblePrints[0]) ? a.visiblePrints[0] : null;
-      const bp = (b.visiblePrints && b.visiblePrints[0]) ? b.visiblePrints[0] : null;
+  // Backfill prints from legacy fields
+  if (!card.prints.length && (card.setName || card.cardNumber)) {
+    card.prints.push({
+      setId: card.setName || "",
+      cardNumber: card.cardNumber || ""
+    });
+  }
 
-      const aset = (ap?.setId || a.setName || "");
-      const bset = (bp?.setId || b.setName || "");
-      const s = aset.localeCompare(bset);
-      if (s !== 0) return s;
+  // Primary print backfills setName/cardNumber for sorting/searching display
+  const primary = card.prints[0];
+  if (primary) {
+    card.setName = primary.setId || card.setName || "";
+    card.cardNumber = primary.cardNumber || card.cardNumber || "";
+  } else {
+    card.setName = card.setName || "";
+    card.cardNumber = card.cardNumber || "";
+  }
 
-      const anum = (ap?.cardNumber || a.cardNumber || "");
-      const bnum = (bp?.cardNumber || b.cardNumber || "");
-      const n = anum.localeCompare(bnum);
-      if (n !== 0) return n;
+  // Visible prints respect RELEASED_SETS
+  card.visiblePrints = (card.prints || []).filter(p => isSetReleased(p?.setId));
+}
 
-      return (a.name || "").localeCompare(b.name || "");
-    }
+function getVehicleTypes(card) {
+  if (!card) return [];
+  if (Array.isArray(card.vehicleTypes) && card.vehicleTypes.length) return card.vehicleTypes;
 
-    function buildHaystack(card) {
-      const prints = card.visiblePrints || [];
-      const setBits = prints.map(p => `${p.setId || ""} ${p.cardNumber || ""}`.trim()).filter(Boolean);
-      const vtBits = getVehicleTypes(card).filter(Boolean);
-      const tagBits = (card.tags || []).filter(Boolean);
-      const e = card.extra || {};
-      const extraBits = [e.modType, e.modBasePart, e.modLevel1, e.modLevel2, e.modLevel3, e.modLevel4].filter(Boolean);
+  const e = card.extra || {};
+  if (Array.isArray(e.vehicleTypes) && e.vehicleTypes.length) return e.vehicleTypes;
+  if (e.vehicleType) return [e.vehicleType];
 
-      const parts = [
-        card.name,
-        card.type,
-        card.rarity,
-        card.setName,
-        card.cardNumber,
-        ...setBits,
-        ...vtBits,
-        ...tagBits,
-        ...extraBits,
-        (card.notes || "").replace(/\s+/g, " ")
-      ];
-      return parts.join(" | ").toLowerCase();
-    }
+  return [];
+}
 
-    function computeFilters(cards) {
-      const types = new Set();
-      const sets = new Set();
-      const rarities = new Set();
-      cards.forEach(c => {
-        if (c.type) types.add(c.type);
-        if (c.rarity) rarities.add(c.rarity);
-        (c.visiblePrints || []).forEach(p => { if (p.setId) sets.add(p.setId); });
-      });
-      return {
-        types: Array.from(types).sort(),
-        sets: Array.from(sets).sort(),
-        rarities: Array.from(rarities).sort()
-      };
-    }
+function getModStats(card) {
+  if (!card || card.type !== "Mod") return null;
+  const e = card.extra || {};
 
-    function fillSelect(selectEl, values, placeholder) {
-      selectEl.innerHTML = `<option value="">${placeholder}</option>`;
-      values.forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = v;
-        selectEl.appendChild(opt);
-      });
-    }
+  const parts = [];
+  if (e.modLevel1) parts.push(`L1 ${e.modLevel1}`);
+  if (e.modLevel2) parts.push(`L2 ${e.modLevel2}`);
+  if (e.modLevel3) parts.push(`L3 ${e.modLevel3}`);
+  if (e.modLevel4) parts.push(`L4 ${e.modLevel4}`);
 
-    function makeLabel(text) {
-      const s = document.createElement("span");
-      s.className = "detail-row-label";
-      s.textContent = text;
-      return s;
-    }
+  if (!parts.length && !e.modBasePart && !e.modType) return null;
+
+  const label = e.modType
+    ? `${e.modType} ${e.modBasePart || "Mod"}`
+    : (e.modBasePart || "Mod");
+
+  return parts.length ? `${label}: ${parts.join(" / ")}` : label;
+}
+
+function getVehicleStats(card) {
+  if (!card) return null;
+  if (card.type !== "Vehicle" && card.type !== "Named Vehicle") return null;
+
+  const e = card.extra || {};
+  const bits = [];
+
+  if (e.hp !== undefined || e.con !== undefined) {
+    bits.push(`HP/CON: ${(e.hp ?? "?")}/${(e.con ?? "?")}`);
+  }
+  if (e.pitCost !== undefined) {
+    bits.push(`PIT: ${e.pitCost}`);
+  }
+  return bits.length ? bits.join(" | ") : null;
+}
+
+// Sorting: type → set → cardNumber → name
+function byTypeSetNumberName(a, b) {
+  const t = (a.type || "").localeCompare(b.type || "");
+  if (t !== 0) return t;
+
+  const ap = (a.visiblePrints && a.visiblePrints[0]) ? a.visiblePrints[0] : null;
+  const bp = (b.visiblePrints && b.visiblePrints[0]) ? b.visiblePrints[0] : null;
+
+  const aset = (ap?.setId || a.setName || "");
+  const bset = (bp?.setId || b.setName || "");
+  const s = aset.localeCompare(bset);
+  if (s !== 0) return s;
+
+  const anum = (ap?.cardNumber || a.cardNumber || "");
+  const bnum = (bp?.cardNumber || b.cardNumber || "");
+  const n = anum.localeCompare(bnum);
+  if (n !== 0) return n;
+
+  return (a.name || "").localeCompare(b.name || "");
+}
+
+// Search “haystack”
+function buildHaystack(card) {
+  const prints = card.visiblePrints || [];
+  const setBits = prints
+    .map(p => `${p?.setId || ""} ${p?.cardNumber || ""}`.trim())
+    .filter(Boolean);
+
+  const vtBits = getVehicleTypes(card).filter(Boolean);
+  const tagBits = (card.tags || []).filter(Boolean);
+
+  const e = card.extra || {};
+  const extraBits = [
+    e.modType,
+    e.modBasePart,
+    e.modLevel1,
+    e.modLevel2,
+    e.modLevel3,
+    e.modLevel4
+  ].filter(Boolean);
+
+  const parts = [
+    card.name,
+    card.type,
+    card.rarity,
+    card.setName,
+    card.cardNumber,
+    ...setBits,
+    ...vtBits,
+    ...tagBits,
+    ...extraBits,
+    toStr(card.notes).replace(/\s+/g, " ")
+  ];
+
+  return parts.join(" | ").toLowerCase();
+}
+
+// Dropdown filter values
+function computeFilters(cards) {
+  const types = new Set();
+  const sets = new Set();
+  const rarities = new Set();
+
+  (cards || []).forEach(c => {
+    if (c.type) types.add(c.type);
+    if (c.rarity) rarities.add(c.rarity);
+    (c.visiblePrints || []).forEach(p => { if (p?.setId) sets.add(p.setId); });
+  });
+
+  return {
+    types: Array.from(types).sort(),
+    sets: Array.from(sets).sort(),
+    rarities: Array.from(rarities).sort()
+  };
+}
+
+function fillSelect(selectEl, values, placeholder) {
+  selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+  (values || []).forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    selectEl.appendChild(opt);
+  });
+}
+
+function makeLabel(text) {
+  const s = document.createElement("span");
+  s.className = "detail-row-label";
+  s.textContent = text;
+  return s;
+}
+
+/**
+ * PRECONS: supports BOTH formats:
+ *  A) cards: { "cardId": qty, ... }
+ *  B) cards: [ {id, qty}, ... ] or [ "cardId", ... ]
+ */
+function getPreconEntries(precon) {
+  const c = precon?.cards;
+
+  // A) map form
+  if (c && !Array.isArray(c) && typeof c === "object") {
+    return Object.entries(c)
+      .map(([id, qty]) => ({ id, qty: Number(qty) || 0 }))
+      .filter(e => e.id && e.qty > 0);
+  }
+
+  // B) array form
+  if (Array.isArray(c)) {
+    return c
+      .map(item => {
+        if (!item) return null;
+
+        if (typeof item === "string") return { id: item, qty: 1 };
+
+        if (typeof item === "object") {
+          const id =
+            item.id || item.cardId || item.card_id || item.card || item.cardID;
+          const qty = Number(item.qty ?? item.count ?? item.quantity ?? 1) || 0;
+          if (!id || qty <= 0) return null;
+          return { id, qty };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  return [];
+}
 
     // -------------------- Data Load --------------------
     function loadCards() {
@@ -1705,4 +1814,5 @@
   </script>
 </body>
 </html>
+
 
