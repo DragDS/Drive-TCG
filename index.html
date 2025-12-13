@@ -796,14 +796,20 @@
     async function loadPrecons() {
       Dom.preconList.innerHTML = "<p class='small-note'>Loading precons…</p>";
 
-      const candidates = [
-        "precon.json",
-        "./precon.json",
-        "data/precon.json",
-        "json/precon.json",
-        "precons.json",
-        "data/precons.json"
-      ];
+     const candidates = [
+  "drive-precons.json",
+  "./drive-precons.json",
+  "data/drive-precons.json",
+  "json/drive-precons.json",
+
+  // legacy fallbacks (optional)
+  "precon.json",
+  "./precon.json",
+  "precons.json",
+  "./precons.json",
+  "data/precon.json",
+  "data/precons.json"
+];
 
       let lastMessage = "Unknown error";
 
@@ -1699,3 +1705,4 @@
   </script>
 </body>
 </html>
+
