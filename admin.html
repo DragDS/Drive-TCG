@@ -820,38 +820,65 @@
         <div id="preconGrid"></div>
       </div>
 
-      <!-- =========================
-           HELP
-           ========================= -->
-      <div id="helpSection" class="section">
-        <div class="section-header">
-          <h2>Help</h2>
-          <p>Quick notes for using the admin tool.</p>
-        </div>
-
-        <div class="card">
-          <h3>Quick Tips</h3>
-          <p class="sub">
-            • Use <b>Bulk Import</b> to load the master XLSX and import cards in batches.<br>
-            • Use <b>Single Card</b> to edit details and manage Prints.<br>
-            • Export JSON often to save work.
-          </p>
-        </div>
-      </div>
-    </section>
+<!-- =========================
+     HELP
+     ========================= -->
+<div id="helpSection" class="section">
+  <div class="section-header">
+    <h2>Help</h2>
+    <p>Quick notes for using the DRIVE TCG admin tool.</p>
   </div>
 
-  <!-- Modal used by single.js confirmAction -->
-  <div id="modalBackdrop">
-    <div class="modal">
-      <h3 id="modalTitle">Confirm</h3>
-      <p id="modalBody">Are you sure?</p>
-      <div class="row">
-        <button id="modalCancelBtn" class="btn ghost" type="button">Cancel</button>
-        <button id="modalConfirmBtn" class="btn primary" type="button">Confirm</button>
-      </div>
+  <div class="card">
+    <h3>Recommended Workflow</h3>
+    <p class="sub">
+      • <b>1) Bulk Import</b> — Load your master XLSX and import cards in batches.<br>
+      • <b>2) Single Card</b> — Fix details, add images, tags, and manage <b>Prints</b>.<br>
+      • <b>3) Export JSON</b> — Save updates frequently to prevent losing work.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Prints / Sets</h3>
+    <p class="sub">
+      • A card can have multiple <b>Prints</b> (reprints across sets).<br>
+      • Each print should include a <b>Set ID</b> and <b>Card #</b> (ex: <span class="inline-code">SET 1</span>, <span class="inline-code">01-001</span>).<br>
+      • The first print is treated as the primary set/card number for sorting and display.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Common Gotchas</h3>
+    <p class="sub">
+      • If a card image doesn’t show up, verify <b>imageUrl</b> points to the correct file path.<br>
+      • If cards “disappear” on the public site, the set may be restricted by the release filter (or the card has no visible prints).<br>
+      • Keep <b>id</b> values stable — changing IDs can break Precons and Deck Confirmations.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>Precons & Deck Lists</h3>
+    <p class="sub">
+      • Precons reference cards by <b>id</b>. If an ID isn’t in <span class="inline-code">drive-card.json</span>, it will appear as “Missing”.<br>
+      • If a Precon won’t load on the site, confirm the filename matches exactly (ex: <span class="inline-code">drive-precons.json</span>).<br>
+      • Exporting often helps when you’re still building the library.
+    </p>
+  </div>
+</div>
+</section>
+</div>
+
+<!-- Modal used by single.js confirmAction -->
+<div id="modalBackdrop">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm</h3>
+    <p id="modalBody">Are you sure?</p>
+    <div class="row">
+      <button id="modalCancelBtn" class="btn ghost" type="button">Cancel</button>
+      <button id="modalConfirmBtn" class="btn primary" type="button">Confirm</button>
     </div>
   </div>
+</div>
 
   <!-- XLSX must be loaded BEFORE app.js so bulk.js can use it -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
