@@ -900,57 +900,70 @@ function getPreconEntries(precon) {
           Dom.deckCardsGrid.innerHTML = "<p class='small-note'>Error loading drive-card.json. Check console.</p>";
         });
     }
+// ✅ FIXED: robust precon loading with fallback paths + visible error details
+async function loadPrecons() {
+  Dom.preconList.innerHTML = "<p class='small-note'>Loading precons…</p>";
+  AppState.precons = [];
 
-    // ✅ FIXED: robust precon loading with fallback paths + visible error details
-    async function loadPrecons() {
-      Dom.preconList.innerHTML = "<p class='small-note'>Loading precons…</p>";
+  const candidates = [
+    "drive-precons.json",
+    "./drive-precons.json",
+    "data/drive-precons.json",
+    "json/drive-precons.json",
 
-     const candidates = [
-  "drive-precons.json",
-  "./drive-precons.json",
-  "data/drive-precons.json",
-  "json/drive-precons.json",
+    // legacy fallbacks
+    "precon.json",
+    "./precon.json",
+    "precons.json",
+    "./precons.json",
+    "data/precon.json",
+    "data/precons.json"
+  ];
 
-  // legacy fallbacks (optional)
-  "precon.json",
-  "./precon.json",
-  "precons.json",
-  "./precons.json",
-  "data/precon.json",
-  "data/precons.json"
-];
+  let lastError = null;
 
-      let lastMessage = "Unknown error";
-
-      for (const url of candidates) {
-        try {
-          const res = await fetch(url, { cache: "no-store" });
-          if (!res.ok) {
-            lastMessage = `${url} → ${res.status} ${res.statusText}`;
-            continue;
-          }
-
-          const json = await res.json();
-          if (!Array.isArray(json)) {
-            lastMessage = `${url} → JSON is not an array`;
-            continue;
-          }
-
-          AppState.precons = json;
-          console.log(`[precon] loaded from: ${url}`, json);
-          return;
-        } catch (e) {
-          lastMessage = `${url} → ${e?.message || String(e)}`;
-        }
+  for (const path of candidates) {
+    try {
+      const res = await fetch(path, { cache: "no-store" });
+      if (!res.ok) {
+        lastError = `${path} → HTTP ${res.status}`;
+        continue;
       }
 
-      AppState.precons = [];
-      console.warn("[precon] failed to load from any candidate path.", lastMessage);
+      const json = await res.json();
+      if (!Array.isArray(json)) {
+        lastError = `${path} → not an array`;
+        continue;
+      }
 
-      Dom.preconList.innerHTML =
-        `<p class="small-note">No precons found. Last error: <span class="mono">${escapeHtml(lastMessage)}</span></p>
-         <p class="small-note">Tried: <span class="mono">${candidates.map(escapeHtml).join(" , ")}</span></p>`;
+      // ✅ success
+      AppState.precons = json;
+      console.log(`[precon] loaded from: ${path}`, json);
+
+      Dom.preconList.innerHTML = `
+        <p class="small-note">
+          Loaded from <span class="inline-code">${path}</span>.
+        </p>
+      `;
+
+      renderPreconList();
+      return;
+    } catch (err) {
+      lastError = `${path} → ${err.message}`;
     }
+  }
+
+  // ❌ nothing worked
+  console.warn("[precon] failed to load from all candidate paths");
+
+  Dom.preconList.innerHTML = `
+    <p class="small-note">
+      Failed to load precons.<br>
+      Expected <span class="inline-code">drive-precons.json</span><br>
+      <span style="opacity:.7">${lastError || "No further details."}</span>
+    </p>
+  `;
+}
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, ch => ({
@@ -1873,6 +1886,7 @@ function buildPreconDecklistText(precon) {
   </script>
 </body>
 </html>
+
 
 
 
