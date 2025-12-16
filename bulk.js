@@ -156,7 +156,17 @@ function mapRowToCard(sheetType, headers, row) {
   const map = headerMap(headers);
 
   const type = pick(row, map, "type") || sheetType;
-  const name = pick(row, map, "name", "cardname", "title");
+
+  // ✅ FIX: Your spreadsheet uses "Crew Name", "Mod Name", "Driver Name",
+  // "Track Name", "Condition Name", "VEHICLE name", "NAMED VEHICLE NAME", etc.
+  const name = pick(
+    row, map,
+    "name", "cardname", "card name", "title",
+    "crew name", "mod name", "driver name",
+    "track name", "condition name",
+    "vehicle name", "named vehicle name"
+  );
+
   const rarity = pick(row, map, "rarity", "rar");
 
   const setName = pick(row, map, "set", "setname", "setid", "prints", "printset") || "";
@@ -173,11 +183,11 @@ function mapRowToCard(sheetType, headers, row) {
   const extra = {};
 
   if (type === "Mod") {
-    extra.modBasePart = pick(row, map, "basepart", "part", "modbase", "base");
-    extra.modLevel1 = pick(row, map, "level1", "l1", "lvl1");
-    extra.modLevel2 = pick(row, map, "level2", "l2", "lvl2");
-    extra.modLevel3 = pick(row, map, "level3", "l3", "lvl3");
-    extra.modLevel4 = pick(row, map, "level4", "l4", "lvl4");
+    extra.modBasePart = pick(row, map, "basepart", "part", "modbase", "base", "base part");
+    extra.modLevel1 = pick(row, map, "level1", "l1", "lvl1", "mod lvl 1", "modlvl1");
+    extra.modLevel2 = pick(row, map, "level2", "l2", "lvl2", "mod lvl 2", "modlvl2");
+    extra.modLevel3 = pick(row, map, "level3", "l3", "lvl3", "mod lvl 3", "modlvl3");
+    extra.modLevel4 = pick(row, map, "level4", "l4", "lvl4", "mod lvl 4", "modlvl4");
   }
 
   if (type === "Vehicle" || type === "Named Vehicle") {
@@ -189,7 +199,7 @@ function mapRowToCard(sheetType, headers, row) {
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
 
-    const pitStr = pick(row, map, "pitcost", "pit", "pitpoints");
+    const pitStr = pick(row, map, "pitcost", "pit", "pitpoints", "pit cost");
     extra.pitCost = pitStr ? Number(pitStr) : undefined;
   }
 
