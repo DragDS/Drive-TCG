@@ -37,8 +37,25 @@ function pick(row, map, ...keys) {
     const nk = normHeader(k);
     if (nk in map) {
       const v = row[map[nk]];
-      if (v !== undefined && v !== null && String(v).trim() !== "") {
-        return String(v).trim();
+      if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+    }
+  }
+  return "";
+}
+
+/**
+ * Fallback picker: find the first header key that contains any of the given substrings
+ * (ex: contains "rarity") and return its non-empty value.
+ */
+function pickByHeaderContains(row, map, ...needles) {
+  const keys = Object.keys(map);
+  const want = needles.map(n => normHeader(n));
+
+  for (const k of keys) {
+    for (const n of want) {
+      if (k.includes(n)) {
+        const v = row[map[k]];
+        if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
       }
     }
   }
@@ -53,7 +70,10 @@ function generateId() {
 function parseListLike(str) {
   const s = safeStr(str);
   if (!s) return [];
-  return s.split(/[,;/|]+|&/g).map(x => x.trim()).filter(Boolean);
+  return s
+    .split(/[,;/|]+|&/g)
+    .map(x => x.trim())
+    .filter(Boolean);
 }
 
 function parseVehicleTypes(str) {
@@ -72,6 +92,7 @@ function parseHpCon(str) {
 }
 
 function normalizeCardShape(card) {
+  // Minimal normalization to match your card library expectations
   return {
     id: safeStr(card.id) || generateId(),
     name: safeStr(card.name),
@@ -89,24 +110,31 @@ function normalizeCardShape(card) {
 }
 
 /************************************************************
- * Display helpers
+ * Set tokenization for filtering
  ************************************************************/
 function setTokens(setStr) {
   const raw = safeStr(setStr);
   if (!raw) return [];
 
   const parts = raw.split(/&|,|;|\+|\//).map(s => s.trim()).filter(Boolean);
-  return Array.from(
-    new Set(
-      parts.map(p =>
-        p.replace(/^set\s*(\d+)$/i, (_, n) => `SET ${n}`).toUpperCase()
-      )
-    )
-  );
+  const out = [];
+
+  for (let p of (parts.length ? parts : [raw])) {
+    p = p.replace(/\s+/g, " ").trim();
+    if (/^\d+$/.test(p)) p = `SET ${p}`;
+    p = p.replace(/^set\s*(\d+)$/i, (_, n) => `SET ${n}`);
+    out.push(p.toUpperCase());
+  }
+
+  return Array.from(new Set(out));
 }
 
 function cardDisplayLine(c) {
-  return `${c.type || "(?)"} | ${c.name || "(no name)"} | ${c.setName || "SET ?"} ${c.cardNumber || "####"}`;
+  const type = c.type || "(?)";
+  const name = c.name || "(no name)";
+  const setName = c.setName || "SET ?";
+  const cardNumber = c.cardNumber || "####";
+  return `${type} | ${name} | ${setName} ${cardNumber}`;
 }
 
 /************************************************************
@@ -128,14 +156,17 @@ function inferTypeFromSheetName(sheetName) {
 function rowArrayFromSheet(sheet) {
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, defval: "" });
   if (!rows.length) return { headers: [], data: [] };
-  return { headers: rows[0].map(safeStr), data: rows.slice(1) };
+  const headers = rows[0].map(h => safeStr(h));
+  const data = rows.slice(1);
+  return { headers, data };
 }
 
 function headerMap(headers) {
   const map = {};
   headers.forEach((h, idx) => {
-    const k = normHeader(h);
-    if (k && !(k in map)) map[k] = idx;
+    const key = normHeader(h);
+    if (!key) return;
+    if (!(key in map)) map[key] = idx;
   });
   return map;
 }
@@ -145,6 +176,7 @@ function mapRowToCard(sheetType, headers, row) {
 
   const type = pick(row, map, "type") || sheetType;
 
+  // ✅ FIX: spreadsheet uses card-type-specific name columns
   const name = pick(
     row, map,
     "name", "cardname", "card name", "title",
@@ -153,6 +185,7 @@ function mapRowToCard(sheetType, headers, row) {
     "vehicle name", "named vehicle name"
   );
 
+  // ✅ FIX: spreadsheet uses Trait/Ability columns per type
   const notes = pick(
     row, map,
     "notes", "rules", "rule", "text", "effect", "ability", "trait",
@@ -165,43 +198,73 @@ function mapRowToCard(sheetType, headers, row) {
     "mod ability"
   );
 
-  const rarity = pick(row, map, "rarity", "rar");
-  const setName = pick(row, map, "set", "setname", "setid", "printset") || "";
-  const cardNumber = pick(row, map, "cardnumber", "number", "no", "#", "cardno") || "";
+  // ✅ FIX: rarity often "RARITY" (and sometimes other variations)
+  let rarity = pick(row, map, "rarity", "rar", "card rarity");
+  if (!rarity) rarity = pickByHeaderContains(row, map, "rarity");
 
-  const vehicleTypes = parseVehicleTypes(pick(row, map, "vehicletype", "vehicletype1", "vehicletype2"));
-  const tags = parseTags(pick(row, map, "tags", "keywords"));
+  const setName = pick(row, map, "set", "setname", "setid", "prints", "printset") || "";
+  const cardNumber = pick(row, map, "cardnumber", "card number", "number", "no", "#", "cardno") || "";
+
+  const vtRaw = pick(row, map, "vehicletype", "vehicle types", "vehicletype1", "vehicletype2", "vehicletype3");
+  const tagsRaw = pick(row, map, "tags", "tag", "keywords");
   const imageUrl = pick(row, map, "image", "imageurl", "img");
+  // notes already pulled above
+
+  const vehicleTypes = parseVehicleTypes(vtRaw);
+  const tags = parseTags(tagsRaw);
 
   const extra = {};
 
   if (type === "Mod") {
-    extra.modBasePart = pick(row, map, "basepart", "base part", "part");
-    extra.modLevel1 = pick(row, map, "level1", "l1");
-    extra.modLevel2 = pick(row, map, "level2", "l2");
-    extra.modLevel3 = pick(row, map, "level3", "l3");
-    extra.modLevel4 = pick(row, map, "level4", "l4");
+    extra.modBasePart = pick(row, map, "basepart", "base part", "part", "modbase", "base");
+
+    // ✅ FIX: your sheet uses "Mod Lvl 1/2/3/4"
+    extra.modLevel1 = pick(
+      row, map,
+      "mod lvl 1", "modlvl1", "mod level 1",
+      "level1", "lvl1", "l1"
+    );
+    extra.modLevel2 = pick(
+      row, map,
+      "mod lvl 2", "modlvl2", "mod level 2",
+      "level2", "lvl2", "l2"
+    );
+    extra.modLevel3 = pick(
+      row, map,
+      "mod lvl 3", "modlvl3", "mod level 3",
+      "level3", "lvl3", "l3"
+    );
+    extra.modLevel4 = pick(
+      row, map,
+      "mod lvl 4", "modlvl4", "mod level 4",
+      "level4", "lvl4", "l4"
+    );
   }
 
   if (type === "Vehicle" || type === "Named Vehicle") {
-    const hpConStr = pick(row, map, "hpcon", "hp/con", "hp");
-    const hpCon = hpConStr.includes("/") ? parseHpCon(hpConStr) : {};
+    const hpConStr = pick(row, map, "hpcon", "hp/con", "hp con", "hp", "hitpoints");
+    const hpCon = hpConStr && hpConStr.includes("/")
+      ? parseHpCon(hpConStr)
+      : { hp: hpConStr ? Number(hpConStr) || undefined : undefined, con: undefined };
+
     extra.hp = hpCon.hp;
     extra.con = hpCon.con;
-    extra.pitCost = Number(pick(row, map, "pitcost", "pit cost")) || undefined;
+
+    const pitStr = pick(row, map, "pitcost", "pit cost", "pit", "pitpoints");
+    extra.pitCost = pitStr ? Number(pitStr) : undefined;
   }
 
   const prints = [];
   if (setName || cardNumber) {
-    prints.push({ setName, cardNumber, isPrimary: true });
+    prints.push({ setName: safeStr(setName), cardNumber: safeStr(cardNumber), isPrimary: true });
   }
 
-  return normalizeCardShape({
+  const baseCard = {
     id: pick(row, map, "id", "cardid") || generateId(),
     name,
     type,
-    setName,
-    cardNumber,
+    setName: safeStr(setName),
+    cardNumber: safeStr(cardNumber),
     rarity,
     vehicleTypes,
     tags,
@@ -209,111 +272,317 @@ function mapRowToCard(sheetType, headers, row) {
     notes,
     extra,
     prints
-  });
+  };
+
+  return normalizeCardShape(baseCard);
 }
 
 function parseWorkbookToCards(workbook) {
-  const out = [];
-  workbook.SheetNames.forEach(name => {
-    const sheet = workbook.Sheets[name];
-    if (!sheet) return;
-    const { headers, data } = rowArrayFromSheet(sheet);
-    if (!headers.length) return;
+  const all = [];
 
-    const sheetType = inferTypeFromSheetName(name);
+  workbook.SheetNames.forEach(sheetName => {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) return;
+
+    const sheetType = inferTypeFromSheetName(sheetName);
+    const { headers, data } = rowArrayFromSheet(sheet);
+    if (!headers.length || !data.length) return;
+
     data.forEach(row => {
-      if (row.some(c => safeStr(c))) {
-        const card = mapRowToCard(sheetType, headers, row);
-        if (card.name || card.type) out.push(card);
+      const hasAny = Array.isArray(row) && row.some(cell => safeStr(cell) !== "");
+      if (!hasAny) return;
+
+      const card = mapRowToCard(sheetType, headers, row);
+      if (card && (card.name || card.type || card.setName || card.cardNumber)) {
+        all.push(card);
       }
     });
   });
-  return out;
+
+  return all;
 }
 
 /************************************************************
- * Filtering / UI
+ * Filtering + rendering
  ************************************************************/
-function getViewedCards() {
-  const type = Dom.bulkTypeFilter?.value || "All Types";
-  const set = Dom.bulkSetFilter?.value || "All Sets";
-  const q = safeStr(Dom.bulkFilterInput?.value).toLowerCase();
+function getAllTypes(cards) {
+  const types = new Set();
+  cards.forEach(c => types.add((c.type || "Misc").trim() || "Misc"));
+  return ["All Types", ...Array.from(types).sort((a, b) => a.localeCompare(b))];
+}
 
-  return parsedCards.filter(c =>
-    (type === "All Types" || c.type === type) &&
-    (set === "All Sets" || setTokens(c.setName).includes(set)) &&
-    (!q || `${c.name} ${c.type} ${c.setName} ${c.cardNumber}`.toLowerCase().includes(q))
+function getAllSetOptions(cards) {
+  const sets = new Set();
+  cards.forEach(c => setTokens(c.setName).forEach(t => sets.add(t)));
+
+  const arr = Array.from(sets);
+  const setNums = arr
+    .filter(s => /^SET\s+\d+$/.test(s))
+    .sort((a, b) => Number(a.replace(/\D+/g, "")) - Number(b.replace(/\D+/g, "")));
+
+  const others = arr
+    .filter(s => !/^SET\s+\d+$/.test(s))
+    .sort((a, b) => a.localeCompare(b));
+
+  return ["All Sets", ...setNums, ...others];
+}
+
+function cardMatchesType(card, typeFilter) {
+  if (!typeFilter || typeFilter === "All Types") return true;
+  return (card.type || "Misc") === typeFilter;
+}
+
+function cardMatchesSet(card, setFilter) {
+  if (!setFilter || setFilter === "All Sets") return true;
+  const tokens = setTokens(card.setName);
+  if (!tokens.length) return false;
+  return tokens.includes(setFilter.toUpperCase());
+}
+
+function cardMatchesText(card, q) {
+  if (!q) return true;
+  const s = q.toLowerCase();
+  return (
+    (card.name || "").toLowerCase().includes(s) ||
+    (card.type || "").toLowerCase().includes(s) ||
+    (card.setName || "").toLowerCase().includes(s) ||
+    (card.cardNumber || "").toLowerCase().includes(s)
   );
 }
 
+function getViewedCards() {
+  const typeFilter = Dom.bulkTypeFilter?.value || "All Types";
+  const setFilter = Dom.bulkSetFilter?.value || "All Sets";
+  const q = safeStr(Dom.bulkFilterInput?.value).trim();
+
+  return parsedCards.filter(c =>
+    cardMatchesType(c, typeFilter) &&
+    cardMatchesSet(c, setFilter) &&
+    cardMatchesText(c, q)
+  );
+}
+
+function renderFilters() {
+  if (!Dom.bulkTypeFilter || !Dom.bulkSetFilter) return;
+
+  const types = getAllTypes(parsedCards);
+  Dom.bulkTypeFilter.innerHTML = "";
+  types.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    Dom.bulkTypeFilter.appendChild(opt);
+  });
+
+  const sets = getAllSetOptions(parsedCards);
+  Dom.bulkSetFilter.innerHTML = "";
+  sets.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    Dom.bulkSetFilter.appendChild(opt);
+  });
+
+  Dom.bulkTypeFilter.value = "All Types";
+  Dom.bulkSetFilter.value = "All Sets";
+}
+
 function renderSelectionList() {
+  if (!Dom.bulkSelectionList) return;
   const list = Dom.bulkSelectionList;
-  if (!list) return;
   list.innerHTML = "";
 
-  getViewedCards().forEach(card => {
+  if (!parsedCards.length) {
+    const li = document.createElement("li");
+    li.className = "mono";
+    li.textContent = "No parsed cards yet. Load your master spreadsheet in Step 1.";
+    list.appendChild(li);
+    return;
+  }
+
+  const viewed = getViewedCards();
+  if (!viewed.length) {
+    const li = document.createElement("li");
+    li.className = "mono";
+    li.textContent = "No cards match the current filters.";
+    list.appendChild(li);
+    return;
+  }
+
+  viewed.forEach(card => {
     const li = document.createElement("li");
     li.className = "checkrow";
 
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = selectedCardIds.has(card.id);
-    cb.onchange = () => {
-      cb.checked ? selectedCardIds.add(card.id) : selectedCardIds.delete(card.id);
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = selectedCardIds.has(card.id);
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) selectedCardIds.add(card.id);
+      else selectedCardIds.delete(card.id);
       renderSelectedPreview();
-    };
+    });
 
     const label = document.createElement("div");
     label.className = "mono";
     label.textContent = cardDisplayLine(card);
 
-    li.append(cb, label);
+    li.appendChild(checkbox);
+    li.appendChild(label);
     list.appendChild(li);
   });
 }
 
 function renderSelectedPreview() {
   if (!Dom.bulkSelectedPreview) return;
+
   const selected = parsedCards.filter(c => selectedCardIds.has(c.id));
-  Dom.bulkSelectedPreview.textContent = selected.length
-    ? selected.map(c => `• ${cardDisplayLine(c)}`).join("\n")
-    : "No cards selected for import.";
+  if (!selected.length) {
+    Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
+    return;
+  }
+
+  const lines = selected.slice(0, 80).map(c => `• ${cardDisplayLine(c)}`);
+  Dom.bulkSelectedPreview.textContent =
+    `${selected.length} card(s) selected for import:\n` +
+    lines.join("\n") +
+    (selected.length > 80 ? `\n...and ${selected.length - 80} more.` : "");
 }
 
 /************************************************************
- * Import actions
+ * Actions
  ************************************************************/
-function handleLoadAndParseXlsx() {
-  const file = Dom.bulkFileInput?.files?.[0];
-  if (!file) return;
+function clearBulkSession() {
+  parsedCards = [];
+  selectedCardIds.clear();
 
-  const reader = new FileReader();
-  reader.onload = e => {
-    const workbook = XLSX.read(e.target.result, { type: "array" });
-    parsedCards = parseWorkbookToCards(workbook);
-    selectedCardIds = new Set(parsedCards.map(c => c.id));
-    renderSelectionList();
-    renderSelectedPreview();
-    setStatus(`Parsed ${parsedCards.length} cards.`);
-  };
-  reader.readAsArrayBuffer(file);
+  setStatus("Waiting for file…");
+  if (Dom.bulkSelectionList) Dom.bulkSelectionList.innerHTML = "";
+  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "";
+  if (Dom.bulkTypeFilter) Dom.bulkTypeFilter.innerHTML = "";
+  if (Dom.bulkSetFilter) Dom.bulkSetFilter.innerHTML = "";
+}
+
+async function tryRefreshSingleUi() {
+  // If single.js is healthy, refresh it. If not, don't block bulk.
+  try {
+    const m = await import("./single.js");
+    m?.refreshSingleUi?.();
+  } catch (e) {
+    console.warn("[bulk] Could not refresh Single UI (single.js may be broken).", e);
+  }
 }
 
 async function importSelectedIntoLibrary() {
-  parsedCards.filter(c => selectedCardIds.has(c.id)).forEach(card => {
-    const i = AppState.cards.findIndex(x => x.id === card.id);
-    if (i >= 0) AppState.cards[i] = card;
-    else AppState.cards.push(card);
+  if (!parsedCards.length) {
+    setStatus("Nothing parsed yet.");
+    return;
+  }
+
+  const toImport = parsedCards.filter(c => selectedCardIds.has(c.id));
+  if (!toImport.length) {
+    setStatus("No cards selected to import.");
+    return;
+  }
+
+  let added = 0;
+  let updated = 0;
+
+  toImport.forEach(card => {
+    const idx = AppState.cards.findIndex(c => c.id === card.id);
+    if (idx >= 0) {
+      AppState.cards[idx] = card;
+      updated++;
+    } else {
+      AppState.cards.push(card);
+      added++;
+    }
   });
-  setStatus("Import complete.");
+
+  setStatus(`Imported ${toImport.length} card(s) (${added} added, ${updated} updated).`);
+  await tryRefreshSingleUi();
 }
 
 /************************************************************
- * Init
+ * Step 1: Load & Parse XLSX (AUTO-PARSE + BUTTON)
+ ************************************************************/
+function handleLoadAndParseXlsx() {
+  const file = Dom.bulkFileInput?.files?.[0];
+  if (!file) {
+    setStatus("Waiting for file…");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    setStatus("XLSX library is not loaded. Check the xlsx.full.min.js script tag in admin.html.");
+    console.error("[bulk] XLSX is undefined. CDN blocked/offline/CSP?");
+    return;
+  }
+
+  setStatus(`Loading & parsing ${file.name}…`);
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = e.target.result;
+      const workbook = XLSX.read(data, { type: "array" });
+      parsedCards = parseWorkbookToCards(workbook);
+
+      selectedCardIds = new Set(parsedCards.map(c => c.id));
+
+      renderFilters();
+      renderSelectionList();
+      renderSelectedPreview();
+
+      setStatus(`Parsed ${parsedCards.length} cards from master spreadsheet.`);
+    } catch (err) {
+      console.error("[bulk] XLSX parse failed:", err);
+      setStatus("Failed to parse XLSX. Check console for details.");
+    }
+  };
+
+  reader.onerror = () => setStatus("Could not read file.");
+  reader.readAsArrayBuffer(file);
+}
+
+/************************************************************
+ * Public init
  ************************************************************/
 export function initBulk() {
-  Dom.bulkFileInput?.addEventListener("change", handleLoadAndParseXlsx);
+  console.log("[bulk] initBulk called. XLSX available?", typeof XLSX !== "undefined");
+
+  // Auto-parse when file selected
+  Dom.bulkFileInput?.addEventListener("change", () => {
+    const f = Dom.bulkFileInput.files?.[0];
+    if (!f) return setStatus("Waiting for file…");
+    handleLoadAndParseXlsx();
+  });
+
+  // Manual parse button
   Dom.bulkLoadBtn?.addEventListener("click", handleLoadAndParseXlsx);
+
+  // Filters
+  Dom.bulkTypeFilter?.addEventListener("change", () => { renderSelectionList(); renderSelectedPreview(); });
+  Dom.bulkSetFilter?.addEventListener("change", () => { renderSelectionList(); renderSelectedPreview(); });
+  Dom.bulkFilterInput?.addEventListener("input", () => { renderSelectionList(); renderSelectedPreview(); });
+
+  // Select/Deselect viewed
+  Dom.bulkSelectAllViewedBtn?.addEventListener("click", () => {
+    getViewedCards().forEach(c => selectedCardIds.add(c.id));
+    renderSelectionList();
+    renderSelectedPreview();
+  });
+
+  Dom.bulkDeselectAllViewedBtn?.addEventListener("click", () => {
+    getViewedCards().forEach(c => selectedCardIds.delete(c.id));
+    renderSelectionList();
+    renderSelectedPreview();
+  });
+
+  // Import / clear
   Dom.bulkImportSelectedBtn?.addEventListener("click", importSelectedIntoLibrary);
+  Dom.bulkClearSessionBtn?.addEventListener("click", clearBulkSession);
+
+  if (Dom.bulkSelectedPreview) Dom.bulkSelectedPreview.textContent = "No cards selected for import.";
   setStatus("Waiting for file…");
 }
