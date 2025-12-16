@@ -62,6 +62,27 @@ function pickByHeaderContains(row, map, ...needles) {
   return "";
 }
 
+/**
+ * ✅ Rarity normalization:
+ * Excel often stores "COMMON", "RARE", etc.
+ * Single editor <select> needs exact labels: "Common", "Rare", ...
+ */
+function normalizeRarity(r) {
+  const s = safeStr(r).toUpperCase();
+  if (!s) return "";
+
+  const map = {
+    "COMMON": "Common",
+    "UNCOMMON": "Uncommon",
+    "RARE": "Rare",
+    "ULTRA RARE": "Ultra Rare",
+    "ULTRARARE": "Ultra Rare",
+    "PROMO": "Promo"
+  };
+
+  return map[s] || (s.charAt(0) + s.slice(1).toLowerCase());
+}
+
 function generateId() {
   if (crypto?.randomUUID) return crypto.randomUUID();
   return "card_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -176,7 +197,7 @@ function mapRowToCard(sheetType, headers, row) {
 
   const type = pick(row, map, "type") || sheetType;
 
-  // ✅ FIX: spreadsheet uses card-type-specific name columns
+  // Spreadsheet uses card-type-specific name columns
   const name = pick(
     row, map,
     "name", "cardname", "card name", "title",
@@ -185,7 +206,7 @@ function mapRowToCard(sheetType, headers, row) {
     "vehicle name", "named vehicle name"
   );
 
-  // ✅ FIX: spreadsheet uses Trait/Ability columns per type
+  // Spreadsheet uses Trait/Ability columns per type
   const notes = pick(
     row, map,
     "notes", "rules", "rule", "text", "effect", "ability", "trait",
@@ -198,9 +219,10 @@ function mapRowToCard(sheetType, headers, row) {
     "mod ability"
   );
 
-  // ✅ FIX: rarity often "RARITY" (and sometimes other variations)
+  // ✅ Rarity: read + normalize to match Single editor dropdown labels
   let rarity = pick(row, map, "rarity", "rar", "card rarity");
   if (!rarity) rarity = pickByHeaderContains(row, map, "rarity");
+  rarity = normalizeRarity(rarity);
 
   const setName = pick(row, map, "set", "setname", "setid", "prints", "printset") || "";
   const cardNumber = pick(row, map, "cardnumber", "card number", "number", "no", "#", "cardno") || "";
@@ -208,7 +230,6 @@ function mapRowToCard(sheetType, headers, row) {
   const vtRaw = pick(row, map, "vehicletype", "vehicle types", "vehicletype1", "vehicletype2", "vehicletype3");
   const tagsRaw = pick(row, map, "tags", "tag", "keywords");
   const imageUrl = pick(row, map, "image", "imageurl", "img");
-  // notes already pulled above
 
   const vehicleTypes = parseVehicleTypes(vtRaw);
   const tags = parseTags(tagsRaw);
@@ -218,27 +239,10 @@ function mapRowToCard(sheetType, headers, row) {
   if (type === "Mod") {
     extra.modBasePart = pick(row, map, "basepart", "base part", "part", "modbase", "base");
 
-    // ✅ FIX: your sheet uses "Mod Lvl 1/2/3/4"
-    extra.modLevel1 = pick(
-      row, map,
-      "mod lvl 1", "modlvl1", "mod level 1",
-      "level1", "lvl1", "l1"
-    );
-    extra.modLevel2 = pick(
-      row, map,
-      "mod lvl 2", "modlvl2", "mod level 2",
-      "level2", "lvl2", "l2"
-    );
-    extra.modLevel3 = pick(
-      row, map,
-      "mod lvl 3", "modlvl3", "mod level 3",
-      "level3", "lvl3", "l3"
-    );
-    extra.modLevel4 = pick(
-      row, map,
-      "mod lvl 4", "modlvl4", "mod level 4",
-      "level4", "lvl4", "l4"
-    );
+    extra.modLevel1 = pick(row, map, "mod lvl 1", "modlvl1", "mod level 1", "level1", "l1", "lvl1");
+    extra.modLevel2 = pick(row, map, "mod lvl 2", "modlvl2", "mod level 2", "level2", "l2", "lvl2");
+    extra.modLevel3 = pick(row, map, "mod lvl 3", "modlvl3", "mod level 3", "level3", "l3", "lvl3");
+    extra.modLevel4 = pick(row, map, "mod lvl 4", "modlvl4", "mod level 4", "level4", "l4", "lvl4");
   }
 
   if (type === "Vehicle" || type === "Named Vehicle") {
